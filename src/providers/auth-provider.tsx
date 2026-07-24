@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { useRouter, usePathname } from "next/navigation";
 import { authService } from "@/features/auth/services/auth.service";
 import { getAuthErrorMessage } from "@/features/auth/error-utils";
+import { setAccessToken as setStoredAccessToken } from "@/lib/access-token-store";
 import { useToast } from "@/providers/toast-provider";
 import type { CurrentMember } from "@/features/session/types";
 import type { LoginCredentials } from "@/features/auth/types";
@@ -16,7 +17,7 @@ interface AuthState {
 interface AuthContextValue {
   member: CurrentMember | null;
   isAuthenticated: boolean;
-  /** Kept for parity with the rest of the app's useQuery-shaped hooks. Always false — there is nothing to bootstrap since tokens live in memory only (see note below). */
+  /** True while the initial session-restore attempt (silent refresh from the httpOnly cookie) is in flight. */
   isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<CurrentMember>;
   logout: () => void;
@@ -30,14 +31,26 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 // races an about-to-expire token.
 const REFRESH_BUFFER_MS = 5000;
 
+// "memory": refresh token held in JS memory, sent explicitly (rememberMe off).
+// "persistent": no refresh token in JS at all — every refresh relies on the
+// httpOnly cookie the backend reads automatically.
+type SessionMode = "memory" | "persistent" | null;
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
 
   const [state, setState] = useState<AuthState>({ member: null, accessToken: null });
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
   const refreshTokenRef = useRef<string | null>(null);
+  const modeRef = useRef<SessionMode>(null);
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const setAccessToken = useCallback((token: string | null) => {
+    setStoredAccessToken(token);
+    setState((prev) => ({ ...prev, accessToken: token }));
+  }, []);
 
   const clearRefreshTimer = useCallback(() => {
     if (refreshTimerRef.current) {
@@ -51,6 +64,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearRefreshTimer();
       const returnTo = pathname && pathname !== "/login" ? pathname : undefined;
       refreshTokenRef.current = null;
+      modeRef.current = null;
+      setStoredAccessToken(null);
       setState({ member: null, accessToken: null });
 
       if (reason === "expired") {
@@ -79,12 +94,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const delay = Math.max(expiresInSeconds * 1000 - REFRESH_BUFFER_MS, 0);
 
       const runRefresh = async () => {
-        const currentRefreshToken = refreshTokenRef.current;
-        if (!currentRefreshToken) return;
+        const mode = modeRef.current;
+        if (!mode) return;
 
         try {
-          const refreshed = await authService.refresh(currentRefreshToken);
-          setState((prev) => ({ ...prev, accessToken: refreshed.accessToken }));
+          const refreshed = await authService.refresh(mode === "memory" ? refreshTokenRef.current : null);
+          if (mode === "memory" && refreshed.refreshToken) {
+            refreshTokenRef.current = refreshed.refreshToken;
+          }
+          setAccessToken(refreshed.accessToken);
           scheduleRefreshRef.current(refreshed.expiresIn);
         } catch {
           // Refresh token itself is invalid/expired — the session cannot continue silently.
@@ -94,18 +112,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       refreshTimerRef.current = setTimeout(runRefresh, delay);
     },
-    [clearRefreshTimer, forceLogout]
+    [clearRefreshTimer, forceLogout, setAccessToken]
   );
 
   useEffect(() => {
     scheduleRefreshRef.current = scheduleRefresh;
   }, [scheduleRefresh]);
 
+  // On mount, try to restore a persistent session from the httpOnly refresh
+  // cookie. Most visitors won't have one (nothing to redirect, no toast) —
+  // this is silent by design, unlike an expiring active session.
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const session = await authService.restoreSession();
+      if (cancelled) return;
+
+      if (session) {
+        modeRef.current = "persistent";
+        refreshTokenRef.current = null;
+        setStoredAccessToken(session.accessToken);
+        setState({ member: session.member, accessToken: session.accessToken });
+        scheduleRefresh(session.expiresIn);
+      }
+      setIsBootstrapping(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // Runs once on mount only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const login = useCallback(
     async (credentials: LoginCredentials): Promise<CurrentMember> => {
       try {
         const session = await authService.login(credentials);
-        refreshTokenRef.current = session.refreshToken;
+        modeRef.current = credentials.rememberMe ? "persistent" : "memory";
+        refreshTokenRef.current = credentials.rememberMe ? null : (session.refreshToken ?? null);
+        setStoredAccessToken(session.accessToken);
         setState({ member: session.member, accessToken: session.accessToken });
         scheduleRefresh(session.expiresIn);
         return session.member;
@@ -118,9 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const logout = useCallback(() => {
-    if (refreshTokenRef.current) {
-      authService.logout(refreshTokenRef.current).catch(() => {});
-    }
+    authService.logout().catch(() => {});
     forceLogout("manual");
   }, [forceLogout]);
 
@@ -133,7 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         member: state.member,
         isAuthenticated: Boolean(state.member),
-        isLoading: false,
+        isLoading: isBootstrapping,
         login,
         logout,
         updateMember,

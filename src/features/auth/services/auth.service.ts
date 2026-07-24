@@ -7,12 +7,17 @@ export const authService = {
     return response.data;
   },
 
-  async refresh(refreshToken: string): Promise<RefreshedSession> {
+  async refresh(refreshToken: string | null): Promise<RefreshedSession> {
     const response = await authRepository.refresh(refreshToken);
     return response.data;
   },
 
-  async logout(refreshToken: string): Promise<void> {
-    await authRepository.logout(refreshToken);
+  async restoreSession(): Promise<AuthSession | null> {
+    const response = await authRepository.restoreSession();
+    return response?.data ?? null;
+  },
+
+  async logout(): Promise<void> {
+    await authRepository.logout();
   },
 };

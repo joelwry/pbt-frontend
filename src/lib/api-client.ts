@@ -1,21 +1,29 @@
 import axios from "axios";
+import { getAccessToken } from "@/lib/access-token-store";
 
 /**
- * Central Axios instance for the future Express.js API.
+ * Central Axios instance for the Express.js API.
  *
- * Nothing in the app talks to this directly today — every feature goes
- * through a repository (see features/*\/repositories). While repositories
- * return mock data, swapping a repository's implementation to call this
- * client is the only change required to go live.
+ * Every feature goes through a repository (see features/*\/repositories),
+ * which is the only place that should import this client directly.
  */
-// Auth is cookie-based (httpOnly refresh + short-lived access token) once the
-// real API is live, per SECURITY.md — no tokens are ever kept in
-// localStorage/sessionStorage. `withCredentials` lets the browser attach
-// those cookies automatically.
+// Access tokens are held in memory only — never localStorage/sessionStorage.
+// Persistent ("remember me") sessions additionally rely on an httpOnly
+// refresh cookie, which is why `withCredentials` is always on: it lets the
+// browser attach that cookie automatically for members who opted in, while
+// members who didn't simply have no cookie to send.
 export const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api",
   headers: {
     "Content-Type": "application/json",
   },
   withCredentials: true,
+});
+
+apiClient.interceptors.request.use((requestConfig) => {
+  const token = getAccessToken();
+  if (token && !requestConfig.headers.Authorization) {
+    requestConfig.headers.Authorization = `Bearer ${token}`;
+  }
+  return requestConfig;
 });
