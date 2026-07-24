@@ -1,0 +1,4 @@
+1. in admin community page /admin/community . there is no need to include those links of view all, Review, manage, view groups found on those cards since they would mislead the user  to think they are navigating a user to another page
+2. The circular pie chart used in the member dashboard is not pie at all.. we can use the ones (pies/doughnut) we used in the admin dashboard or admin analytical page 
+3. member my learning page does not seem to follow how the pie chart designed on the ui is ... it is quite very different
+4. All this member page Community, my learning, Resources, PBT Plus, PBT mentorship, Subscription did not completely implement the cards just below / after the page banner top header... like for my learning pagem what am referring to it is called ProgrammeSummaryCard in respect to learning page 

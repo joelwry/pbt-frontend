@@ -1,0 +1,145 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/manrope/500.css";
+@import "@fontsource/manrope/600.css";
+@import "@fontsource/manrope/700.css";
+@import "@fontsource/manrope/800.css";
+
+:root {
+  --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-manrope: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  /* PBT Design Guide v4 tokens (pixel-sampled from live site) */
+  --pbt-navy-950: #0d0a30;
+  --pbt-navy-900: #130f40;
+  --pbt-sky-600: #1e8fc4;
+  --pbt-sky-500: #26aae1;
+  --pbt-sky-tint: #e8f6fc;
+  --pbt-orange-500: #f18d00;
+  --pbt-orange-tint: #fdeeda;
+  --pbt-slate-500: #64748b;
+  --pbt-success: #22c55e;
+  --pbt-warning: #f59e0b;
+  --pbt-error: #ef4444;
+  --pbt-info: #3b82f6;
+
+  --pbt-text-primary: #1f2937;
+  --pbt-text-secondary: #47565e;
+  --pbt-text-muted: #6b7b84;
+
+  --pbt-bg: #f5f8fa;
+  --pbt-card: #ffffff;
+  --pbt-border: #e2e8ed;
+
+  --background: var(--pbt-bg);
+  --foreground: var(--pbt-text-primary);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-navy-950: var(--pbt-navy-950);
+  --color-navy-900: var(--pbt-navy-900);
+  --color-sky-600: var(--pbt-sky-600);
+  --color-sky-500: var(--pbt-sky-500);
+  --color-sky-tint: var(--pbt-sky-tint);
+  --color-orange-500: var(--pbt-orange-500);
+  --color-orange-tint: var(--pbt-orange-tint);
+  --color-slate-500: var(--pbt-slate-500);
+  --color-success: var(--pbt-success);
+  --color-warning: var(--pbt-warning);
+  --color-error: var(--pbt-error);
+  --color-info: var(--pbt-info);
+
+  --color-text-primary: var(--pbt-text-primary);
+  --color-text-secondary: var(--pbt-text-secondary);
+  --color-text-muted: var(--pbt-text-muted);
+
+  --color-card: var(--pbt-card);
+  --color-border: var(--pbt-border);
+
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-manrope);
+
+  --radius-card: 18px;
+  --radius-btn: 12px;
+  --radius-input: 12px;
+  --radius-modal: 24px;
+  --radius-chip: 999px;
+
+  --shadow-sm-pbt: 0 2px 10px rgba(0, 0, 0, 0.05);
+  --shadow-md-pbt: 0 8px 30px rgba(0, 0, 0, 0.08);
+  --shadow-lg-pbt: 0 18px 60px rgba(0, 0, 0, 0.12);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+}
+
+.pbt-card {
+  background: var(--pbt-card);
+  border: 1px solid var(--pbt-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm-pbt);
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+
+.pbt-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md-pbt);
+}
+
+/* Custom scrollbar — thin, brand navy, subtle track */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--pbt-navy-900) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--pbt-navy-900);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--pbt-navy-950);
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* On the navy sidebar itself, use a lighter thumb so it's visible against the dark background */
+aside *::-webkit-scrollbar-thumb,
+[data-scrollbar="on-dark"]::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+aside *::-webkit-scrollbar-thumb:hover,
+[data-scrollbar="on-dark"]::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+aside,
+[data-scrollbar="on-dark"] {
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
