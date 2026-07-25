@@ -42,11 +42,15 @@ interface BackendTokens {
   refreshToken: string;
 }
 
-interface BackendMembership {
-  tier: MembershipTier;
-  status: "active" | "inactive" | "suspended" | "cancelled";
+interface BackendSubscription {
+  tier: "pathway" | "plus" | "mentorship";
+  status: "active" | "pending" | "cancelled" | "expired";
   startDate: string;
-  renewalDate?: string;
+  endDate: string;
+}
+
+function toMembershipTier(tier: BackendSubscription["tier"]): MembershipTier {
+  return (tier.charAt(0).toUpperCase() + tier.slice(1)) as MembershipTier;
 }
 
 function initialsOf(fullName: string): string {
@@ -69,13 +73,13 @@ function expiresInFromJwt(token: string): number {
   return Math.max(Math.floor(decoded.exp - Date.now() / 1000), 0);
 }
 
-// No membership record exists for an account until Phase 2 wires membership
-// provisioning — a 404 here is a real "no active subscription" state, not an
-// error, so it's treated conservatively as an inactive Pathway membership
-// rather than a broken request.
-async function fetchMembership(accessToken: string): Promise<BackendMembership | null> {
+// No subscription record exists for an account until one is created via the
+// real payment flow (see renew-subscription.repository.ts) — a 404 here is a
+// real "never subscribed" state, not an error, so it's treated conservatively
+// as an expired Pathway subscription rather than a broken request.
+async function fetchSubscription(accessToken: string): Promise<BackendSubscription | null> {
   try {
-    const { data } = await apiClient.get<ApiSuccess<BackendMembership>>("/memberships/current", {
+    const { data } = await apiClient.get<ApiSuccess<BackendSubscription>>("/subscriptions/current", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     return data.data;
@@ -85,7 +89,7 @@ async function fetchMembership(accessToken: string): Promise<BackendMembership |
 }
 
 async function composeMember(user: BackendUser, accessToken: string): Promise<CurrentMember> {
-  const membership = await fetchMembership(accessToken);
+  const subscription = await fetchSubscription(accessToken);
   return {
     id: user.id,
     clientId: user.clientId ?? user.id,
@@ -93,9 +97,9 @@ async function composeMember(user: BackendUser, accessToken: string): Promise<Cu
     initials: initialsOf(user.fullName),
     email: user.email,
     avatarUrl: user.avatarUrl,
-    membershipTier: membership?.tier ?? "Pathway",
-    subscriptionStatus: membership?.status === "active" ? "active" : "expired",
-    subscriptionDate: membership?.renewalDate ?? membership?.startDate ?? new Date().toISOString(),
+    membershipTier: subscription ? toMembershipTier(subscription.tier) : "Pathway",
+    subscriptionStatus: subscription?.status === "active" ? "active" : "expired",
+    subscriptionDate: subscription?.endDate ?? subscription?.startDate ?? new Date().toISOString(),
   };
 }
 

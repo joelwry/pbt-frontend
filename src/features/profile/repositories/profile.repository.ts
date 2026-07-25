@@ -1,36 +1,71 @@
+import { apiClient } from "@/lib/api-client";
 import type { ApiSuccess } from "@/types/api";
 import type { ProfileData, ProfileDetails, NotificationPreferences } from "@/features/profile/types";
-import { profileMock } from "@/features/profile/mocks/profile.mock";
 
-const SIMULATED_LATENCY_MS = 400;
-const store: ProfileData = JSON.parse(JSON.stringify(profileMock.data));
+interface BackendProfile {
+  fullName: string;
+  email: string;
+  phone?: string;
+  location?: string;
+  investmentFocus?: string;
+  assignedLeader?: string;
+  notificationPreferences: NotificationPreferences;
+}
+
+function toProfileData(profile: BackendProfile): ProfileData {
+  return {
+    details: {
+      fullName: profile.fullName,
+      email: profile.email,
+      phone: profile.phone ?? "",
+      location: profile.location ?? "",
+      investmentFocus: profile.investmentFocus ?? "",
+      assignedLeader: profile.assignedLeader ?? "",
+    },
+    notifications: profile.notificationPreferences,
+  };
+}
 
 export const profileRepository = {
   async getProfile(): Promise<ApiSuccess<ProfileData>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    return { success: true, message: "Profile retrieved successfully", data: store };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiSuccess<ProfileData>>("/members/me/profile");
-    // return data;
+    const { data } = await apiClient.get<ApiSuccess<BackendProfile>>("/auth/me");
+    return { success: true, message: data.message, data: toProfileData(data.data) };
   },
 
   async updateDetails(details: ProfileDetails): Promise<ApiSuccess<ProfileDetails>> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    store.details = details;
-    return { success: true, message: "Profile updated successfully", data: store.details };
+    const { data } = await apiClient.patch<ApiSuccess<Omit<BackendProfile, "notificationPreferences">>>(
+      "/auth/me",
+      {
+        fullName: details.fullName,
+        email: details.email,
+        phone: details.phone,
+        location: details.location,
+        investmentFocus: details.investmentFocus,
+      }
+    );
 
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.patch<ApiSuccess<ProfileDetails>>("/members/me/profile", details);
-    // return data;
+    return {
+      success: true,
+      message: data.message,
+      data: {
+        fullName: data.data.fullName,
+        email: data.data.email,
+        phone: data.data.phone ?? "",
+        location: data.data.location ?? "",
+        investmentFocus: data.data.investmentFocus ?? "",
+        assignedLeader: data.data.assignedLeader ?? details.assignedLeader,
+      },
+    };
   },
 
   async updateNotificationPreference(
     key: keyof NotificationPreferences,
     value: boolean
   ): Promise<ApiSuccess<NotificationPreferences>> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    store.notifications[key] = value;
-    return { success: true, message: "Preference updated successfully", data: store.notifications };
+    const { data } = await apiClient.patch<ApiSuccess<NotificationPreferences>>("/auth/me/notifications", {
+      key,
+      value,
+    });
+    return { success: true, message: data.message, data: data.data };
   },
 };
