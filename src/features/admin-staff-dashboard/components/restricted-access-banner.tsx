@@ -17,7 +17,9 @@ export function RestrictedAccessBanner({ admin }: { admin: AdminUser }) {
         <ShieldCheck className="h-5 w-5" />
       </div>
       <div>
-        <p className="text-sm font-semibold text-text-primary">You&apos;re signed in as a {admin.role}</p>
+        <p className="text-sm font-semibold text-text-primary">
+          You&apos;re signed in as {/^[aeiou]/i.test(admin.role) ? "an" : "a"} {admin.role}
+        </p>
         <p className="text-sm text-text-secondary mt-1">
           Your access is limited to {formatAccessList(labels)}. Locked sections in the sidebar aren&apos;t part of your
           role — contact a Super Admin if you need broader access.

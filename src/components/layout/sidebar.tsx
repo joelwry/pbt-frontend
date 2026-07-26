@@ -17,9 +17,9 @@ export function Sidebar() {
   const { logout } = useAuth();
 
   return (
-    <aside className="hidden lg:flex lg:flex-col lg:w-[248px] lg:shrink-0 h-screen sticky top-0 bg-gradient-to-b from-navy-950 to-navy-900 border-t-4 border-t-transparent">
+    <aside className="hidden lg:flex lg:flex-col lg:w-[248px] lg:shrink-0 h-screen sticky top-0 bg-linear-to-b from-navy-950 to-navy-900 border-t-4 border-t-transparent">
       <div
-        className="h-1 w-full bg-gradient-to-r from-orange-500 via-sky-500 to-navy-900 shrink-0"
+        className="h-1 w-full bg-linear-to-r from-orange-500 via-sky-500 to-navy-900 shrink-0"
         aria-hidden
       />
       <div className="px-5 pt-5 pb-4 flex items-center gap-3 border-b border-white/10">

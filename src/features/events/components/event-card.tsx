@@ -34,7 +34,7 @@ export function EventCard({
 
   return (
     <Card className="!p-0 overflow-hidden flex flex-col h-full">
-      <div className="bg-gradient-to-br from-navy-950 to-navy-900 px-4 pt-4 pb-8 flex items-start justify-between">
+      <div className="bg-linear-to-br from-navy-950 to-navy-900 px-4 pt-4 pb-8 flex items-start justify-between">
         <div className="flex flex-col items-center justify-center h-12 w-12 rounded-lg bg-white/10 text-white shrink-0">
           <span className="text-[10px] font-bold leading-none uppercase">{month}</span>
           <span className="text-sm font-bold leading-none mt-0.5">{day}</span>

@@ -18,7 +18,7 @@ export function SubscriptionGate({
   return (
     <Card className="relative overflow-hidden text-center py-16 px-6">
       <div
-        className="absolute inset-0 bg-gradient-to-br from-navy-950 to-navy-900 opacity-[0.03]"
+        className="absolute inset-0 bg-linear-to-br from-navy-950 to-navy-900 opacity-[0.03]"
         aria-hidden
       />
       <div className="relative">

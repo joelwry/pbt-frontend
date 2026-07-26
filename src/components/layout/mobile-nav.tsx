@@ -27,7 +27,7 @@ export function MobileNav() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent
           side="left"
-          className="w-[280px] max-w-[80vw] bg-gradient-to-b from-navy-950 to-navy-900 p-0"
+          className="w-[280px] max-w-[80vw] bg-linear-to-b from-navy-950 to-navy-900 p-0"
         >
           <VisuallyHidden>
             <SheetTitle>Navigation</SheetTitle>

@@ -22,7 +22,7 @@ export function LessonBodyRenderer({ body }: { body: LessonBody }) {
 function VideoBlock({ body }: { body: Extract<LessonBody, { kind: "video" }> }) {
   return (
     <Card className="!p-0 overflow-hidden">
-      <div className="aspect-video bg-gradient-to-br from-navy-950 to-navy-900 flex items-center justify-center relative">
+      <div className="aspect-video bg-linear-to-br from-navy-950 to-navy-900 flex items-center justify-center relative">
         <div className="h-16 w-16 rounded-full bg-white/15 flex items-center justify-center">
           <Play className="h-6 w-6 text-white ml-1" fill="currentColor" />
         </div>

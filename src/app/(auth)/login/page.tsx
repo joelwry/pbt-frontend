@@ -14,8 +14,8 @@ export default function LoginPage() {
     <div className="min-h-screen grid lg:grid-cols-2">
       <div className="hidden lg:h-1 lg:w-full" />
       {/* Hero */}
-      <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-gradient-to-b from-navy-950 via-navy-900 to-sky-600 px-14 py-14">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-orange-500 via-sky-500 to-navy-900" />
+      <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-linear-to-b from-navy-950 via-navy-900 to-sky-600 px-14 py-14">
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-linear-to-r from-orange-500 via-sky-500 to-navy-900" />
         <div className="absolute right-0 bottom-0 flex items-end gap-2 opacity-20" aria-hidden>
           {[40, 64, 52, 80, 60, 48, 72].map((h, i) => (
             <div key={i} className="w-10 bg-orange-500 rounded-t-sm" style={{ height: h * 2 }} />

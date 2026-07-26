@@ -8,7 +8,7 @@ export function SubscriptionHeroCard({ subscription }: { subscription: Subscript
   const badge = MEMBERSHIP_BADGE[subscription.tier];
 
   return (
-    <Card className="bg-gradient-to-r from-navy-950 to-sky-600 border-none">
+    <Card className="bg-linear-to-r from-navy-950 to-sky-600 border-none">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <Badge variant="orange" className="mb-3">

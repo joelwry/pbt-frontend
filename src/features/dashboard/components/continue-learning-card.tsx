@@ -37,7 +37,7 @@ export function ContinueLearningCard({ lesson }: { lesson: ContinueLearningLesso
         </Link>
       </div>
       <div className="flex flex-col md:flex-row gap-0">
-        <div className="relative w-full md:w-64 h-40 md:h-auto shrink-0 bg-gradient-to-br from-navy-950 to-navy-900 flex items-center justify-center mx-6 md:mx-6 mb-5 md:mb-6 rounded-2xl">
+        <div className="relative w-full md:w-64 h-40 md:h-auto shrink-0 bg-linear-to-br from-navy-950 to-navy-900 flex items-center justify-center mx-6 md:mx-6 mb-5 md:mb-6 rounded-2xl">
           <span className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/15 backdrop-blur px-2.5 py-1 text-[11px] font-semibold text-white">
             <TypeIcon className="h-3 w-3" />
             {lesson.type}

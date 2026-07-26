@@ -87,7 +87,12 @@ body {
 }
 
 .pbt-card {
-  background: var(--pbt-card);
+  /* background-color, not the `background` shorthand: the shorthand also
+     resets background-image to `none`, which was silently overriding any
+     Tailwind gradient utility (bg-linear-to-*) a caller added via
+     `className` on top of the base "pbt-card" class, since this rule is
+     unlayered custom CSS and wins the cascade over @layer utilities. */
+  background-color: var(--pbt-card);
   border: 1px solid var(--pbt-border);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-sm-pbt);
