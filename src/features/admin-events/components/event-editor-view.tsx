@@ -26,11 +26,11 @@ import { useAdminEvent, useSaveEvent, useCancelEvent } from "@/features/admin-ev
 import { CurrentRsvpsCard } from "@/features/admin-events/components/current-rsvps-card";
 import type { AdminEvent, AdminEventType, EventRsvpVisibility } from "@/features/admin-events/types";
 
-const EVENT_TYPES: AdminEventType[] = ["Live Online", "In-Person", "Workshop"];
+const EVENT_TYPES: AdminEventType[] = ["Mentorship", "In-Person", "Community", "Masterclass", "Onboarding"];
 
 const editorSchema = z.object({
   title: z.string().min(3, "Give the event a title"),
-  type: z.enum(["Live Online", "In-Person", "Workshop"]),
+  type: z.enum(["Mentorship", "In-Person", "Community", "Masterclass", "Onboarding"]),
   capacity: z.string().min(1, "Set a capacity").refine((v) => Number(v) > 0, "Must be greater than 0"),
   date: z.string().min(1, "Choose a date"),
   startTime: z.string().min(1, "Choose a start time"),
@@ -44,7 +44,7 @@ type EditorFormValues = z.infer<typeof editorSchema>;
 function defaultValues(): EditorFormValues {
   return {
     title: "",
-    type: "Live Online",
+    type: "Mentorship",
     capacity: "50",
     date: new Date().toISOString().slice(0, 10),
     startTime: "18:00",
@@ -58,7 +58,7 @@ function defaultValues(): EditorFormValues {
 function buildEvent(values: EditorFormValues, isNew: boolean, eventId: string, existingRsvpCount: number): AdminEvent {
   const eventDate = new Date(`${values.date}T${values.startTime}`);
   return {
-    id: isNew ? `evt_${Date.now()}` : eventId,
+    id: isNew ? "" : eventId,
     title: values.title,
     date: values.date,
     startTime: values.startTime,

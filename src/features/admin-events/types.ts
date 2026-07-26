@@ -1,4 +1,7 @@
-export type AdminEventType = "Live Online" | "In-Person" | "Workshop";
+// Unified with the backend's real Event.category enum (Event.schema.ts) —
+// this used to be a mismatched, mock-only 3-value "type" (Live Online/
+// In-Person/Workshop) with no backend counterpart at all.
+export type AdminEventType = "Mentorship" | "In-Person" | "Community" | "Masterclass" | "Onboarding";
 export type AdminEventStatus = "Upcoming" | "Completed" | "Cancelled";
 export type EventRsvpVisibility = "all" | "plus-mentorship" | "mentorship";
 
@@ -26,4 +29,4 @@ export interface AdminEventsStats {
   yearLabel: string;
 }
 
-export type EventFilterTab = "Upcoming" | "Past" | "Live Online" | "In-Person" | "Workshop";
+export type EventFilterTab = "Upcoming" | "Past" | AdminEventType;

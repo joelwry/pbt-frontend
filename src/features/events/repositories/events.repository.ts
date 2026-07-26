@@ -1,61 +1,41 @@
+import { apiClient } from "@/lib/api-client";
 import type { ApiSuccess, ApiPaginated } from "@/types/api";
 import type { EventItem, EventsTab, RsvpDetails } from "@/features/events/types";
-import { eventsMock } from "@/features/events/mocks/events.mock";
 
-const SIMULATED_LATENCY_MS = 450;
+interface BackendEventItem {
+  id: string;
+  date: string; // full ISO datetime
+  title: string;
+  timeLabel: string;
+  location: string;
+  category: EventItem["category"];
+  rsvped: boolean;
+  rsvpDetails?: RsvpDetails;
+}
 
-const eventsStore: EventItem[] = [...eventsMock.data];
+function toEventItem(e: BackendEventItem): EventItem {
+  return { ...e, date: e.date.slice(0, 10) };
+}
 
-export class EventNotFoundError extends Error {}
+const TAB_ENDPOINT: Record<EventsTab, string> = {
+  upcoming: "/events/upcoming",
+  past: "/events/past",
+  "my-rsvps": "/events/my-rsvps",
+};
 
 export const eventsRepository = {
-  async getEventsPage(tab: EventsTab, todayIso: string, page: number, limit: number): Promise<ApiPaginated<EventItem>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-
-    let filtered = eventsStore;
-    if (tab === "upcoming") filtered = eventsStore.filter((e) => e.date >= todayIso);
-    if (tab === "past") filtered = eventsStore.filter((e) => e.date < todayIso);
-    if (tab === "my-rsvps") filtered = eventsStore.filter((e) => e.rsvped);
-
-    filtered = [...filtered].sort((a, b) => (tab === "past" ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)));
-
-    const start = (page - 1) * limit;
-    const items = filtered.slice(start, start + limit);
-    const totalPages = Math.max(1, Math.ceil(filtered.length / limit));
-
-    return {
-      success: true,
-      data: items,
-      pagination: {
-        page,
-        limit,
-        totalItems: filtered.length,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
-    };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiPaginated<EventItem>>("/events", { params: { tab, page, limit } });
-    // return data;
+  async getEventsPage(tab: EventsTab, _todayIso: string, page: number, limit: number): Promise<ApiPaginated<EventItem>> {
+    const { data } = await apiClient.get<ApiPaginated<BackendEventItem>>(TAB_ENDPOINT[tab], { params: { page, limit } });
+    return { success: true, data: data.data.map(toEventItem), pagination: data.pagination };
   },
 
   async submitRsvp(eventId: string, details: RsvpDetails): Promise<ApiSuccess<EventItem>> {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    const event = eventsStore.find((e) => e.id === eventId);
-    if (!event) throw new EventNotFoundError(`No event found for id ${eventId}`);
-    event.rsvped = true;
-    event.rsvpDetails = details;
-    return { success: true, message: "RSVP confirmed", data: event };
+    const { data } = await apiClient.post<ApiSuccess<BackendEventItem>>(`/events/${eventId}/rsvp`, details);
+    return { success: true, message: data.message, data: toEventItem(data.data) };
   },
 
   async cancelRsvp(eventId: string): Promise<ApiSuccess<EventItem>> {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const event = eventsStore.find((e) => e.id === eventId);
-    if (!event) throw new EventNotFoundError(`No event found for id ${eventId}`);
-    event.rsvped = false;
-    event.rsvpDetails = undefined;
-    return { success: true, message: "RSVP cancelled", data: event };
+    const { data } = await apiClient.delete<ApiSuccess<BackendEventItem>>(`/events/${eventId}/rsvp`);
+    return { success: true, message: data.message, data: toEventItem(data.data) };
   },
 };
