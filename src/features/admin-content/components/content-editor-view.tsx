@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -244,6 +245,15 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
                   ))}
                 </select>
                 {errors.moduleId && <p className="text-xs text-error">{errors.moduleId.message}</p>}
+                {!moduleOptionsLoading && modulesForYear.length === 0 && (
+                  <p className="text-xs text-text-muted">
+                    No modules exist yet for this year.{" "}
+                    <Link href="/admin/content/roadmaps" className="text-sky-600 hover:underline">
+                      Create a roadmap week and module first
+                    </Link>
+                    .
+                  </p>
+                )}
               </div>
             </div>
 

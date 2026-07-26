@@ -1,6 +1,14 @@
 import { adminApiClient } from "@/lib/admin-api-client";
 import type { ApiSuccess, ApiPaginated } from "@/types/api";
-import type { AdminLesson, AdminLessonType, AdminContentStats, LessonVisibility } from "@/features/admin-content/types";
+import type {
+  AdminLesson,
+  AdminLessonType,
+  AdminContentStats,
+  LessonVisibility,
+  AdminRoadmap,
+  AdminRoadmapWeek,
+  AdminModuleItem,
+} from "@/features/admin-content/types";
 
 export class AdminLessonNotFoundError extends Error {}
 
@@ -50,6 +58,50 @@ interface BackendLessonWithContext {
   moduleTitle: string;
   weekNumber?: number;
   roadmapYear?: string;
+}
+
+interface BackendRoadmap {
+  _id: string;
+  title: string;
+  year: string;
+  description?: string;
+  isCurrent: boolean;
+}
+
+interface BackendRoadmapWeek {
+  _id: string;
+  roadmapId: string;
+  weekNumber: number;
+  title: string;
+  description?: string;
+}
+
+interface BackendModule {
+  _id: string;
+  roadmapWeekId: string;
+  moduleNumber: number;
+  title: string;
+  description?: string;
+  lessons: string[];
+}
+
+function toAdminRoadmap(r: BackendRoadmap): AdminRoadmap {
+  return { id: r._id, title: r.title, year: r.year, description: r.description, isCurrent: r.isCurrent };
+}
+
+function toAdminWeek(w: BackendRoadmapWeek): AdminRoadmapWeek {
+  return { id: w._id, roadmapId: w.roadmapId, weekNumber: w.weekNumber, title: w.title, description: w.description };
+}
+
+function toAdminModule(m: BackendModule): AdminModuleItem {
+  return {
+    id: m._id,
+    roadmapWeekId: m.roadmapWeekId,
+    moduleNumber: m.moduleNumber,
+    title: m.title,
+    description: m.description,
+    lessonCount: m.lessons?.length ?? 0,
+  };
 }
 
 // ---- Field mapping between the admin editor's UI-shaped AdminLesson and
@@ -238,5 +290,64 @@ export const adminContentRepository = {
     );
 
     return perRoadmap.flat();
+  },
+
+  // ---- Roadmap structure management (Roadmap -> Week -> Module) ----
+
+  async listRoadmapsFull(): Promise<AdminRoadmap[]> {
+    const { data } = await adminApiClient.get<ApiSuccess<BackendRoadmap[]>>("/admin/learning/roadmaps");
+    return data.data.map(toAdminRoadmap);
+  },
+
+  async createRoadmap(input: { title: string; year: string; description?: string; isCurrent: boolean }): Promise<AdminRoadmap> {
+    const { data } = await adminApiClient.post<ApiSuccess<BackendRoadmap>>("/admin/learning/roadmaps", input);
+    return toAdminRoadmap(data.data);
+  },
+
+  async updateRoadmap(id: string, input: { title: string; description?: string; isCurrent: boolean }): Promise<AdminRoadmap> {
+    const { data } = await adminApiClient.patch<ApiSuccess<BackendRoadmap>>(`/admin/learning/roadmaps/${id}`, input);
+    return toAdminRoadmap(data.data);
+  },
+
+  async deleteRoadmap(id: string): Promise<void> {
+    await adminApiClient.delete(`/admin/learning/roadmaps/${id}`);
+  },
+
+  async listWeeks(roadmapId: string): Promise<AdminRoadmapWeek[]> {
+    const { data } = await adminApiClient.get<ApiSuccess<BackendRoadmapWeek[]>>(`/admin/learning/roadmaps/${roadmapId}/weeks`);
+    return data.data.map(toAdminWeek);
+  },
+
+  async createWeek(roadmapId: string, input: { weekNumber: number; title: string; description?: string }): Promise<AdminRoadmapWeek> {
+    const { data } = await adminApiClient.post<ApiSuccess<BackendRoadmapWeek>>(`/admin/learning/roadmaps/${roadmapId}/weeks`, input);
+    return toAdminWeek(data.data);
+  },
+
+  async updateWeek(weekId: string, input: { weekNumber: number; title: string; description?: string }): Promise<AdminRoadmapWeek> {
+    const { data } = await adminApiClient.patch<ApiSuccess<BackendRoadmapWeek>>(`/admin/learning/weeks/${weekId}`, input);
+    return toAdminWeek(data.data);
+  },
+
+  async deleteWeek(weekId: string): Promise<void> {
+    await adminApiClient.delete(`/admin/learning/weeks/${weekId}`);
+  },
+
+  async listModules(weekId: string): Promise<AdminModuleItem[]> {
+    const { data } = await adminApiClient.get<ApiSuccess<BackendModule[]>>(`/admin/learning/weeks/${weekId}/modules`);
+    return data.data.map(toAdminModule);
+  },
+
+  async createModule(weekId: string, input: { moduleNumber: number; title: string; description?: string }): Promise<AdminModuleItem> {
+    const { data } = await adminApiClient.post<ApiSuccess<BackendModule>>(`/admin/learning/weeks/${weekId}/modules`, input);
+    return toAdminModule(data.data);
+  },
+
+  async updateModule(moduleId: string, input: { moduleNumber: number; title: string; description?: string }): Promise<AdminModuleItem> {
+    const { data } = await adminApiClient.patch<ApiSuccess<BackendModule>>(`/admin/learning/modules/${moduleId}`, input);
+    return toAdminModule(data.data);
+  },
+
+  async deleteModule(moduleId: string): Promise<void> {
+    await adminApiClient.delete(`/admin/learning/modules/${moduleId}`);
   },
 };
