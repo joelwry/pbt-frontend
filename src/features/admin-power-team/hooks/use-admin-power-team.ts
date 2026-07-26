@@ -36,3 +36,9 @@ export function useDeletePartner() {
   const invalidate = useInvalidatePartners();
   return useMutation({ mutationFn: (id: string) => adminPowerTeamService.deletePartner(id), onSuccess: invalidate });
 }
+
+export function useUploadPartnerLogo() {
+  return useMutation({
+    mutationFn: ({ partnerId, file }: { partnerId: string; file: File }) => adminPowerTeamService.uploadLogo(partnerId, file),
+  });
+}

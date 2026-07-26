@@ -28,4 +28,7 @@ export const adminPowerTeamService = {
     const response = await adminPowerTeamRepository.deletePartner(id);
     return response.data.deleted;
   },
+  async uploadLogo(partnerId: string, file: File): Promise<AdminPartner> {
+    return adminPowerTeamRepository.uploadLogo(partnerId, file);
+  },
 };

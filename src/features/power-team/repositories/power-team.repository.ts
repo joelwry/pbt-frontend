@@ -1,8 +1,6 @@
+import { apiClient } from "@/lib/api-client";
 import type { ApiPaginated } from "@/types/api";
 import type { Partner, PartnerCategory } from "@/features/power-team/types";
-import { partnersMock } from "@/features/power-team/mocks/power-team.mock";
-
-const SIMULATED_LATENCY_MS = 450;
 
 export interface PartnersQuery {
   category: PartnerCategory | "All";
@@ -11,36 +9,53 @@ export interface PartnersQuery {
   limit: number;
 }
 
+interface BackendPartner {
+  _id: string;
+  name: string;
+  category: PartnerCategory;
+  categoryLabel: string;
+  region: string;
+  isVerified: boolean;
+  bio: string;
+  phone: string;
+  contactEmail: string;
+  website: string;
+  logoUrl: string;
+}
+
+function initialsFor(name: string): string {
+  return (
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((p) => p[0]?.toUpperCase() ?? "")
+      .join("") || "PT"
+  );
+}
+
+function toPartner(p: BackendPartner): Partner {
+  return {
+    id: p._id,
+    name: p.name,
+    initials: initialsFor(p.name),
+    category: p.category,
+    categoryLabel: p.categoryLabel,
+    city: p.region,
+    verified: p.isVerified,
+    bio: p.bio,
+    phone: p.phone,
+    email: p.contactEmail,
+    website: p.website,
+    logoUrl: p.logoUrl || undefined,
+  };
+}
+
 export const powerTeamRepository = {
   async getPartnersPage(query: PartnersQuery): Promise<ApiPaginated<Partner>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-
-    const q = query.search.trim().toLowerCase();
-    const filtered = partnersMock.data.filter((partner) => {
-      const matchesCategory = query.category === "All" || partner.category === query.category;
-      const matchesSearch = !q || partner.name.toLowerCase().includes(q) || partner.city.toLowerCase().includes(q);
-      return matchesCategory && matchesSearch;
+    const { data } = await apiClient.get<ApiPaginated<BackendPartner>>("/power-team", {
+      params: { category: query.category, search: query.search || undefined, page: query.page, limit: query.limit },
     });
-
-    const start = (query.page - 1) * query.limit;
-    const items = filtered.slice(start, start + query.limit);
-    const totalPages = Math.max(1, Math.ceil(filtered.length / query.limit));
-
-    return {
-      success: true,
-      data: items,
-      pagination: {
-        page: query.page,
-        limit: query.limit,
-        totalItems: filtered.length,
-        totalPages,
-        hasNextPage: query.page < totalPages,
-        hasPreviousPage: query.page > 1,
-      },
-    };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiPaginated<Partner>>("/power-team", { params: query });
-    // return data;
+    return { success: true, data: data.data.map(toPartner), pagination: data.pagination };
   },
 };

@@ -3,6 +3,7 @@
 import { Mail, Phone, Globe, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar } from "@/components/shared/avatar";
 import {
   Dialog,
   DialogContent,
@@ -20,9 +21,12 @@ export function PartnerProfileDialog({ partner, trigger }: { partner: Partner; t
       <DialogContent>
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="h-14 w-14 rounded-full bg-navy-900 text-white text-base font-bold flex items-center justify-center shrink-0">
-              {partner.initials}
-            </div>
+            <Avatar
+              src={partner.logoUrl}
+              alt={partner.name}
+              initials={partner.initials}
+              className="h-14 w-14 rounded-full bg-navy-900 text-base shrink-0"
+            />
             <div>
               <DialogTitle>{partner.name}</DialogTitle>
               <DialogDescription>{partner.categoryLabel}</DialogDescription>
@@ -48,10 +52,12 @@ export function PartnerProfileDialog({ partner, trigger }: { partner: Partner; t
             <Mail className="h-4 w-4 text-text-muted" />
             {partner.email}
           </a>
-          <a href={partner.website} target="_blank" rel="noreferrer" className="flex items-center gap-2.5 text-sm text-text-secondary hover:text-sky-600">
-            <Globe className="h-4 w-4 text-text-muted" />
-            {partner.website.replace("https://", "")}
-          </a>
+          {partner.website && (
+            <a href={partner.website} target="_blank" rel="noreferrer" className="flex items-center gap-2.5 text-sm text-text-secondary hover:text-sky-600">
+              <Globe className="h-4 w-4 text-text-muted" />
+              {partner.website.replace("https://", "")}
+            </a>
+          )}
         </div>
 
         <Button className="w-full mt-6" asChild>

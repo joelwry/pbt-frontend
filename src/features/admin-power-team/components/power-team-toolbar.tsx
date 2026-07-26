@@ -12,6 +12,7 @@ const CATEGORY_TABS: { value: AdminPartnerCategory | "All"; label: string }[] = 
   { value: "Mortgage Brokers", label: "Mortgage Brokers" },
   { value: "Accountants", label: "Accountants" },
   { value: "Surveyors", label: "Surveyors" },
+  { value: "Letting Agents", label: "Letting Agents" },
 ];
 
 interface PowerTeamToolbarProps {
