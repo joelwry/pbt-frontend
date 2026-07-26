@@ -3,14 +3,18 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/shared/avatar";
 import type { Leader } from "@/features/leaders/types";
 
 export function LeaderCard({ leader }: { leader: Leader }) {
   return (
     <Card className="pbt-hover-lift text-center">
-      <div className="h-16 w-16 rounded-full bg-orange-500 text-white text-lg font-bold flex items-center justify-center mx-auto">
-        {leader.initials}
-      </div>
+      <Avatar
+        src={leader.profileImageUrl}
+        alt={leader.name}
+        initials={leader.initials}
+        className="h-16 w-16 rounded-full text-lg mx-auto"
+      />
       <p className="font-semibold text-text-primary mt-3">{leader.name}</p>
       <p className="text-xs text-text-muted mt-0.5">PBT Leader{leader.isTopMentor ? " · Mentorship Track" : ""}</p>
       <div className="mt-3">

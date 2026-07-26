@@ -36,3 +36,9 @@ export function useDeleteLeader() {
   const invalidate = useInvalidateLeaders();
   return useMutation({ mutationFn: (id: string) => adminLeadersService.deleteLeader(id), onSuccess: invalidate });
 }
+
+export function useUploadLeaderPhoto() {
+  return useMutation({
+    mutationFn: ({ leaderId, file }: { leaderId: string; file: File }) => adminLeadersService.uploadPhoto(leaderId, file),
+  });
+}
