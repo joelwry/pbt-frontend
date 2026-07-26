@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { adminCommunityService } from "@/features/admin-community/services/admin-community.service";
 
 export function useCommunityStats() {
@@ -13,8 +13,12 @@ export function usePinnedAnnouncements() {
   return useQuery({ queryKey: ["admin", "community", "pinned"], queryFn: adminCommunityService.getPinnedAnnouncements });
 }
 
-export function useAllPosts() {
-  return useQuery({ queryKey: ["admin", "community", "all-posts"], queryFn: adminCommunityService.getAllPosts });
+export function useAllPosts(search: string, page: number) {
+  return useQuery({
+    queryKey: ["admin", "community", "all-posts", search, page],
+    queryFn: () => adminCommunityService.getAllPosts({ search, page, limit: 6 }),
+    placeholderData: keepPreviousData,
+  });
 }
 
 export function useCommunityGroups() {
@@ -24,6 +28,11 @@ export function useCommunityGroups() {
 function useInvalidateCommunity() {
   const queryClient = useQueryClient();
   return () => queryClient.invalidateQueries({ queryKey: ["admin", "community"] });
+}
+
+export function useTogglePin() {
+  const invalidate = useInvalidateCommunity();
+  return useMutation({ mutationFn: (id: string) => adminCommunityService.togglePin(id), onSuccess: invalidate });
 }
 
 export function useApprovePost() {
@@ -38,7 +47,10 @@ export function useRemovePost() {
 
 export function useCreatePinnedAnnouncement() {
   const invalidate = useInvalidateCommunity();
-  return useMutation({ mutationFn: (title: string) => adminCommunityService.createPinnedAnnouncement(title), onSuccess: invalidate });
+  return useMutation({
+    mutationFn: ({ title, body }: { title: string; body: string }) => adminCommunityService.createPinnedAnnouncement(title, body),
+    onSuccess: invalidate,
+  });
 }
 
 export function useUnpinAnnouncement() {

@@ -1,7 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { communityService } from "@/features/community/services/community.service";
 import type { Discussion } from "@/features/community/types";
-import { useCurrentMember } from "@/features/session/hooks/use-current-member";
 
 const DISCUSSIONS_PAGE_SIZE = 4;
 const DISCUSSIONS_KEY = ["community", "discussions"];
@@ -33,15 +32,9 @@ export function useDiscussion(discussionId: string) {
 
 export function useCreateDiscussion() {
   const queryClient = useQueryClient();
-  const { data: member } = useCurrentMember();
 
   return useMutation({
-    mutationFn: (input: { title: string; excerpt: string }) =>
-      communityService.createDiscussion({
-        ...input,
-        authorName: member?.fullName ?? "You",
-        authorInitials: member?.initials ?? "Y",
-      }),
+    mutationFn: (input: { title: string; excerpt: string }) => communityService.createDiscussion(input),
     onSuccess: (newDiscussion) => {
       queryClient.setQueryData<{ pages: { items: Discussion[]; pagination: unknown }[]; pageParams: unknown[] }>(
         DISCUSSIONS_KEY,
@@ -70,7 +63,7 @@ export function useToggleLike(discussionId: string) {
             ...prev,
             pages: prev.pages.map((page) => ({
               ...page,
-              items: page.items.map((d) => (d.id === updated.id ? updated : d)),
+              items: page.items.map((d) => (d.id === updated.id ? { ...d, likeCount: updated.likeCount, likedByMe: updated.likedByMe } : d)),
             })),
           };
         }
@@ -81,17 +74,17 @@ export function useToggleLike(discussionId: string) {
 
 export function useAddReply(discussionId: string) {
   const queryClient = useQueryClient();
-  const { data: member } = useCurrentMember();
 
   return useMutation({
-    mutationFn: (message: string) =>
-      communityService.addReply(discussionId, {
-        message,
-        authorName: member?.fullName ?? "You",
-        authorInitials: member?.initials ?? "Y",
-      }),
+    mutationFn: (message: string) => communityService.addReply(discussionId, { message }),
     onSuccess: (updated) => {
       queryClient.setQueryData(["community", "discussion", discussionId], updated);
     },
+  });
+}
+
+export function useReportDiscussion(discussionId: string) {
+  return useMutation({
+    mutationFn: (reason: string) => communityService.reportDiscussion(discussionId, reason),
   });
 }

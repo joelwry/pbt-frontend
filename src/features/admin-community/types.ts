@@ -31,6 +31,7 @@ export interface CommunityPostSummary {
   replyCount: number;
   likeCount: number;
   postedAtLabel: string;
+  pinned: boolean;
 }
 
 export interface CommunityGroupSummary {
