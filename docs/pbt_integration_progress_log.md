@@ -371,4 +371,20 @@ Backend `getPriceForTier` (Pathway £0, Plus £29.99/mo, Mentorship £99.99/mo) 
 
 Verified live end-to-end (curl + real Playwright browser) across all three tiers using `testuser1` (Plus, then cancelled — banner correctly shows "set to cancel" + real access-until date + real billing history), `testuser2` (Pathway — correctly gated off `/pbt-mentorship` with the upgrade prompt, not an error; cancel-subscription button flow exercised live in-browser), and `testuser3` (Mentorship — mentor assigned via the new admin control, mentorship page shows the real assigned mentor, booked a real call both via curl and via the browser dialog, both appearing in the calls table). Confirmed the admin Subscriptions & Billing page shows real, consistent numbers across all three seeded subscriptions (MRR, revenue-by-tier donut, invoice rows, mentorship assignment dropdown).
 
-**Next**: multi-tier real-user testing pass across the rest of the platform (Learning, Events, Resources, Community, Power Team) using these same three tiered test accounts, still ahead of any Stripe integration.
+## Phase 3 continued — Multi-tier real-user verification pass
+
+Went back through Learning, Events, Resources, Community, Power Team, and Leaders — all built in earlier phases and already working for a single generic test account — using the three real tiered accounts seeded during Premium paths (`testuser2` Pathway, `testuser1` Plus, `testuser3` Mentorship) to check tier-gating specifically, not to rebuild anything.
+
+**Real bug found and fixed: Events had a real, enforced server-side tier gate (`requiredTier` on RSVP) that the frontend never surfaced at all.** `EventItem` had no `requiredTier` field, `toMemberEventItem()` never sent it, and `EventCard` showed every event's RSVP button as equally available regardless of the member's tier. A Pathway member could fill out the entire RSVP form for a Plus-only event only to get a generic "Couldn't RSVP" toast after submitting — the gate was real, just invisible until the last possible moment. Fixed:
+- `toMemberEventItem()` now includes `requiredTier` in the member-facing event DTO.
+- `EventItem` (frontend) gained `requiredTier: MembershipTier`; the event card now shows a lock badge (e.g. "🔒 Plus") for any tier-restricted event and replaces the RSVP button with a disabled "Requires {tier}" state for members who don't meet it — before they ever open the dialog, not after a failed submit.
+- Deleted `events/mocks/events.mock.ts`, a dead leftover from before Events was wired to the real backend (unreferenced anywhere, and would have failed to typecheck against the new required field).
+
+**Everything else checked out with no changes needed:**
+- **Resources**: list-level tier filtering confirmed correct for all three tiers (Pathway saw 1 Pathway-only resource; Plus saw that plus all Plus resources; Mentorship saw all of the above plus a newly-created Mentorship-only resource) — verified via curl and in the browser.
+- **Learning**: confirmed tier-agnostic by design (documented product decision from earlier in the session — tier-restricted content lives in its own dedicated areas, not mixed into the shared Roadmap). All three tiers received an identical roadmap structure; only per-user progress percentage differed, which is correct.
+- **Community, Power Team, Leaders**: none of these are tier-gated (open directories/discussion to every member), confirmed with a 200 response across all three tiers and a visual pass in the browser. Community's role tags (PBT Plus/PBT Mentorship) rendered correctly. A Leader photo rendering as a plain red circle for one seeded Leader was checked and is not a bug — it's a genuine (if tiny, 69-byte) test PNG uploaded during earlier Leaders-domain testing, rendering correctly as an actual image rather than falling back to initials; a different seeded Leader's deliberately-broken `.txt` "photo" correctly falls back to initials, confirming the `Avatar` fallback still works as designed.
+
+Verified live via curl (all three tiers against every endpoint above) and real Playwright browser sessions (event lock badges, resource lists, Community/Power Team/Leaders pages) for all three tiers.
+
+**Next**: Stripe integration, once explicitly requested — everything up to the payment gateway itself is now real and tier-verified.

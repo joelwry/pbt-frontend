@@ -9,6 +9,7 @@ interface BackendEventItem {
   timeLabel: string;
   location: string;
   category: EventItem["category"];
+  requiredTier: EventItem["requiredTier"];
   rsvped: boolean;
   rsvpDetails?: RsvpDetails;
 }
