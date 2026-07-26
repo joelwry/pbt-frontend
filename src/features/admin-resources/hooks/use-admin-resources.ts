@@ -45,3 +45,10 @@ export function useDeleteResource() {
     onSuccess: invalidate,
   });
 }
+
+export function useUploadResourceFile() {
+  return useMutation({
+    mutationFn: ({ resourceId, file }: { resourceId: string; file: File }) =>
+      adminResourcesService.uploadFile(resourceId, file),
+  });
+}

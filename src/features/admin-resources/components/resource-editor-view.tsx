@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileUploadDropzone } from "@/components/shared/file-upload-dropzone";
 import { useToast } from "@/providers/toast-provider";
-import { useAdminResource, useSaveResource } from "@/features/admin-resources/hooks/use-admin-resources";
+import { useAdminResource, useSaveResource, useUploadResourceFile } from "@/features/admin-resources/hooks/use-admin-resources";
 import type { AdminResource, AdminResourceCategory, AdminResourceFileType, ResourceVisibility } from "@/features/admin-resources/types";
 
 const CATEGORIES: AdminResourceCategory[] = ["Template", "Guide", "Webinar", "Toolkit"];
@@ -25,6 +25,7 @@ const editorSchema = z.object({
   title: z.string().min(3, "Give the resource a title"),
   category: z.enum(["Template", "Guide", "Webinar", "Toolkit"]),
   fileType: z.enum(["XLSX", "PDF", "MP4", "DOCX", "ZIP"]),
+  metaLabel: z.string().min(1, "Add a short label (e.g. \"12 pages\", \"58 min\")"),
   description: z.string().min(10, "Add a short description (at least 10 characters)"),
   visibility: z.enum(["all", "plus-mentorship", "mentorship"]),
   status: z.enum(["Published", "Draft"]),
@@ -32,12 +33,12 @@ const editorSchema = z.object({
 type EditorFormValues = z.infer<typeof editorSchema>;
 
 function defaultValues(): EditorFormValues {
-  return { title: "", category: "Template", fileType: "PDF", description: "", visibility: "all", status: "Draft" };
+  return { title: "", category: "Template", fileType: "PDF", metaLabel: "", description: "", visibility: "all", status: "Draft" };
 }
 
-function buildResource(values: EditorFormValues, isNew: boolean, resourceId: string, existingEngagement?: string): AdminResource {
+function buildResource(values: EditorFormValues, isNew: boolean, resourceId: string, existingEngagement?: string, existingFileUrl?: string): AdminResource {
   return {
-    id: isNew ? `res_${Date.now()}` : resourceId,
+    id: isNew ? "" : resourceId,
     title: values.title,
     category: values.category,
     fileType: values.fileType,
@@ -45,6 +46,8 @@ function buildResource(values: EditorFormValues, isNew: boolean, resourceId: str
     status: values.status,
     description: values.description,
     visibility: values.visibility as ResourceVisibility,
+    metaLabel: values.metaLabel,
+    fileUrl: existingFileUrl ?? "",
   };
 }
 
@@ -54,6 +57,8 @@ export function ResourceEditorView({ resourceId }: { resourceId: string }) {
   const { toast } = useToast();
   const { data: resource, isLoading, isError, refetch } = useAdminResource(resourceId);
   const { mutate: saveResource, isPending } = useSaveResource();
+  const { mutateAsync: uploadFile } = useUploadResourceFile();
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   const {
     register,
@@ -69,6 +74,7 @@ export function ResourceEditorView({ resourceId }: { resourceId: string }) {
         title: resource.title,
         category: resource.category,
         fileType: resource.fileType,
+        metaLabel: resource.metaLabel,
         description: resource.description,
         visibility: resource.visibility,
         status: resource.status,
@@ -76,9 +82,20 @@ export function ResourceEditorView({ resourceId }: { resourceId: string }) {
     }
   }, [resource, reset]);
 
+  async function afterSave(saved: AdminResource) {
+    if (pendingFile) {
+      try {
+        await uploadFile({ resourceId: saved.id, file: pendingFile });
+      } catch {
+        toast({ variant: "error", title: "Resource saved, but the file upload failed", description: "You can try uploading again from Edit Resource." });
+      }
+    }
+  }
+
   function handleSave(values: EditorFormValues, forcedStatus: "Published" | "Draft") {
-    saveResource(buildResource({ ...values, status: forcedStatus }, isNew, resourceId, resource?.engagementLabel), {
-      onSuccess: () => {
+    saveResource(buildResource({ ...values, status: forcedStatus }, isNew, resourceId, resource?.engagementLabel, resource?.fileUrl), {
+      onSuccess: async (saved) => {
+        await afterSave(saved);
         toast({
           variant: "success",
           title: isNew ? "Resource created" : "Resource updated",
@@ -156,6 +173,12 @@ export function ResourceEditorView({ resourceId }: { resourceId: string }) {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="metaLabel">Meta Label</Label>
+              <Input id="metaLabel" placeholder='e.g. "12 pages", "58 min", "Interactive"' {...register("metaLabel")} invalid={!!errors.metaLabel} />
+              {errors.metaLabel && <p className="text-xs text-error">{errors.metaLabel.message}</p>}
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <textarea
                 id="description"
@@ -168,7 +191,7 @@ export function ResourceEditorView({ resourceId }: { resourceId: string }) {
 
             <div className="space-y-2">
               <Label>Upload File</Label>
-              <FileUploadDropzone />
+              <FileUploadDropzone existingFileName={resource?.fileUrl ? resource.fileUrl.split("/").pop() : undefined} onFileSelected={setPendingFile} />
             </div>
           </div>
         </Card>

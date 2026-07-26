@@ -12,6 +12,8 @@ export interface AdminResource {
   status: AdminResourceStatus;
   description: string;
   visibility: ResourceVisibility;
+  metaLabel: string; // "12 pages", "58 min", "Interactive"
+  fileUrl: string;
 }
 
 export interface AdminResourcesStats {

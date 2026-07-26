@@ -32,4 +32,8 @@ export const adminResourcesService = {
     const response = await adminResourcesRepository.deleteResource(id);
     return response.data.deleted;
   },
+
+  async uploadFile(resourceId: string, file: File): Promise<AdminResource> {
+    return adminResourcesRepository.uploadFile(resourceId, file);
+  },
 };

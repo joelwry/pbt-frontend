@@ -1,5 +1,5 @@
 export type ResourceCategory = "Template" | "Guide" | "Webinar" | "Toolkit";
-export type ResourceFileType = "XLSX" | "PDF" | "MP4" | "DOCX";
+export type ResourceFileType = "XLSX" | "PDF" | "MP4" | "DOCX" | "ZIP";
 
 export interface Resource {
   id: string;
