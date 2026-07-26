@@ -7,14 +7,13 @@ import { ErrorState } from "@/components/shared/error-state";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useLessonContext } from "@/features/learning/hooks/use-learning";
+import { useCompleteLesson, useLessonContext } from "@/features/learning/hooks/use-learning";
 import { LessonBodyRenderer } from "@/features/learning/components/lesson-body-renderer";
 import { LessonLockedState } from "@/features/learning/components/lesson-locked-state";
-import { useState } from "react";
 
 export function LessonDetailView({ lessonId }: { lessonId: string }) {
   const { data, isLoading, isError, refetch } = useLessonContext(lessonId);
-  const [markedComplete, setMarkedComplete] = useState(false);
+  const completeLesson = useCompleteLesson();
 
   if (isLoading) {
     return (
@@ -30,8 +29,8 @@ export function LessonDetailView({ lessonId }: { lessonId: string }) {
     return <ErrorState onRetry={() => refetch()} />;
   }
 
-  const { lesson, moduleTitle, yearLabel, previousLesson, nextLesson } = data;
-  const isComplete = markedComplete || lesson.resolvedStatus === "completed";
+  const { lesson, moduleTitle, previousLesson, nextLesson } = data;
+  const isComplete = completeLesson.isSuccess || lesson.resolvedStatus === "completed";
 
   return (
     <div className="space-y-6">
@@ -39,8 +38,6 @@ export function LessonDetailView({ lessonId }: { lessonId: string }) {
         <Link href="/my-learning" className="hover:text-text-primary hover:underline">
           My Learning
         </Link>
-        <Crumb className="h-3 w-3" />
-        <span>{yearLabel.replace(" Programme — Ongoing Membership", "").replace(" Programme — Completed", "")}</span>
         <Crumb className="h-3 w-3" />
         <span className="text-text-secondary font-medium">{moduleTitle}</span>
       </nav>
@@ -58,11 +55,11 @@ export function LessonDetailView({ lessonId }: { lessonId: string }) {
             actions={
               <Button
                 variant={isComplete ? "secondary" : "primary"}
-                onClick={() => setMarkedComplete(true)}
-                disabled={isComplete}
+                onClick={() => completeLesson.mutate({ lessonId: lesson.id, moduleId: lesson.moduleId })}
+                disabled={isComplete || completeLesson.isPending}
               >
                 <CheckCircle2 className="h-4 w-4" />
-                {isComplete ? "Completed" : "Mark as Complete"}
+                {isComplete ? "Completed" : completeLesson.isPending ? "Saving…" : "Mark as Complete"}
               </Button>
             }
           />

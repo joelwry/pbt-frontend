@@ -1,4 +1,4 @@
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { learningService } from "@/features/learning/services/learning.service";
 import { useCurrentMember } from "@/features/session/hooks/use-current-member";
 
@@ -10,12 +10,20 @@ export function useLearningYears() {
   });
 }
 
-export function useYearProgramme(year: string) {
+export function useRoadmap(year: string) {
+  return useQuery({
+    queryKey: ["learning", "roadmap", year],
+    queryFn: () => learningService.getRoadmap(year),
+    enabled: Boolean(year),
+  });
+}
+
+export function useContinueLearning() {
   const { data: member } = useCurrentMember();
 
   return useQuery({
-    queryKey: ["learning", "year", year, member?.membershipTier],
-    queryFn: () => learningService.getYearProgramme(year, member!.membershipTier),
+    queryKey: ["learning", "continue", member?.membershipTier],
+    queryFn: () => learningService.getContinueLearning(member!.membershipTier),
     enabled: Boolean(member),
   });
 }
@@ -30,6 +38,21 @@ export function useModuleLessons(moduleId: string, page: number, limit: number =
     queryFn: () => learningService.getModuleLessonsPage(moduleId, page, limit, member!.membershipTier),
     enabled: Boolean(member) && Boolean(moduleId),
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useCompleteLesson() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ lessonId, moduleId }: { lessonId: string; moduleId: string }) =>
+      learningService.completeLesson(lessonId, moduleId),
+    onSuccess: () => {
+      // Completion changes the lesson's own state, its module's progress
+      // badge, the roadmap's overall percent, and where Continue Learning
+      // points next — all downstream of the one write, so refetch them all.
+      queryClient.invalidateQueries({ queryKey: ["learning"] });
+    },
   });
 }
 

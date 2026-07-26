@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 
-export function ProgrammeSummaryCard({
+export function RoadmapSummaryCard({
   label,
   note,
   percent,

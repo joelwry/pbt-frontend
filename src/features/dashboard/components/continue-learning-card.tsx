@@ -20,7 +20,7 @@ export function ContinueLearningCard({ lesson }: { lesson: ContinueLearningLesso
         <EmptyState
           icon={Lock}
           title="Nothing unlocked yet"
-          description="Your next lesson will appear here as soon as it's unlocked on the programme schedule."
+          description="Your next lesson will appear here as soon as it's unlocked on the roadmap schedule."
         />
       </Card>
     );

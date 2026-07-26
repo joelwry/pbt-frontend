@@ -2,7 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import type { ProgrammeProgress } from "@/features/dashboard/types";
+import type { RoadmapProgress } from "@/features/dashboard/types";
 
 function ProgressRing({ percent }: { percent: number }) {
   const size = 108;
@@ -47,7 +47,7 @@ function ProgressRing({ percent }: { percent: number }) {
   );
 }
 
-export function ProgrammeProgressCard({ progress }: { progress: ProgrammeProgress }) {
+export function RoadmapProgressCard({ progress }: { progress: RoadmapProgress }) {
   const metrics = [
     { label: "Completed", value: progress.completed },
     { label: "Unlocked, In Progress", value: progress.unlockedInProgress },
@@ -59,13 +59,13 @@ export function ProgrammeProgressCard({ progress }: { progress: ProgrammeProgres
     <Card>
       <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h3 className="font-display text-lg font-semibold text-text-primary">Programme Progress</h3>
+          <h3 className="font-display text-lg font-semibold text-text-primary">Roadmap Progress</h3>
           <p className="text-sm text-text-muted mt-1">
             Your learning journey (ongoing) — new content unlocks on schedule
           </p>
         </div>
         <button className="inline-flex items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold text-text-primary bg-white">
-          {progress.programmeLabel}
+          {progress.roadmapLabel}
           <ChevronDown className="h-3.5 w-3.5 text-text-muted" />
         </button>
       </div>

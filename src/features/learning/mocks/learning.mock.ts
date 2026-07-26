@@ -1,5 +1,5 @@
 import type { ApiSuccess } from "@/types/api";
-import type { YearOption, YearProgramme, Lesson, ModuleBadge } from "@/features/learning/types";
+import type { YearOption, Roadmap, Lesson, ModuleBadge } from "@/features/learning/types";
 
 export const learningYearsMock: ApiSuccess<YearOption[]> = {
   success: true,
@@ -355,50 +355,89 @@ export const yearModuleIds: Record<string, string[]> = {
   "2024": ["mod_2024_intro"],
 };
 
-export const yearProgrammeMocks: Record<string, ApiSuccess<YearProgramme>> = {
+/** Continue Where You Left Off is its own endpoint now (GET /learning/continue), not embedded in the roadmap. */
+export const continueLearningMock: ApiSuccess<Lesson[]> = {
+  success: true,
+  message: "Continue lessons retrieved",
+  data: [
+    dealStructuringLessons[1], // Negotiating Below-Market Offers
+    dealStructuringLessons[2], // Bridging Loans Explained
+    portfolioGrowthLessons[1], // Scaling From 1 to 10 Units (locked)
+    foundationsLessons[3], // Understanding buy box quiz
+  ],
+};
+
+export const roadmapMocks: Record<string, ApiSuccess<Roadmap>> = {
   "2026": {
     success: true,
-    message: "Programme retrieved successfully",
+    message: "Roadmap retrieved successfully",
     data: {
       year: "2026",
-      label: "2026 Programme — Ongoing Membership",
-      isCurrent: true,
+      title: "2026 Growth Roadmap — Ongoing Membership",
       overallPercent: 62,
-      note:
-        "There's no fixed 12-month end date. New months unlock automatically as they're released, and every programme you've subscribed to stays available under the year selector above.",
-      continueWhereLeftOff: [
-        dealStructuringLessons[1], // Negotiating Below-Market Offers
-        dealStructuringLessons[2], // Bridging Loans Explained
-        portfolioGrowthLessons[1], // Scaling From 1 to 10 Units (locked)
-        foundationsLessons[3], // Understanding buy box quiz
+      description:
+        "There's no fixed 12-month end date. New weeks unlock automatically as they're released, and every roadmap you've subscribed to stays available under the year selector above.",
+      weeks: [
+        {
+          id: "week_2026_1",
+          weekNumber: 1,
+          title: "Foundations",
+          progressPercent: 100,
+          modules: [moduleSummary("mod_foundations")],
+        },
+        {
+          id: "week_2026_2",
+          weekNumber: 2,
+          title: "Deal Structuring",
+          progressPercent: 46,
+          modules: [moduleSummary("mod_deal_structuring")],
+        },
+        {
+          id: "week_2026_3",
+          weekNumber: 3,
+          title: "Portfolio Growth",
+          progressPercent: 0,
+          modules: [moduleSummary("mod_portfolio_growth")],
+        },
       ],
-      modules: yearModuleIds["2026"].map(moduleSummary),
     },
   },
   "2025": {
     success: true,
-    message: "Programme retrieved successfully",
+    message: "Roadmap retrieved successfully",
     data: {
       year: "2025",
-      label: "2025 Programme — Completed",
-      isCurrent: false,
+      title: "2025 Growth Roadmap — Completed",
       overallPercent: 100,
-      note: "You completed every month released in 2025. This programme remains available to revisit any time.",
-      continueWhereLeftOff: [],
-      modules: yearModuleIds["2025"].map(moduleSummary),
+      description: "You completed every week released in 2025. This roadmap remains available to revisit any time.",
+      weeks: [
+        {
+          id: "week_2025_1",
+          weekNumber: 1,
+          title: "Pathway Fundamentals",
+          progressPercent: 100,
+          modules: [moduleSummary("mod_2025_pathway")],
+        },
+      ],
     },
   },
   "2024": {
     success: true,
-    message: "Programme retrieved successfully",
+    message: "Roadmap retrieved successfully",
     data: {
       year: "2024",
-      label: "2024 Programme — Completed",
-      isCurrent: false,
+      title: "2024 Growth Roadmap — Completed",
       overallPercent: 100,
-      note: "Your first year on the programme — fully completed.",
-      continueWhereLeftOff: [],
-      modules: yearModuleIds["2024"].map(moduleSummary),
+      description: "Your first year on the roadmap — fully completed.",
+      weeks: [
+        {
+          id: "week_2024_1",
+          weekNumber: 1,
+          title: "Property Business Foundations",
+          progressPercent: 100,
+          modules: [moduleSummary("mod_2024_intro")],
+        },
+      ],
     },
   },
 };

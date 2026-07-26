@@ -9,14 +9,14 @@ export interface DashboardStats {
   nextUnlockLabel: string;
 }
 
-export interface ProgrammeProgress {
+export interface RoadmapProgress {
   overallPercent: number;
   encouragement: string;
   completed: number;
   unlockedInProgress: number;
   upcoming: number;
   totalThisYear: number;
-  programmeLabel: string;
+  roadmapLabel: string;
 }
 
 export type LessonType = "Video" | "Article" | "Download" | "Quiz";
@@ -60,7 +60,7 @@ export interface CommunityActivityItem {
 export interface DashboardData {
   memberFirstName: string;
   stats: DashboardStats;
-  programmeProgress: ProgrammeProgress;
+  roadmapProgress: RoadmapProgress;
   continueLearning: ContinueLearningLesson | null;
   quickAccess: QuickAccessTile[];
   upcomingEvents: UpcomingEvent[];

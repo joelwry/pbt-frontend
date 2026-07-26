@@ -16,14 +16,14 @@ export const dashboardMock: ApiSuccess<DashboardData> = {
       nextUnlockInDays: 5,
       nextUnlockLabel: "New lesson",
     },
-    programmeProgress: {
+    roadmapProgress: {
       overallPercent: 68,
       encouragement: "Keep going! You're doing excellent.",
       completed: 24,
       unlockedInProgress: 8,
       upcoming: 6,
       totalThisYear: 38,
-      programmeLabel: "2026 Programme",
+      roadmapLabel: "2026 Roadmap",
     },
     continueLearning: {
       id: "lesson_deal_analysis",

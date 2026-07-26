@@ -1,13 +1,12 @@
 import { learningRepository } from "@/features/learning/repositories/learning.repository";
 import { resolveLessonAccess } from "@/features/learning/access-control";
 import type { MembershipTier } from "@/features/session/types";
-import type { YearOption, YearProgramme, LearningModuleSummary } from "@/features/learning/types";
+import type { YearOption, Roadmap, LearningModuleSummary } from "@/features/learning/types";
 import type { ResolvedLesson } from "@/features/learning/access-control";
 import type { Pagination } from "@/types/api";
 
-export interface ResolvedYearProgramme extends Omit<YearProgramme, "continueWhereLeftOff"> {
-  modules: LearningModuleSummary[];
-  continueWhereLeftOff: ResolvedLesson[];
+export interface ResolvedRoadmap extends Omit<Roadmap, "weeks"> {
+  weeks: Array<Roadmap["weeks"][number]>;
 }
 
 export interface ResolvedLessonPage {
@@ -18,7 +17,6 @@ export interface ResolvedLessonPage {
 export interface ResolvedLessonContext {
   lesson: ResolvedLesson;
   moduleTitle: string;
-  yearLabel: string;
   previousLesson: ResolvedLesson | null;
   nextLesson: ResolvedLesson | null;
 }
@@ -29,13 +27,14 @@ export const learningService = {
     return response.data;
   },
 
-  async getYearProgramme(year: string, memberTier: MembershipTier): Promise<ResolvedYearProgramme> {
-    const response = await learningRepository.getYearProgramme(year);
-    const programme = response.data;
-    return {
-      ...programme,
-      continueWhereLeftOff: programme.continueWhereLeftOff.map((lesson) => resolveLessonAccess(lesson, memberTier)),
-    };
+  async getRoadmap(year: string): Promise<ResolvedRoadmap> {
+    const response = await learningRepository.getRoadmap(year);
+    return response.data;
+  },
+
+  async getContinueLearning(memberTier: MembershipTier): Promise<ResolvedLesson[]> {
+    const response = await learningRepository.getContinueLearning();
+    return response.data.map((lesson) => resolveLessonAccess(lesson, memberTier));
   },
 
   async getModuleLessonsPage(moduleId: string, page: number, limit: number, memberTier: MembershipTier): Promise<ResolvedLessonPage> {
@@ -46,9 +45,13 @@ export const learningService = {
     };
   },
 
+  async completeLesson(lessonId: string, moduleId: string): Promise<void> {
+    await learningRepository.completeLesson(lessonId, moduleId);
+  },
+
   async getLessonContext(lessonId: string, memberTier: MembershipTier): Promise<ResolvedLessonContext> {
     const response = await learningRepository.getLessonContext(lessonId);
-    const { lesson, moduleTitle, yearLabel, moduleLessons } = response.data;
+    const { lesson, moduleTitle, moduleLessons } = response.data;
 
     const resolved = resolveLessonAccess(lesson, memberTier);
     const sorted = [...moduleLessons].sort((a, b) => a.month - b.month);
@@ -56,6 +59,8 @@ export const learningService = {
     const previousLesson = idx > 0 ? resolveLessonAccess(sorted[idx - 1], memberTier) : null;
     const nextLesson = idx >= 0 && idx < sorted.length - 1 ? resolveLessonAccess(sorted[idx + 1], memberTier) : null;
 
-    return { lesson: resolved, moduleTitle, yearLabel, previousLesson, nextLesson };
+    return { lesson: resolved, moduleTitle, previousLesson, nextLesson };
   },
 };
+
+export type { LearningModuleSummary };
