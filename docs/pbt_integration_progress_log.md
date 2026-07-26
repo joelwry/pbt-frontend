@@ -322,3 +322,19 @@ Frontend: member repository rewritten to `apiClient`; create/reply mutations no 
 Verified live (curl + Playwright browser): create/reply/like (per-user, confirmed two different users see independent `likedByMe` state) all correctly authenticated; report → appears in admin Flagged queue → approve clears it (post stays visible) or remove soft-deletes it; pin toggle reflected on both admin and member sides; announcement create/unpin reflected in the member banner; role tags (PBT Plus/PBT Mentorship/PBT Leader) derived correctly from real subscription and Leader data.
 
 **Also discovered, out of scope for this domain:** navigating from an admin session back to a member page in the same browser tab can incorrectly trigger a "membership expired" gate even though the member's seeded subscription is active through 2027 — confirmed real Community functionality is unaffected via a clean single-session test. Likely a session/cache collision in the subscription-status check; flagged for the upcoming Premium paths phase, where that gate is the actual focus.
+
+## Phase 3 continued — Session collision fix (Premium paths prerequisite)
+
+### Root cause: admin and member logins shared one refresh cookie
+Both portals authenticated against the same `/auth/login` and `/auth/refresh-token` endpoints, which set/read a single globally-named `refreshToken` httpOnly cookie. Cookies are scoped by domain, not port, so with both frontends on the same host, logging into one portal silently overwrote the other's persistent (`rememberMe`) refresh cookie — the next silent session-restore for the other portal (any full page load) would then authenticate as the wrong account entirely.
+
+Caught concretely (flagged at the end of the Community work): a member session correctly showed the Community page, then an admin login in the same tab, then navigating back to the member Community page incorrectly showed a "membership has expired" gate. The displayed lapse date matched today's date, not either seeded subscription's real end date (both valid through 2027) — that's the fallback used when the subscription lookup 404s, exactly what happens when the member page's silent refresh resolves to the admin account (no subscription record) instead of the member's.
+
+This was already known and documented as an accepted limitation in `admin-auth.repository.ts` ("these are different people on different machines in practice") — but that assumption doesn't hold for admin staff who are also members, or anyone testing both portals in one browser, so it's fixed properly now.
+
+### Fix
+Added admin-only endpoints — `POST /auth/admin/login`, `/auth/admin/refresh-token`, `/auth/admin/logout` — that set/read a distinct `adminRefreshToken` cookie, so an admin and a member session in the same browser no longer contend for one cookie. The member-facing `/auth/login`, `/auth/refresh-token`, `/auth/logout` are untouched. Frontend `admin-auth.repository.ts` now points at these new endpoints.
+
+**Closed a related gap while touching this:** the admin-only role check was previously enforced only by the admin frontend (bypassable by calling `/auth/login` directly) — `/admin/*` API routes were always properly gated server-side via `authorize('admin', 'super_admin')`, but login itself accepted any valid credentials regardless of role. `/auth/admin/login` now rejects non-admin credentials with 403 server-side.
+
+Verified live: curl with a single shared cookie jar simulating the exact collision (member login, then admin login, then refreshing each independently) — both sessions now resolve to their own correct account. Confirmed in a real browser too: the previously-broken sequence (member session → admin login → back to member Community) now works correctly end to end, with no false "expired" gate.
