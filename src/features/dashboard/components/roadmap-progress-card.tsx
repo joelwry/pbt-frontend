@@ -7,39 +7,48 @@ import type { RoadmapProgress } from "@/features/dashboard/types";
 function ProgressRing({ percent }: { percent: number }) {
   const size = 108;
   const stroke = 10;
+  const center = size / 2;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percent / 100) * circumference;
 
   return (
-    <svg width={size} height={size} className="shrink-0 -rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#EDF1F4" strokeWidth={stroke} />
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke="#26AAE1"
-        strokeWidth={stroke}
-        strokeLinecap="round"
-        strokeDasharray={circumference}
-        strokeDashoffset={offset}
-        style={{ transition: "stroke-dashoffset 600ms ease" }}
-      />
+    <svg width={size} height={size} className="shrink-0">
+      {/* Only the arc needs rotating (so it starts at 12 o'clock) — rotating
+          the whole SVG previously forced a counter-rotation on the text
+          labels too, and that counter-rotation pivoted around each text
+          element's own bounding box instead of the ring's center, which is
+          what made the percent and "Overall" labels collide. */}
+      <g transform={`rotate(-90 ${center} ${center})`}>
+        <circle cx={center} cy={center} r={radius} fill="none" stroke="#EDF1F4" strokeWidth={stroke} />
+        <circle
+          cx={center}
+          cy={center}
+          r={radius}
+          fill="none"
+          stroke="#26AAE1"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          style={{ transition: "stroke-dashoffset 600ms ease" }}
+        />
+      </g>
       <text
-        x="50%"
-        y="46%"
+        x={center}
+        y={center - 8}
         textAnchor="middle"
-        className="rotate-90"
-        style={{ transform: "rotate(90deg)", transformOrigin: "center", fontSize: 22, fontWeight: 700, fill: "#1F2937" }}
+        dominantBaseline="middle"
+        style={{ fontSize: 22, fontWeight: 700, fill: "#1F2937" }}
       >
         {percent}%
       </text>
       <text
-        x="50%"
-        y="64%"
+        x={center}
+        y={center + 14}
         textAnchor="middle"
-        style={{ transform: "rotate(90deg)", transformOrigin: "center", fontSize: 10, fill: "#6B7B84" }}
+        dominantBaseline="middle"
+        style={{ fontSize: 10, fill: "#6B7B84" }}
       >
         Overall
       </text>

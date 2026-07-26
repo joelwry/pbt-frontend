@@ -45,8 +45,8 @@ export const learningService = {
     };
   },
 
-  async completeLesson(lessonId: string, moduleId: string): Promise<void> {
-    await learningRepository.completeLesson(lessonId, moduleId);
+  async completeLesson(lessonId: string, moduleId: string, timeSpentMinutes: number): Promise<void> {
+    await learningRepository.completeLesson(lessonId, moduleId, timeSpentMinutes);
   },
 
   async getLessonContext(lessonId: string, memberTier: MembershipTier): Promise<ResolvedLessonContext> {

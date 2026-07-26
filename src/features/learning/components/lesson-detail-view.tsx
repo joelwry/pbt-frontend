@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, CheckCircle2, ChevronRight as Crumb } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { ErrorState } from "@/components/shared/error-state";
@@ -14,6 +15,22 @@ import { LessonLockedState } from "@/features/learning/components/lesson-locked-
 export function LessonDetailView({ lessonId }: { lessonId: string }) {
   const { data, isLoading, isError, refetch } = useLessonContext(lessonId);
   const completeLesson = useCompleteLesson();
+
+  // Elapsed time spent viewing this lesson, sent along with "Mark as
+  // Complete" so UserLessonProgress.timeSpentMinutes (and, in turn, the
+  // dashboard's totalLearningMinutes aggregate) reflects real activity
+  // instead of always reading 0. Resets whenever the lesson id changes.
+  // Set from an effect, not the useRef initializer — Date.now() is impure
+  // and must not run during render.
+  const viewStartRef = useRef<number | null>(null);
+  useEffect(() => {
+    viewStartRef.current = Date.now();
+  }, [lessonId]);
+
+  function elapsedMinutes(): number {
+    if (viewStartRef.current === null) return 0;
+    return Math.max(0, Math.round((Date.now() - viewStartRef.current) / 60000));
+  }
 
   if (isLoading) {
     return (
@@ -55,7 +72,9 @@ export function LessonDetailView({ lessonId }: { lessonId: string }) {
             actions={
               <Button
                 variant={isComplete ? "secondary" : "primary"}
-                onClick={() => completeLesson.mutate({ lessonId: lesson.id, moduleId: lesson.moduleId })}
+                onClick={() =>
+                  completeLesson.mutate({ lessonId: lesson.id, moduleId: lesson.moduleId, timeSpentMinutes: elapsedMinutes() })
+                }
                 disabled={isComplete || completeLesson.isPending}
               >
                 <CheckCircle2 className="h-4 w-4" />

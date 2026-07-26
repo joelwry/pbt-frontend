@@ -23,9 +23,3 @@ export interface AdminContentStats {
   scheduledCount: number;
   modulesActiveCount: number;
 }
-
-export const MODULE_OPTIONS = [
-  { id: "mod_foundations", label: "Foundations of Property Investing" },
-  { id: "mod_deal_structuring", label: "Deal Structuring & Finance" },
-  { id: "mod_portfolio_growth", label: "Portfolio Growth & Scaling" },
-] as const;

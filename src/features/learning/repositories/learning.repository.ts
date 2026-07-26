@@ -62,11 +62,12 @@ export const learningRepository = {
     };
   },
 
-  async completeLesson(lessonId: string, moduleId: string): Promise<void> {
+  async completeLesson(lessonId: string, moduleId: string, timeSpentMinutes: number): Promise<void> {
     await apiClient.post(`/learning/lessons/${lessonId}/progress`, {
       moduleId,
       status: "completed",
       progressPercent: 100,
+      timeSpentMinutes,
     });
   },
 

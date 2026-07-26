@@ -1,4 +1,4 @@
-import { adminContentRepository, type AdminLessonsQuery } from "@/features/admin-content/repositories/admin-content.repository";
+import { adminContentRepository, type AdminLessonsQuery, type AdminModuleOption } from "@/features/admin-content/repositories/admin-content.repository";
 import type { AdminLesson, AdminContentStats } from "@/features/admin-content/types";
 import type { Pagination } from "@/types/api";
 
@@ -32,4 +32,18 @@ export const adminContentService = {
     const response = await adminContentRepository.deleteLesson(id);
     return response.data.deleted;
   },
+
+  async getModuleOptions(): Promise<AdminModuleOption[]> {
+    return adminContentRepository.getModuleOptions();
+  },
+
+  async getRoadmapYears(): Promise<string[]> {
+    return adminContentRepository.getRoadmapYears();
+  },
+
+  async uploadLessonAsset(lessonId: string, file: File): Promise<string> {
+    return adminContentRepository.uploadLessonAsset(lessonId, file);
+  },
 };
+
+export type { AdminModuleOption };

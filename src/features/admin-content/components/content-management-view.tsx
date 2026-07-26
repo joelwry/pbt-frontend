@@ -15,7 +15,7 @@ import { LessonsTable } from "@/features/admin-content/components/lessons-table"
 
 export function ContentManagementView() {
   const { data: stats, isLoading: statsLoading } = useAdminContentStats();
-  const [year, setYear] = useState("2026");
+  const [year, setYear] = useState("All");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 

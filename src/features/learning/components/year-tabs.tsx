@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { ChevronDown } from "lucide-react";
 import type { YearOption } from "@/features/learning/types";
 
 interface YearTabsProps {
@@ -7,21 +7,25 @@ interface YearTabsProps {
   onSelect: (year: string) => void;
 }
 
+// A drop-down select, not tabs — years only ever run backward from the
+// current one (the backend already excludes anything in the future), so a
+// small select reads more naturally than a row of pills. See docs/ui_adjustment.md.
 export function YearTabs({ years, activeYear, onSelect }: YearTabsProps) {
   return (
-    <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-white p-1 overflow-x-auto max-w-full">
-      {years.map((year) => (
-        <button
-          key={year.year}
-          onClick={() => onSelect(year.year)}
-          className={cn(
-            "rounded-lg px-4 py-2 text-sm font-semibold whitespace-nowrap transition-colors",
-            activeYear === year.year ? "bg-navy-900 text-white" : "text-text-secondary hover:bg-[#F5F8FA]"
-          )}
-        >
-          {year.label}
-        </button>
-      ))}
+    <div className="relative inline-block">
+      <select
+        value={activeYear}
+        onChange={(e) => onSelect(e.target.value)}
+        aria-label="Roadmap year"
+        className="appearance-none rounded-xl border border-border bg-white pl-4 pr-9 py-2.5 text-sm font-semibold text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+      >
+        {years.map((year) => (
+          <option key={year.year} value={year.year}>
+            {year.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
     </div>
   );
 }

@@ -1,9 +1,14 @@
+import axios from "axios";
+import { adminApiClient } from "@/lib/admin-api-client";
 import type { ApiSuccess, ApiError } from "@/types/api";
-import type { AdminLoginCredentials, AdminAuthSession, AdminRefreshedSession } from "@/features/admin-auth/types";
-import { MOCK_ADMIN_DIRECTORY } from "@/features/admin-auth/mocks/admin-directory.mock";
-import { createMockToken, decodeMockToken, isTokenExpired } from "@/features/auth/token-utils";
-
-const SIMULATED_LATENCY_MS = 700;
+import type {
+  AdminLoginCredentials,
+  AdminAuthSession,
+  AdminRefreshedSession,
+  AdminUser,
+  AdminRole,
+} from "@/features/admin-auth/types";
+import { ROLE_DEFAULT_SECTIONS } from "@/features/admin-auth/permissions";
 
 export class AdminAuthApiError extends Error {
   errors: string[];
@@ -13,88 +18,170 @@ export class AdminAuthApiError extends Error {
   }
 }
 
-const issuedRefreshTokens = new Map<string, string>();
+function toAdminAuthApiError(error: unknown): AdminAuthApiError {
+  if (axios.isAxiosError(error) && error.response?.data) {
+    const payload = error.response.data as Partial<ApiError>;
+    return new AdminAuthApiError({
+      success: false,
+      message: payload.message ?? "Something went wrong. Please try again.",
+      errors: payload.errors ?? [],
+    });
+  }
+  return new AdminAuthApiError({
+    success: false,
+    message: "Something went wrong. Please try again.",
+    errors: [],
+  });
+}
+
+interface BackendUser {
+  id: string;
+  email: string;
+  fullName: string;
+  role: string;
+  clientId?: string;
+  avatarUrl?: string;
+}
+
+interface BackendTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
+// The backend has no separate /admin/auth/* namespace (see
+// pbt_frontend_backend_integration_handoff.md, "Admin portal routes") — admin
+// sign-in reuses the same /auth/login as members, and role is what gates
+// admin-portal access, enforced for real by authorize('admin', 'super_admin')
+// on every /admin/* backend route. This check is a UX nicety, not security.
+const ADMIN_BACKEND_ROLES = new Set(["admin", "super_admin"]);
+
+function toAdminRole(role: string): AdminRole {
+  return role === "super_admin" ? "Super Admin" : "Admin";
+}
+
+function initialsOf(fullName: string): string {
+  return fullName
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]!.toUpperCase())
+    .join("");
+}
+
+function expiresInFromJwt(token: string): number {
+  const payload = token.split(".")[1];
+  const decoded = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/"))) as { exp: number };
+  return Math.max(Math.floor(decoded.exp - Date.now() / 1000), 0);
+}
+
+function composeAdmin(user: BackendUser): AdminUser {
+  const role = toAdminRole(user.role);
+  return {
+    id: user.id,
+    adminId: user.id,
+    fullName: user.fullName,
+    initials: initialsOf(user.fullName),
+    email: user.email,
+    role,
+    // The backend doesn't have granular per-admin section permissions yet —
+    // every admin/super_admin account gets full section access on the
+    // frontend; the real gate remains the backend's role check.
+    sections: ROLE_DEFAULT_SECTIONS[role],
+  };
+}
+
+function assertIsAdmin(user: BackendUser): void {
+  if (!ADMIN_BACKEND_ROLES.has(user.role)) {
+    throw new AdminAuthApiError({
+      success: false,
+      message: "This account does not have admin access",
+      errors: ["Admin accounts are provisioned manually by a super-admin. Contact IT support if you need access."],
+    });
+  }
+}
 
 export const adminAuthRepository = {
   async login(credentials: AdminLoginCredentials): Promise<ApiSuccess<AdminAuthSession>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
+    try {
+      const { data } = await adminApiClient.post<ApiSuccess<{ user: BackendUser; tokens: BackendTokens }>>(
+        "/auth/login",
+        { email: credentials.email, password: credentials.password, rememberMe: credentials.rememberDevice }
+      );
+      const { user, tokens } = data.data;
+      assertIsAdmin(user);
 
-    const record = MOCK_ADMIN_DIRECTORY[credentials.email.trim().toLowerCase()];
-
-    if (!record) {
-      throw new AdminAuthApiError({
-        success: false,
-        message: "No admin account found for that email address",
-        errors: ["Admin accounts are provisioned manually by a super-admin. Contact IT support if you need access."],
-      });
+      return {
+        success: true,
+        message: data.message,
+        data: {
+          accessToken: tokens.accessToken,
+          refreshToken: credentials.rememberDevice ? undefined : tokens.refreshToken,
+          expiresIn: expiresInFromJwt(tokens.accessToken),
+          admin: composeAdmin(user),
+        },
+      };
+    } catch (error) {
+      if (error instanceof AdminAuthApiError) throw error;
+      throw toAdminAuthApiError(error);
     }
-
-    if (record.password !== credentials.password) {
-      throw new AdminAuthApiError({
-        success: false,
-        message: "Incorrect password",
-        errors: ["The password you entered is incorrect."],
-      });
-    }
-
-    const accessToken = createMockToken(record.admin.id, "access", record.accessTokenTtl);
-    const refreshToken = createMockToken(record.admin.id, "refresh", record.refreshTokenTtl);
-    issuedRefreshTokens.set(refreshToken, credentials.email.trim().toLowerCase());
-
-    return {
-      success: true,
-      message: "Signed in successfully",
-      data: { accessToken, refreshToken, expiresIn: record.accessTokenTtl, admin: record.admin },
-    };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.post<ApiSuccess<AdminAuthSession>>("/admin/auth/login", credentials);
-    // return data;
   },
 
-  async refresh(refreshToken: string): Promise<ApiSuccess<AdminRefreshedSession>> {
-    await new Promise((resolve) => setTimeout(resolve, 400));
+  /** Pass null to refresh via the httpOnly cookie (persistent sessions). */
+  async refresh(refreshToken: string | null): Promise<ApiSuccess<AdminRefreshedSession>> {
+    try {
+      const { data } = await adminApiClient.post<ApiSuccess<BackendTokens>>(
+        "/auth/refresh-token",
+        refreshToken ? { refreshToken } : {}
+      );
 
-    if (isTokenExpired(refreshToken)) {
-      throw new AdminAuthApiError({
-        success: false,
-        message: "Session expired",
-        errors: ["Your refresh token has expired. Please log in again."],
-      });
+      return {
+        success: true,
+        message: data.message,
+        data: {
+          accessToken: data.data.accessToken,
+          refreshToken: refreshToken ? data.data.refreshToken : undefined,
+          expiresIn: expiresInFromJwt(data.data.accessToken),
+        },
+      };
+    } catch (error) {
+      throw toAdminAuthApiError(error);
     }
-
-    const email = issuedRefreshTokens.get(refreshToken);
-    const decoded = decodeMockToken(refreshToken);
-    if (!email || !decoded) {
-      throw new AdminAuthApiError({
-        success: false,
-        message: "Invalid refresh token",
-        errors: ["This session could not be verified. Please log in again."],
-      });
-    }
-
-    const record = MOCK_ADMIN_DIRECTORY[email];
-    if (!record) {
-      throw new AdminAuthApiError({
-        success: false,
-        message: "Invalid refresh token",
-        errors: ["This session could not be verified. Please log in again."],
-      });
-    }
-
-    const accessToken = createMockToken(record.admin.id, "access", record.accessTokenTtl);
-    return { success: true, message: "Token refreshed successfully", data: { accessToken, expiresIn: record.accessTokenTtl } };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.post<ApiSuccess<AdminRefreshedSession>>("/admin/auth/refresh", { refreshToken });
-    // return data;
   },
 
-  async logout(refreshToken: string): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    issuedRefreshTokens.delete(refreshToken);
+  /**
+   * Attempts to restore a persistent admin session from the httpOnly refresh
+   * cookie on app boot — mirrors the member auth restoreSession() flow. Note:
+   * the backend issues one global refreshToken cookie, not one per role, so
+   * an admin and a member logged in persistently in the *same* browser will
+   * contend for the same cookie. In practice these are different people on
+   * different machines; documented here rather than silently glossed over.
+   */
+  async restoreSession(): Promise<ApiSuccess<AdminAuthSession> | null> {
+    try {
+      const { data: tokenData } = await adminApiClient.post<ApiSuccess<BackendTokens>>("/auth/refresh-token", {});
+      const { accessToken } = tokenData.data;
 
-    // Live implementation, once the Express API exists:
-    // await apiClient.post("/admin/auth/logout", { refreshToken });
+      const { data: userData } = await adminApiClient.get<ApiSuccess<BackendUser>>("/auth/me", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      assertIsAdmin(userData.data);
+
+      return {
+        success: true,
+        message: tokenData.message,
+        data: { accessToken, expiresIn: expiresInFromJwt(accessToken), admin: composeAdmin(userData.data) },
+      };
+    } catch {
+      return null;
+    }
+  },
+
+  async logout(): Promise<void> {
+    try {
+      await adminApiClient.post("/auth/logout", {});
+    } catch {
+      // Best-effort — local state is cleared regardless.
+    }
   },
 };

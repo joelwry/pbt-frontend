@@ -45,8 +45,8 @@ export function useCompleteLesson() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ lessonId, moduleId }: { lessonId: string; moduleId: string }) =>
-      learningService.completeLesson(lessonId, moduleId),
+    mutationFn: ({ lessonId, moduleId, timeSpentMinutes }: { lessonId: string; moduleId: string; timeSpentMinutes: number }) =>
+      learningService.completeLesson(lessonId, moduleId, timeSpentMinutes),
     onSuccess: () => {
       // Completion changes the lesson's own state, its module's progress
       // badge, the roadmap's overall percent, and where Continue Learning
