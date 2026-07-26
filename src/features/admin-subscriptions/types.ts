@@ -33,3 +33,11 @@ export interface Invoice {
   dateLabel: string;
   status: InvoiceStatus;
 }
+
+export interface MentorshipMember {
+  userId: string;
+  memberName: string;
+  memberEmail: string;
+  assignedLeaderId: string | null;
+  assignedLeaderName: string | null;
+}

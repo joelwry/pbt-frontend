@@ -37,11 +37,9 @@ export function BookCallDialog({ mentorName, triggerLabel = "Book another" }: { 
 
   function onSubmit(values: BookCallValues) {
     const dateObj = new Date(`${values.date}T${values.time}`);
-    const dateLabel = dateObj.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-    const timeLabel = dateObj.toLocaleTimeString("en-GB", { hour: "numeric", minute: "2-digit" });
 
     mutate(
-      { topic: values.topic, dateLabel: `${dateLabel}, ${timeLabel}`, mentorName },
+      { topic: values.topic, scheduledAt: dateObj.toISOString() },
       { onSuccess: () => { reset(); setOpen(false); } }
     );
   }

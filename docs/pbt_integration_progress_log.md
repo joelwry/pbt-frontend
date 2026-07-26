@@ -7,7 +7,9 @@ This is a running, chronological record of what has actually been built, fixed, 
 - Frontend: `claude/pbt-phase3-mobile-frontend-g0a4tw` (same)
 
 **Test accounts** (seeded locally for this session's testing — see "Environment used for this session's testing" below for why, and what you need to do to get equivalent accounts on your own database):
-- `testuser1@example.com` / `password123` — Plus subscription, member role.
+- `testuser1@example.com` / `password123` — Plus subscription, member role (now cancelled — kept intentionally, see Premium paths below).
+- `testuser2@example.com` / `password123` — Pathway subscription, member role.
+- `testuser3@example.com` / `password123` — Mentorship subscription, member role, mentor assigned (Michael Adeyemi).
 - `admintest@example.com` / `password123` — `admin` role, promoted via a one-off script.
 
 Seeding (subscription, roadmap content, admin role) was done with throwaway scripts, not committed to either repo — matches the project's existing convention.
@@ -338,3 +340,35 @@ Added admin-only endpoints — `POST /auth/admin/login`, `/auth/admin/refresh-to
 **Closed a related gap while touching this:** the admin-only role check was previously enforced only by the admin frontend (bypassable by calling `/auth/login` directly) — `/admin/*` API routes were always properly gated server-side via `authorize('admin', 'super_admin')`, but login itself accepted any valid credentials regardless of role. `/auth/admin/login` now rejects non-admin credentials with 403 server-side.
 
 Verified live: curl with a single shared cookie jar simulating the exact collision (member login, then admin login, then refreshing each independently) — both sessions now resolve to their own correct account. Confirmed in a real browser too: the previously-broken sequence (member session → admin login → back to member Community) now works correctly end to end, with no false "expired" gate.
+
+## Phase 3 continued — Premium paths (PBT Plus / PBT Mentorship, upgrade/downgrade/cancel)
+
+Stripe/real payment processing is explicitly out of scope for this pass (per direct instruction) — everywhere a real payment gateway would normally sit, this phase is honest about the gap rather than faking it: no invoice ever shows Failed/Refunded, `failedPaymentsCount` is always `0`, and there's still no public "buy a subscription" endpoint (test-tier subscriptions were seeded directly against MongoDB, the same way seed data was created earlier this session).
+
+### Subscription cancellation-visibility bug (the "session/expiry bug" flagged at the end of Community)
+`Subscription.schema.ts` had a soft-delete-style pre-hook — copied from the pattern used everywhere else in this codebase — that excluded any document with `cancelledAt` set from every query:
+```
+subscriptionSchema.pre(/^find|^countDocuments|^distinct/, function () { this.where({ cancelledAt: { $exists: false } }); });
+```
+But `cancelledAt` here isn't a deletion marker, it's a real business field (when a member chose to cancel, if at all). `cancelSubscription()` set both `status: 'cancelled'` *and* `cancelledAt`, so the moment a member cancelled, their subscription record vanished from every query immediately — including `getCurrentSubscription()`, which every tier-gate in the app is built on. That's a more severe bug than it looks: it wouldn't just mislabel the UI, it would immediately and incorrectly lock a member out of content they were told they'd keep access to until the billing period ended.
+
+Fixed by removing the pre-hook entirely and rewriting `cancelSubscription()` to only set `autoRenew = false` and stamp `cancelledAt` — `status` stays `'active'` until `endDate` naturally passes, matching the member portal's own pre-existing "you'll keep access until {date}" messaging. The subscription document now stays fully queryable for its entire natural lifetime, cancelled or not.
+
+### Pricing reconciliation
+Backend `getPriceForTier` (Pathway £0, Plus £29.99/mo, Mentorship £99.99/mo) had never been wired to anything real and didn't match the frontend's actual, consistently-displayed `MEMBERSHIP_TIERS` pricing (Pathway £39/mo, Plus £79/mo, Mentorship £149/mo — `features/membership/tiers.ts`). Reconciled the backend to match the frontend, since the frontend was the side real members had actually ever seen. Annual pricing is 10× monthly (2 months free) as a placeholder pending real annual pricing decisions alongside Stripe.
+
+### New backend surface
+- `subscription.controller.ts`/`routes.ts`: `getCurrentSubscription` now returns a computed `cancelled: boolean` (`Boolean(cancelledAt)`) alongside the raw subscription; new `GET /subscriptions/invoices` (a member's own billing history, paginated, projected into invoice rows — each `Subscription` document doubles as an "invoice" since there's no separate payment-gateway invoice record); `cancelSubscription`'s response now returns `{ cancelled: boolean }` to match what the frontend repository already expected.
+- New `admin-subscriptions` module (`GET /admin/subscriptions/stats`, `/revenue-by-tier`, `/invoices`, `/mentorship-members`, `PATCH /admin/subscriptions/members/:userId/assign-mentor`): real MRR/paying-members/churn aggregation, real per-tier revenue breakdown, real invoice rows (search is applied post-query against the populated member name, since a subscription has no invoice-number field of its own to index on), and a minimal mentor-assignment capability. Deliberately scoped to avoid becoming a 7th full admin-members CRUD domain — this only manages the one field (`User.assignedLeader`) that Premium paths actually needs, not a general member-management UI.
+- New `membership-benefits` module, mounted at `/api/v1/membership` (named to avoid confusion with the pre-existing, unrelated, and never-wired `/api/v1/memberships` — plural — legacy scaffold that talks to its own disconnected `Membership` model; that module was left untouched since nothing in either frontend has ever called it): `GET /membership/mentorship` (page data + the member's `assignedMentor`, resolved from `User.assignedLeader` → `Leader`, or `null` if unassigned), `GET/POST /membership/mentorship/calls` (list/book a `MentorshipCall`, a new schema). All three routes enforce the Mentorship tier gate server-side via `subscriptionService.canAccessTier`, in addition to the frontend's own gate — booking a call with no mentor assigned yet returns a clear 400 rather than a confusing failure.
+
+### Frontend
+- `subscription/*`: repository now calls the real endpoints (`/subscriptions/current`, `/invoices`, `/cancel`); the `cancelled` flag is sourced from the real subscription instead of a local `useState` that a page refresh would silently forget; billing history is real, one row per real subscription record.
+- `mentorship/*`: repository/service/hooks now call `/membership/mentorship*` for real; `assignedMentor` is nullable end-to-end (the page previously assumed one always existed) — added an honest "No mentor assigned yet" empty state; the book-call form now sends a real `scheduledAt` timestamp instead of a display-formatted string.
+- `admin-subscriptions/*`: repository now calls the real `/admin/subscriptions/*` endpoints; added a new "Mentorship Assignments" card (reuses the existing `admin-leaders` list for the dropdown) so an admin can actually set `assignedLeader` — closing the same "field exists, nothing can set it" gap found repeatedly in earlier domains this session.
+- **Regression caught and fixed during live testing**: once the backend started enforcing the Mentorship tier gate server-side (a real access-control boundary, not just a frontend nicety), a Pathway/Plus member visiting `/pbt-mentorship` got a generic "Something went wrong" error instead of the intended upgrade prompt — the page's `isError` check from the now-403ing query was firing before the client-side tier check ever got a chance to render `SubscriptionGate`. Fixed by checking the member's tier first and only firing the mentorship-page query once access is already confirmed (`useMentorshipPage(enabled)`), so an under-tier member never triggers the request at all and always sees the upgrade gate, not an error screen.
+- `plus/*` intentionally untouched — its content is static marketing copy with no per-user data, and its tier gating was already real.
+
+Verified live end-to-end (curl + real Playwright browser) across all three tiers using `testuser1` (Plus, then cancelled — banner correctly shows "set to cancel" + real access-until date + real billing history), `testuser2` (Pathway — correctly gated off `/pbt-mentorship` with the upgrade prompt, not an error; cancel-subscription button flow exercised live in-browser), and `testuser3` (Mentorship — mentor assigned via the new admin control, mentorship page shows the real assigned mentor, booked a real call both via curl and via the browser dialog, both appearing in the calls table). Confirmed the admin Subscriptions & Billing page shows real, consistent numbers across all three seeded subscriptions (MRR, revenue-by-tier donut, invoice rows, mentorship assignment dropdown).
+
+**Next**: multi-tier real-user testing pass across the rest of the platform (Learning, Events, Resources, Community, Power Team) using these same three tiered test accounts, still ahead of any Stripe integration.

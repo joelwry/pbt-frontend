@@ -1,6 +1,6 @@
 "use client";
 
-import { Crown, Check } from "lucide-react";
+import { Crown, Check, UserRoundSearch } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { ErrorState } from "@/components/shared/error-state";
 import { Card } from "@/components/ui/card";
@@ -14,10 +14,13 @@ import { BookCallDialog } from "@/features/mentorship/components/book-call-dialo
 import { MentorshipCallsTable } from "@/features/mentorship/components/mentorship-calls-table";
 
 export function MentorshipView() {
-  const { data, isLoading, isError, refetch } = useMentorshipPage();
   const { data: member, isLoading: memberLoading } = useCurrentMember();
+  const hasAccess = Boolean(member) && tierMeetsRequirement(member!.membershipTier, "Mentorship");
+  // The backend enforces this same tier gate server-side (403s otherwise), so the
+  // page query is only fired once we already know it's allowed to succeed.
+  const { data, isLoading, isError, refetch } = useMentorshipPage(hasAccess);
 
-  if (isLoading || memberLoading) {
+  if (memberLoading || (hasAccess && isLoading)) {
     return (
       <div className="space-y-6">
         <PageHeader title="PBT Mentorship" description="Your premium 1:1 mentorship membership." />
@@ -30,7 +33,7 @@ export function MentorshipView() {
     );
   }
 
-  if (isError || !data || !member) {
+  if (!member) {
     return (
       <div className="space-y-6">
         <PageHeader title="PBT Mentorship" description="Your premium 1:1 mentorship membership." />
@@ -39,13 +42,20 @@ export function MentorshipView() {
     );
   }
 
-  const hasAccess = tierMeetsRequirement(member.membershipTier, "Mentorship");
-
   if (!hasAccess) {
     return (
       <div className="space-y-6">
         <PageHeader title="PBT Mentorship" description="Your premium 1:1 mentorship membership." />
         <SubscriptionGate requiredTier="Mentorship" currentTier={member.membershipTier} />
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="PBT Mentorship" description="Your premium 1:1 mentorship membership." />
+        <ErrorState onRetry={() => refetch()} />
       </div>
     );
   }
@@ -63,9 +73,11 @@ export function MentorshipView() {
             </span>
             <h2 className="font-display text-2xl font-bold text-white leading-snug">{data.headline}</h2>
             <p className="text-sm text-white/70 mt-3 leading-relaxed">{data.description}</p>
-            <div className="mt-4">
-              <BookCallDialog mentorName={data.assignedMentor.name} triggerLabel="Book Your Next Call" />
-            </div>
+            {data.assignedMentor && (
+              <div className="mt-4">
+                <BookCallDialog mentorName={data.assignedMentor.name} triggerLabel="Book Your Next Call" />
+              </div>
+            )}
           </div>
           <div className="rounded-xl bg-white/10 px-5 py-4 text-center shrink-0">
             <p className="text-[11px] font-semibold text-white/50 uppercase tracking-wide">Renews</p>
@@ -95,21 +107,33 @@ export function MentorshipView() {
 
         <Card className="text-center">
           <h3 className="font-display text-base font-semibold text-text-primary mb-4 text-left">Your Assigned Mentor</h3>
-          <div className="h-16 w-16 rounded-full bg-orange-500 text-white text-lg font-bold flex items-center justify-center mx-auto">
-            {data.assignedMentor.initials}
-          </div>
-          <p className="font-semibold text-text-primary mt-3">{data.assignedMentor.name}</p>
-          <p className="text-xs text-text-muted mt-0.5">{data.assignedMentor.regionLabel}</p>
-          <Badge variant="orange" className="mt-3">
-            {data.assignedMentor.badgeLabel}
-          </Badge>
-          <div className="mt-4">
-            <BookCallDialog mentorName={data.assignedMentor.name} triggerLabel="Schedule Call" />
-          </div>
+          {data.assignedMentor ? (
+            <>
+              <div className="h-16 w-16 rounded-full bg-orange-500 text-white text-lg font-bold flex items-center justify-center mx-auto">
+                {data.assignedMentor.initials}
+              </div>
+              <p className="font-semibold text-text-primary mt-3">{data.assignedMentor.name}</p>
+              <p className="text-xs text-text-muted mt-0.5">{data.assignedMentor.regionLabel}</p>
+              <Badge variant="orange" className="mt-3">
+                {data.assignedMentor.badgeLabel}
+              </Badge>
+              <div className="mt-4">
+                <BookCallDialog mentorName={data.assignedMentor.name} triggerLabel="Schedule Call" />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="h-16 w-16 rounded-full bg-[#F5F8FA] text-text-muted flex items-center justify-center mx-auto">
+                <UserRoundSearch className="h-6 w-6" />
+              </div>
+              <p className="text-sm font-semibold text-text-primary mt-3">No mentor assigned yet</p>
+              <p className="text-xs text-text-muted mt-1">Your PBT account manager is matching you with a Leader.</p>
+            </>
+          )}
         </Card>
       </div>
 
-      <MentorshipCallsTable mentorName={data.assignedMentor.name} />
+      {data.assignedMentor && <MentorshipCallsTable mentorName={data.assignedMentor.name} />}
     </div>
   );
 }
