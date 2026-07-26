@@ -48,11 +48,9 @@ interface BackendTokens {
   refreshToken: string;
 }
 
-// The backend has no separate /admin/auth/* namespace (see
-// pbt_frontend_backend_integration_handoff.md, "Admin portal routes") — admin
-// sign-in reuses the same /auth/login as members, and role is what gates
-// admin-portal access, enforced for real by authorize('admin', 'super_admin')
-// on every /admin/* backend route. This check is a UX nicety, not security.
+// The backend enforces admin-only access to these endpoints server-side
+// (rejecting non-admin credentials at /auth/admin/login with 403), so this
+// is defense-in-depth on the frontend, not the only gate.
 const ADMIN_BACKEND_ROLES = new Set(["admin", "super_admin"]);
 
 function toAdminRole(role: string): AdminRole {
@@ -105,7 +103,7 @@ export const adminAuthRepository = {
   async login(credentials: AdminLoginCredentials): Promise<ApiSuccess<AdminAuthSession>> {
     try {
       const { data } = await adminApiClient.post<ApiSuccess<{ user: BackendUser; tokens: BackendTokens }>>(
-        "/auth/login",
+        "/auth/admin/login",
         { email: credentials.email, password: credentials.password, rememberMe: credentials.rememberDevice }
       );
       const { user, tokens } = data.data;
@@ -131,7 +129,7 @@ export const adminAuthRepository = {
   async refresh(refreshToken: string | null): Promise<ApiSuccess<AdminRefreshedSession>> {
     try {
       const { data } = await adminApiClient.post<ApiSuccess<BackendTokens>>(
-        "/auth/refresh-token",
+        "/auth/admin/refresh-token",
         refreshToken ? { refreshToken } : {}
       );
 
@@ -151,15 +149,14 @@ export const adminAuthRepository = {
 
   /**
    * Attempts to restore a persistent admin session from the httpOnly refresh
-   * cookie on app boot — mirrors the member auth restoreSession() flow. Note:
-   * the backend issues one global refreshToken cookie, not one per role, so
-   * an admin and a member logged in persistently in the *same* browser will
-   * contend for the same cookie. In practice these are different people on
-   * different machines; documented here rather than silently glossed over.
+   * cookie on app boot — mirrors the member auth restoreSession() flow.
+   * Uses the admin-only /auth/admin/refresh-token endpoint (a distinct
+   * adminRefreshToken cookie) so an admin and a member logged in
+   * persistently in the same browser no longer contend for one cookie.
    */
   async restoreSession(): Promise<ApiSuccess<AdminAuthSession> | null> {
     try {
-      const { data: tokenData } = await adminApiClient.post<ApiSuccess<BackendTokens>>("/auth/refresh-token", {});
+      const { data: tokenData } = await adminApiClient.post<ApiSuccess<BackendTokens>>("/auth/admin/refresh-token", {});
       const { accessToken } = tokenData.data;
 
       const { data: userData } = await adminApiClient.get<ApiSuccess<BackendUser>>("/auth/me", {
@@ -179,7 +176,7 @@ export const adminAuthRepository = {
 
   async logout(): Promise<void> {
     try {
-      await adminApiClient.post("/auth/logout", {});
+      await adminApiClient.post("/auth/admin/logout", {});
     } catch {
       // Best-effort — local state is cleared regardless.
     }
