@@ -182,4 +182,20 @@ export const authRepository = {
       // Best-effort — local state is cleared regardless.
     }
   },
+
+  /**
+   * Used both by "forgot password" and by the first-time account-setup link
+   * (admin-created member, or eventually a first-ever Stripe subscription) —
+   * the backend's reset-password endpoint is the same token-gated mechanism
+   * either way, only the surrounding page copy differs.
+   */
+  async setNewPassword(token: string, newPassword: string): Promise<void> {
+    try {
+      // Backend requires confirmPassword in the body too (defense against a
+      // client-only mismatch check) — the form already validated equality.
+      await apiClient.post("/auth/reset-password", { token, newPassword, confirmPassword: newPassword });
+    } catch (error) {
+      throw toAuthApiError(error);
+    }
+  },
 };
