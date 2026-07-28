@@ -7,9 +7,12 @@ import type { AdminResourceCategory } from "@/features/admin-resources/types";
 
 const CATEGORY_TABS: { value: AdminResourceCategory | "All"; label: string }[] = [
   { value: "All", label: "All" },
+  { value: "Download", label: "Downloads" },
   { value: "Template", label: "Templates" },
   { value: "Guide", label: "Guides" },
-  { value: "Webinar", label: "Webinars" },
+  { value: "Worksheet", label: "Worksheets" },
+  { value: "Video", label: "Videos" },
+  { value: "Checklist", label: "Checklists" },
   { value: "Toolkit", label: "Toolkits" },
 ];
 

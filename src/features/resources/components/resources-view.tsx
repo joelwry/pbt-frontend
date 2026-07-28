@@ -17,9 +17,12 @@ import type { ResourceCategory } from "@/features/resources/types";
 
 const CATEGORIES: { value: ResourceCategory | "All"; label: string }[] = [
   { value: "All", label: "All" },
+  { value: "Download", label: "Downloads" },
   { value: "Template", label: "Templates" },
   { value: "Guide", label: "Guides" },
-  { value: "Webinar", label: "Webinars" },
+  { value: "Worksheet", label: "Worksheets" },
+  { value: "Video", label: "Videos" },
+  { value: "Checklist", label: "Checklists" },
   { value: "Toolkit", label: "Toolkits" },
 ];
 
@@ -38,7 +41,7 @@ export function ResourcesView() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Resources" description="Templates, guides and toolkits to support every stage of your journey." />
+      <PageHeader title="Resources" description="Downloads, templates, guides, worksheets, videos and checklists to support every stage of your journey." />
 
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-white p-1 overflow-x-auto max-w-full">

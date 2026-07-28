@@ -1,4 +1,4 @@
-export type AdminResourceCategory = "Template" | "Guide" | "Webinar" | "Toolkit";
+export type AdminResourceCategory = "Download" | "Template" | "Guide" | "Worksheet" | "Video" | "Checklist" | "Toolkit";
 export type AdminResourceFileType = "XLSX" | "PDF" | "MP4" | "DOCX" | "ZIP";
 export type AdminResourceStatus = "Published" | "Draft";
 export type ResourceVisibility = "all" | "plus-mentorship" | "mentorship";

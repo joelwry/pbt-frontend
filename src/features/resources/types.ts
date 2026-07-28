@@ -1,4 +1,4 @@
-export type ResourceCategory = "Template" | "Guide" | "Webinar" | "Toolkit";
+export type ResourceCategory = "Download" | "Template" | "Guide" | "Worksheet" | "Video" | "Checklist" | "Toolkit";
 export type ResourceFileType = "XLSX" | "PDF" | "MP4" | "DOCX" | "ZIP";
 
 export interface Resource {

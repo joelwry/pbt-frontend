@@ -18,12 +18,12 @@ import { useToast } from "@/providers/toast-provider";
 import { useAdminResource, useSaveResource, useUploadResourceFile } from "@/features/admin-resources/hooks/use-admin-resources";
 import type { AdminResource, AdminResourceCategory, AdminResourceFileType, ResourceVisibility } from "@/features/admin-resources/types";
 
-const CATEGORIES: AdminResourceCategory[] = ["Template", "Guide", "Webinar", "Toolkit"];
+const CATEGORIES: AdminResourceCategory[] = ["Download", "Template", "Guide", "Worksheet", "Video", "Checklist", "Toolkit"];
 const FILE_TYPES: AdminResourceFileType[] = ["XLSX", "PDF", "MP4", "DOCX", "ZIP"];
 
 const editorSchema = z.object({
   title: z.string().min(3, "Give the resource a title"),
-  category: z.enum(["Template", "Guide", "Webinar", "Toolkit"]),
+  category: z.enum(["Download", "Template", "Guide", "Worksheet", "Video", "Checklist", "Toolkit"]),
   fileType: z.enum(["XLSX", "PDF", "MP4", "DOCX", "ZIP"]),
   metaLabel: z.string().min(1, "Add a short label (e.g. \"12 pages\", \"58 min\")"),
   description: z.string().min(10, "Add a short description (at least 10 characters)"),
