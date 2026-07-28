@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Gift, Copy, Check, Mail, MessageCircle, Users, Wallet, UserPlus } from "lucide-react";
+import { Gift, Copy, Check, Users, Wallet, UserPlus } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/shared/pagination";
 import { useToast } from "@/providers/toast-provider";
 import { useReferralSummary, useReferredMembers } from "@/features/referral-hub/hooks/use-referral-hub";
+import { ShareButtons } from "@/features/referral-hub/components/share-buttons";
 
 function useCopyToClipboard() {
   const [copied, setCopied] = useState(false);
@@ -71,6 +72,11 @@ export function ReferralHubView() {
     window.open(`https://wa.me/?text=${text}`, "_blank");
   }
 
+  function handleFacebookShare() {
+    const url = encodeURIComponent(summary!.referralLink);
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, "_blank");
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader title="Referral Hub" description="Invite friends to PBT and earn rewards for every successful referral." />
@@ -93,16 +99,7 @@ export function ReferralHubView() {
             </Button>
           </div>
 
-          <div className="flex items-center gap-3 mt-4 flex-wrap">
-            <Button variant="secondary" size="sm" onClick={handleEmailShare}>
-              <Mail className="h-3.5 w-3.5" />
-              Share via Email
-            </Button>
-            <Button variant="secondary" size="sm" onClick={handleWhatsAppShare}>
-              <MessageCircle className="h-3.5 w-3.5" />
-              Share via WhatsApp
-            </Button>
-          </div>
+          <ShareButtons onEmail={handleEmailShare} onWhatsApp={handleWhatsAppShare} onFacebook={handleFacebookShare} />
         </div>
       </Card>
 
