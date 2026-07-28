@@ -13,6 +13,7 @@ import { WorkshopsPromoCard } from "@/features/dashboard/components/workshops-pr
 import { UpcomingEventsCard } from "@/features/dashboard/components/upcoming-events-card";
 import { CommunityActivityCard } from "@/features/dashboard/components/community-activity-card";
 import { ConnectWithPbtCard } from "@/features/dashboard/components/connect-with-pbt-card";
+import { FacebookGroupPromoCard } from "@/features/dashboard/components/facebook-group-promo-card";
 
 export function DashboardView() {
   const { data, isLoading, isError, refetch } = useDashboard();
@@ -51,6 +52,7 @@ export function DashboardView() {
 
         <div className="space-y-6">
           <UpcomingEventsCard events={data.upcomingEvents} />
+          <FacebookGroupPromoCard />
           <CommunityActivityCard items={data.communityActivity} />
           <ConnectWithPbtCard />
         </div>
