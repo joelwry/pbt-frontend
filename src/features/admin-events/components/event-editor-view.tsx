@@ -38,6 +38,9 @@ const editorSchema = z.object({
   location: z.string().min(2, "Add a location or link"),
   description: z.string().min(10, "Add a short description (at least 10 characters)"),
   visibility: z.enum(["all", "plus-mentorship", "mentorship"]),
+  photoGalleryUrl: z.string().optional(),
+  recordingUrl: z.string().optional(),
+  slidesUrl: z.string().optional(),
 });
 type EditorFormValues = z.infer<typeof editorSchema>;
 
@@ -52,6 +55,9 @@ function defaultValues(): EditorFormValues {
     location: "",
     description: "",
     visibility: "all",
+    photoGalleryUrl: "",
+    recordingUrl: "",
+    slidesUrl: "",
   };
 }
 
@@ -70,6 +76,9 @@ function buildEvent(values: EditorFormValues, isNew: boolean, eventId: string, e
     location: values.location,
     description: values.description,
     visibility: values.visibility as EventRsvpVisibility,
+    photoGalleryUrl: values.photoGalleryUrl || undefined,
+    recordingUrl: values.recordingUrl || undefined,
+    slidesUrl: values.slidesUrl || undefined,
   };
 }
 
@@ -102,6 +111,9 @@ export function EventEditorView({ eventId }: { eventId: string }) {
         location: event.location,
         description: event.description,
         visibility: event.visibility,
+        photoGalleryUrl: event.photoGalleryUrl ?? "",
+        recordingUrl: event.recordingUrl ?? "",
+        slidesUrl: event.slidesUrl ?? "",
       });
     }
   }, [event, reset]);
@@ -151,7 +163,8 @@ export function EventEditorView({ eventId }: { eventId: string }) {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <Card className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
+        <Card>
           <h3 className="font-display text-lg font-semibold text-text-primary mb-5">Event Details</h3>
           <div className="space-y-5">
             <div className="space-y-2">
@@ -216,6 +229,43 @@ export function EventEditorView({ eventId }: { eventId: string }) {
             </div>
           </div>
         </Card>
+
+        {!isNew && (
+          <Card>
+            <h3 className="font-display text-lg font-semibold text-text-primary mb-1">After the Event</h3>
+            <p className="text-sm text-text-muted mb-5">
+              Add these once the event has taken place — they&apos;ll appear as Photo Gallery, Watch Replay and
+              Slides buttons on the past event card.
+            </p>
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="photoGalleryUrl">Photo Gallery URL</Label>
+                <Input
+                  id="photoGalleryUrl"
+                  placeholder="https://photos.example.com/event-gallery"
+                  {...register("photoGalleryUrl")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="recordingUrl">Recording URL</Label>
+                <Input
+                  id="recordingUrl"
+                  placeholder="https://cdn.example.com/recordings/session.mp4"
+                  {...register("recordingUrl")}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="slidesUrl">Slides URL</Label>
+                <Input
+                  id="slidesUrl"
+                  placeholder="https://cdn.example.com/slides/deck.pdf"
+                  {...register("slidesUrl")}
+                />
+              </div>
+            </div>
+          </Card>
+        )}
+        </div>
 
         <div className="space-y-6">
           <Card>

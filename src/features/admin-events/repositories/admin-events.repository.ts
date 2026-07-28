@@ -27,6 +27,9 @@ interface BackendAdminEvent {
   location: string;
   description: string;
   requiredTier: BackendTier;
+  photoGalleryUrl?: string;
+  recordingUrl?: string;
+  slidesUrl?: string;
 }
 
 function tierToVisibility(tier: BackendTier): EventRsvpVisibility {
@@ -55,6 +58,9 @@ function toAdminEvent(e: BackendAdminEvent): AdminEvent {
     location: e.location,
     description: e.description,
     visibility: tierToVisibility(e.requiredTier),
+    photoGalleryUrl: e.photoGalleryUrl,
+    recordingUrl: e.recordingUrl,
+    slidesUrl: e.slidesUrl,
   };
 }
 
@@ -69,6 +75,9 @@ function toWritePayload(input: AdminEvent) {
     location: input.location,
     description: input.description,
     requiredTier: visibilityToTier(input.visibility),
+    photoGalleryUrl: input.photoGalleryUrl || undefined,
+    recordingUrl: input.recordingUrl || undefined,
+    slidesUrl: input.slidesUrl || undefined,
   };
 }
 

@@ -12,6 +12,9 @@ interface BackendEventItem {
   requiredTier: EventItem["requiredTier"];
   rsvped: boolean;
   rsvpDetails?: RsvpDetails;
+  photoGalleryUrl?: string;
+  recordingUrl?: string;
+  slidesUrl?: string;
 }
 
 function toEventItem(e: BackendEventItem): EventItem {

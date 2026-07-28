@@ -18,6 +18,10 @@ export interface EventItem {
   requiredTier: MembershipTier;
   rsvped: boolean;
   rsvpDetails?: RsvpDetails;
+  /** Past-event media -- set by an admin after the event has taken place; absent until then. */
+  photoGalleryUrl?: string;
+  recordingUrl?: string;
+  slidesUrl?: string;
 }
 
 export type EventsTab = "upcoming" | "past" | "my-rsvps";

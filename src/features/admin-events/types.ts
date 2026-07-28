@@ -18,6 +18,10 @@ export interface AdminEvent {
   location: string;
   description: string;
   visibility: EventRsvpVisibility;
+  /** Past-event media -- set by an admin after the event has taken place. */
+  photoGalleryUrl?: string;
+  recordingUrl?: string;
+  slidesUrl?: string;
 }
 
 export interface AdminEventsStats {

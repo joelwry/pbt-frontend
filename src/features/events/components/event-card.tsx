@@ -1,4 +1,4 @@
-import { Clock, MapPin, CheckCircle2, XCircle, Lock } from "lucide-react";
+import { Clock, MapPin, CheckCircle2, XCircle, Lock, Images, PlayCircle, FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -73,6 +73,35 @@ export function EventCard({
             </p>
           )}
         </div>
+
+        {isPast && (event.photoGalleryUrl || event.recordingUrl || event.slidesUrl) && (
+          <div className="flex items-center gap-2 mt-4 flex-wrap">
+            {event.photoGalleryUrl && (
+              <Button variant="secondary" size="sm" asChild>
+                <a href={event.photoGalleryUrl} target="_blank" rel="noopener noreferrer">
+                  <Images className="h-3.5 w-3.5" />
+                  Photo Gallery
+                </a>
+              </Button>
+            )}
+            {event.recordingUrl && (
+              <Button variant="secondary" size="sm" asChild>
+                <a href={event.recordingUrl} target="_blank" rel="noopener noreferrer">
+                  <PlayCircle className="h-3.5 w-3.5" />
+                  Watch Replay
+                </a>
+              </Button>
+            )}
+            {event.slidesUrl && (
+              <Button variant="secondary" size="sm" asChild>
+                <a href={event.slidesUrl} target="_blank" rel="noopener noreferrer">
+                  <FileText className="h-3.5 w-3.5" />
+                  Slides
+                </a>
+              </Button>
+            )}
+          </div>
+        )}
 
         <div className="mt-4 pt-3">
           {isPast ? (

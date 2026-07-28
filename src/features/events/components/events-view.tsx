@@ -16,7 +16,7 @@ import type { EventsTab } from "@/features/events/types";
 
 const TABS: { value: EventsTab; label: string }[] = [
   { value: "upcoming", label: "Upcoming" },
-  { value: "past", label: "Past Events" },
+  { value: "past", label: "Previous Events" },
   { value: "my-rsvps", label: "My RSVPs" },
 ];
 
