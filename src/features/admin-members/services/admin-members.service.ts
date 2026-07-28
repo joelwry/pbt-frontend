@@ -1,6 +1,6 @@
 import { adminMembersRepository, type AdminMembersQuery } from "@/features/admin-members/repositories/admin-members.repository";
 import type { MembershipTier } from "@/features/session/types";
-import type { AdminMemberDetail, AdminMembersStats } from "@/features/admin-members/types";
+import type { AdminMemberDetail, AdminMembersStats, MemberBillingRow, MemberLearningProgress } from "@/features/admin-members/types";
 import type { Pagination } from "@/types/api";
 
 export interface AdminMembersPage {
@@ -47,5 +47,28 @@ export const adminMembersService = {
   async deleteMember(id: string): Promise<boolean> {
     const response = await adminMembersRepository.deleteMember(id);
     return response.data.deleted;
+  },
+
+  async createMember(input: { fullName: string; email: string; tier: MembershipTier }): Promise<AdminMemberDetail> {
+    const response = await adminMembersRepository.createMember(input);
+    return response.data;
+  },
+
+  async updateMember(
+    id: string,
+    input: { fullName?: string; phone?: string; location?: string; assignedLeaderId?: string | null }
+  ): Promise<AdminMemberDetail> {
+    const response = await adminMembersRepository.updateMember(id, input);
+    return response.data;
+  },
+
+  async getMemberBilling(id: string, page: number, limit: number): Promise<{ items: MemberBillingRow[]; pagination: Pagination }> {
+    const response = await adminMembersRepository.getMemberBilling(id, page, limit);
+    return { items: response.data, pagination: response.pagination };
+  },
+
+  async getMemberLearningProgress(id: string): Promise<MemberLearningProgress> {
+    const response = await adminMembersRepository.getMemberLearningProgress(id);
+    return response.data;
   },
 };

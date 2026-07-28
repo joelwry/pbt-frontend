@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/providers/toast-provider";
 import { useState } from "react";
+import { useCreateMember } from "@/features/admin-members/hooks/use-admin-members";
 
 const addMemberSchema = z.object({
   fullName: z.string().min(2, "Enter the member's full name"),
@@ -34,8 +35,8 @@ const TIER_OPTION_LABEL: Record<(typeof TIER_OPTIONS)[number], string> = {
 
 export function AddMemberDialog() {
   const [open, setOpen] = useState(false);
-  const [isPending, setIsPending] = useState(false);
   const { toast } = useToast();
+  const { mutate: createMember, isPending } = useCreateMember();
   const {
     register,
     handleSubmit,
@@ -45,18 +46,20 @@ export function AddMemberDialog() {
   } = useForm<AddMemberValues>({ resolver: zodResolver(addMemberSchema), defaultValues: { tier: "Pathway" } });
 
   function onSubmit(values: AddMemberValues) {
-    setIsPending(true);
-    // Mock create — swap for POST /admin/members once the Express API exists.
-    setTimeout(() => {
-      setIsPending(false);
-      reset();
-      setOpen(false);
-      toast({
-        variant: "success",
-        title: "Member invited",
-        description: `${values.fullName} will receive a welcome email to set up their account.`,
-      });
-    }, 700);
+    createMember(values, {
+      onSuccess: () => {
+        reset();
+        setOpen(false);
+        toast({
+          variant: "success",
+          title: "Member added",
+          description: `${values.fullName} will receive an email to set up their account.`,
+        });
+      },
+      onError: () => {
+        toast({ variant: "error", title: "Couldn't add member", description: "That email may already be in use." });
+      },
+    });
   }
 
   return (

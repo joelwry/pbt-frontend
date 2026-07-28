@@ -1,24 +1,19 @@
-import Link from "next/link";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { useState } from "react";
+import { Pencil } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EditMemberDialog } from "@/features/admin-members/components/edit-member-dialog";
 import type { AdminMemberDetail } from "@/features/admin-members/types";
 
 const TIER_VARIANT = { Pathway: "outline" as const, Plus: "sky" as const, Mentorship: "orange" as const };
 const STATUS_VARIANT = { Active: "success" as const, "Payment Failed": "error" as const, Paused: "outline" as const };
 
 export function MemberProfileBanner({ member }: { member: AdminMemberDetail }) {
+  const [editOpen, setEditOpen] = useState(false);
+
   return (
     <div className="space-y-4">
-      <Link
-        href="/admin/members"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-text-secondary hover:text-text-primary"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Member Management
-      </Link>
-
       <Card>
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4">
@@ -35,13 +30,15 @@ export function MemberProfileBanner({ member }: { member: AdminMemberDetail }) {
           <div className="flex items-center gap-2">
             <Badge variant={TIER_VARIANT[member.tier]}>PBT {member.tier}</Badge>
             <Badge variant={STATUS_VARIANT[member.status]}>{member.status}</Badge>
-            <Button variant="secondary" size="sm">
+            <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)}>
               <Pencil className="h-3.5 w-3.5" />
               Edit
             </Button>
           </div>
         </div>
       </Card>
+
+      <EditMemberDialog member={member} open={editOpen} onOpenChange={setEditOpen} />
     </div>
   );
 }
