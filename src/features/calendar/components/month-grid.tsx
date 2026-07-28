@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { buildMonthGrid, formatMonthLabel } from "@/features/calendar/date-utils";
+import { DayEventsModal } from "@/features/calendar/components/day-events-modal";
 import type { CalendarEvent, CalendarEventType } from "@/features/calendar/types";
 
 const WEEKDAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
@@ -14,6 +16,8 @@ const TYPE_DOT: Record<CalendarEventType, string> = {
   Mentorship: "bg-sky-500",
   "In-Person": "bg-orange-500",
   Masterclass: "bg-navy-900",
+  Community: "bg-[#16A34A]",
+  Onboarding: "bg-slate-400",
 };
 
 interface MonthGridProps {
@@ -35,6 +39,9 @@ export function MonthGrid({ year, month0, todayIso, events, isLoading, onPrevMon
     list.push(event);
     eventsByDate.set(event.date, list);
   });
+
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const selectedEvents = selectedDate ? (eventsByDate.get(selectedDate) ?? []) : [];
 
   return (
     <Card className="!p-0 overflow-hidden">
@@ -76,13 +83,16 @@ export function MonthGrid({ year, month0, todayIso, events, isLoading, onPrevMon
             ))
           : cells.map((cell, i) => {
               const dayEvents = eventsByDate.get(cell.date) ?? [];
+              const hasEvents = dayEvents.length > 0;
               return (
                 <div
                   key={cell.date + i}
+                  onDoubleClick={() => hasEvents && setSelectedDate(cell.date)}
                   className={cn(
                     "h-24 sm:h-28 border-b border-r border-border p-2 overflow-hidden",
                     (i + 1) % 7 === 0 && "border-r-0",
-                    !cell.isCurrentMonth && "bg-[#FAFCFD]"
+                    !cell.isCurrentMonth && "bg-[#FAFCFD]",
+                    hasEvents && "cursor-pointer hover:bg-sky-tint/40 transition-colors"
                   )}
                 >
                   <span
@@ -112,6 +122,8 @@ export function MonthGrid({ year, month0, todayIso, events, isLoading, onPrevMon
               );
             })}
       </div>
+
+      <DayEventsModal date={selectedDate} events={selectedEvents} open={selectedDate !== null} onOpenChange={(open) => !open && setSelectedDate(null)} />
     </Card>
   );
 }

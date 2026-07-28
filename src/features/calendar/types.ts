@@ -1,4 +1,4 @@
-export type CalendarEventType = "Mentorship" | "In-Person" | "Masterclass";
+export type CalendarEventType = "Mentorship" | "In-Person" | "Community" | "Masterclass" | "Onboarding";
 
 export interface CalendarEvent {
   id: string;
@@ -7,4 +7,5 @@ export interface CalendarEvent {
   timeLabel: string;
   type: CalendarEventType;
   location: string;
+  requiredTier: "Pathway" | "Plus" | "Mentorship";
 }
