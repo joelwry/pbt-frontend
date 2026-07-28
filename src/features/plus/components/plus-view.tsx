@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles, Check, GraduationCap, ArrowRight } from "lucide-react";
+import { Sparkles, Check, GraduationCap, CalendarDays, ArrowRight } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { ErrorState } from "@/components/shared/error-state";
 import { Card } from "@/components/ui/card";
@@ -76,20 +76,37 @@ export function PlusView() {
         </div>
       </Card>
 
-      <Link href="/pbt-plus/learning" className="block group">
-        <Card className="flex items-center justify-between gap-4 flex-wrap bg-linear-to-r from-navy-950 to-navy-900 border-none group-hover:opacity-95 transition-opacity">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-white/10 text-orange-500 flex items-center justify-center shrink-0">
-              <GraduationCap className="h-6 w-6" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Link href="/pbt-plus/learning" className="block group">
+          <Card className="h-full flex items-center justify-between gap-4 flex-wrap bg-linear-to-r from-navy-950 to-navy-900 border-none group-hover:opacity-95 transition-opacity">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-white/10 text-orange-500 flex items-center justify-center shrink-0">
+                <GraduationCap className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="font-display text-base font-semibold text-white">PBT Plus Learning</p>
+                <p className="text-sm text-white/70 mt-0.5">Lessons reserved exclusively for PBT Plus members.</p>
+              </div>
             </div>
-            <div>
-              <p className="font-display text-base font-semibold text-white">PBT Plus Learning</p>
-              <p className="text-sm text-white/70 mt-0.5">Lessons reserved exclusively for PBT Plus members.</p>
+            <ArrowRight className="h-5 w-5 text-white/70 shrink-0" />
+          </Card>
+        </Link>
+
+        <Link href="/workshops" className="block group">
+          <Card className="h-full flex items-center justify-between gap-4 flex-wrap bg-linear-to-r from-sky-600 to-navy-900 border-none group-hover:opacity-95 transition-opacity">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-white/10 text-orange-500 flex items-center justify-center shrink-0">
+                <CalendarDays className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="font-display text-base font-semibold text-white">Workshops</p>
+                <p className="text-sm text-white/70 mt-0.5">Enrol in exclusive live workshops.</p>
+              </div>
             </div>
-          </div>
-          <ArrowRight className="h-5 w-5 text-white/70 shrink-0" />
-        </Card>
-      </Link>
+            <ArrowRight className="h-5 w-5 text-white/70 shrink-0" />
+          </Card>
+        </Link>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <Card className="lg:col-span-2">
