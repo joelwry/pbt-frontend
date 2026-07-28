@@ -326,9 +326,9 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
               render={({ field }) => (
                 <div className="space-y-3">
                   {[
-                    { value: "all", label: "All tiers (Pathway, Plus, Mentorship)" },
-                    { value: "plus-mentorship", label: "Plus & Mentorship only" },
-                    { value: "mentorship", label: "Mentorship only" },
+                    { value: "all", label: "All tiers (Pathway, Plus, Masterplan Programme)" },
+                    { value: "plus-mentorship", label: "Plus & Masterplan Programme only" },
+                    { value: "mentorship", label: "Masterplan Programme only" },
                   ].map((option) => (
                     <label key={option.value} className="flex items-center gap-2.5 cursor-pointer select-none">
                       <input

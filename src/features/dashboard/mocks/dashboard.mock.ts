@@ -36,9 +36,9 @@ export const dashboardMock: ApiSuccess<DashboardData> = {
       timeLeftLabel: "32 mins left",
     },
     quickAccess: [
-      { id: "qa_learning", label: "Learning Hub", description: "Browse this year", href: "/my-learning", icon: "learning" },
+      { id: "qa_learning", label: "PBT Pathway", description: "Browse this year", href: "/pbt-pathway", icon: "learning" },
       { id: "qa_resources", label: "Resource Library", description: "Templates & guides", href: "/resources", icon: "resources" },
-      { id: "qa_community", label: "My Community", description: "Join discussions", href: "/community", icon: "community" },
+      { id: "qa_community", label: "Community Group", description: "Join discussions", href: "/community", icon: "community" },
       { id: "qa_events", label: "Events", description: "Upcoming sessions", href: "/events", icon: "events" },
     ],
     upcomingEvents: [

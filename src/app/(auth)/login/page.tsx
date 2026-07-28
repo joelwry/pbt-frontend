@@ -41,8 +41,8 @@ export default function LoginPage() {
           </h1>
           <p className="text-white/70 mt-5 leading-relaxed">
             Structured learning, live events, your PBT community and Power Team — all in a
-            portal built for members already on the PBT Pathway, Plus or Mentorship
-            programme.
+            portal built for members already on the PBT Pathway, PBT Plus or PBT Masterplan
+            Programme.
           </p>
 
           <div className="mt-8 space-y-4">

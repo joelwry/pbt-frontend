@@ -26,6 +26,11 @@ const addMemberSchema = z.object({
 type AddMemberValues = z.infer<typeof addMemberSchema>;
 
 const TIER_OPTIONS = ["Pathway", "Plus", "Mentorship"] as const;
+const TIER_OPTION_LABEL: Record<(typeof TIER_OPTIONS)[number], string> = {
+  Pathway: "PBT Pathway",
+  Plus: "PBT Plus",
+  Mentorship: "PBT Masterplan Programme",
+};
 
 export function AddMemberDialog() {
   const [open, setOpen] = useState(false);
@@ -92,7 +97,7 @@ export function AddMemberDialog() {
                 >
                   {TIER_OPTIONS.map((tier) => (
                     <option key={tier} value={tier}>
-                      PBT {tier}
+                      {TIER_OPTION_LABEL[tier]}
                     </option>
                   ))}
                 </select>

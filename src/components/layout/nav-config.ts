@@ -4,14 +4,15 @@ import {
   GraduationCap,
   Users,
   MapPin,
-  Handshake,
   Calendar,
   Ticket,
   FolderOpen,
+  ExternalLink,
   Sparkles,
   Crown,
   UserCircle,
   CreditCard,
+  Gift,
 } from "lucide-react";
 
 export interface NavItem {
@@ -25,25 +26,29 @@ export interface NavSection {
   items: NavItem[];
 }
 
+// Power Team is intentionally not a nav item -- per client direction it's
+// restricted to Plus/Masterplan members and discovered via those tiers'
+// pages (see MEMBERSHIP_TIERS features) rather than a top-level link
+// available to everyone including Pathway members.
 export const NAV_SECTIONS: NavSection[] = [
   {
     label: "Main Menu",
     items: [
       { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
-      { label: "My Learning", href: "/my-learning", icon: GraduationCap },
-      { label: "Community", href: "/community", icon: Users },
-      { label: "PBT Leaders", href: "/pbt-leaders", icon: MapPin },
-      { label: "Power Team", href: "/power-team", icon: Handshake },
-      { label: "Calendar", href: "/calendar", icon: Calendar },
+      { label: "PBT Pathway", href: "/pbt-pathway", icon: GraduationCap },
       { label: "Events", href: "/events", icon: Ticket },
       { label: "Resources", href: "/resources", icon: FolderOpen },
+      { label: "PBT Leaders", href: "/pbt-leaders", icon: MapPin },
+      { label: "Community Group", href: "/community", icon: Users },
+      { label: "Facebook Group", href: "/facebook-group", icon: ExternalLink },
+      { label: "Calendar", href: "/calendar", icon: Calendar },
     ],
   },
   {
     label: "Premium",
     items: [
       { label: "PBT Plus", href: "/pbt-plus", icon: Sparkles },
-      { label: "PBT Mentorship", href: "/pbt-mentorship", icon: Crown },
+      { label: "PBT Masterplan Programme", href: "/pbt-masterplan", icon: Crown },
     ],
   },
   {
@@ -51,6 +56,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Profile", href: "/profile", icon: UserCircle },
       { label: "My Subscription", href: "/my-subscription", icon: CreditCard },
+      { label: "Referral Hub", href: "/referral-hub", icon: Gift },
     ],
   },
 ];

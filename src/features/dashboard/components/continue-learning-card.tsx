@@ -32,7 +32,7 @@ export function ContinueLearningCard({ lesson }: { lesson: ContinueLearningLesso
     <Card className="!p-0 overflow-hidden">
       <div className="flex items-center justify-between px-6 pt-6 pb-4">
         <h3 className="font-display text-lg font-semibold text-text-primary">Continue Learning</h3>
-        <Link href="/my-learning" className="text-xs font-semibold text-sky-600 hover:underline">
+        <Link href="/pbt-pathway" className="text-xs font-semibold text-sky-600 hover:underline">
           View all →
         </Link>
       </div>
@@ -68,7 +68,7 @@ export function ContinueLearningCard({ lesson }: { lesson: ContinueLearningLesso
               {lesson.timeLeftLabel}
             </span>
             <Button size="sm" asChild>
-              <Link href="/my-learning">
+              <Link href="/pbt-pathway">
                 Continue
                 <Play className="h-3.5 w-3.5" fill="currentColor" />
               </Link>

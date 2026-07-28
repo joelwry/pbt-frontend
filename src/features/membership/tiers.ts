@@ -25,10 +25,10 @@ export const MEMBERSHIP_TIERS: Record<MembershipTier, TierDefinition> = {
   },
   Mentorship: {
     tier: "Mentorship",
-    label: "Mentorship",
+    label: "Masterplan Programme",
     priceLabel: "£149/month",
     contractLabel: "12-month renewable contract",
-    features: ["Everything in Plus", "1:1 mentor calls", "Early access releases"],
+    features: ["Everything in Plus", "1:1 mentor calls", "Early access releases", "Power Team directory"],
   },
 };
 

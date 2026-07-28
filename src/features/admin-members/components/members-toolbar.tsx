@@ -8,7 +8,7 @@ const TIER_TABS: { value: MembershipTier | "All"; label: string }[] = [
   { value: "All", label: "All Tiers" },
   { value: "Pathway", label: "Pathway" },
   { value: "Plus", label: "Plus" },
-  { value: "Mentorship", label: "Mentorship" },
+  { value: "Mentorship", label: "Masterplan" },
 ];
 
 interface MembersToolbarProps {

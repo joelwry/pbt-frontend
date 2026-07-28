@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { MentorshipView } from "@/features/mentorship/components/mentorship-view";
 
 export const metadata: Metadata = {
-  title: "PBT Mentorship | Property Business Training",
+  title: "PBT Masterplan Programme | Property Business Training",
 };
 
-export default function PbtMentorshipPage() {
+export default function PbtMasterplanPage() {
   return <MentorshipView />;
 }

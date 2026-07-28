@@ -14,7 +14,7 @@ export function LessonLockedState({ reason }: { reason?: string }) {
         {reason ?? "Check back once it unlocks on your roadmap schedule."}
       </p>
       <Button variant="secondary" className="mt-6" asChild>
-        <Link href="/my-learning">Back to My Learning</Link>
+        <Link href="/pbt-pathway">Back to PBT Pathway</Link>
       </Button>
     </Card>
   );

@@ -82,7 +82,7 @@ export function LessonCard({ lesson }: { lesson: ResolvedLesson }) {
   }
 
   return (
-    <Link href={`/my-learning/${lesson.id}`} className="block h-full">
+    <Link href={`/pbt-pathway/${lesson.id}`} className="block h-full">
       {cardInner}
     </Link>
   );

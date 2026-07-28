@@ -8,7 +8,7 @@ export interface PinnedAnnouncement {
   ctaHref: string;
 }
 
-export type AuthorRoleTag = "PBT Leader" | "Power Team" | "PBT Plus" | "PBT Mentorship" | null;
+export type AuthorRoleTag = "PBT Leader" | "Power Team" | "PBT Plus" | "PBT Masterplan Programme" | null;
 
 export interface Reply {
   id: string;

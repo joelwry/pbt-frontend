@@ -42,9 +42,9 @@ export function MentorshipAssignmentsCard() {
   return (
     <Card>
       <div className="flex items-center justify-between mb-1">
-        <h3 className="font-display text-lg font-semibold text-text-primary">Mentorship Assignments</h3>
+        <h3 className="font-display text-lg font-semibold text-text-primary">Masterplan Assignments</h3>
       </div>
-      <p className="text-sm text-text-muted mb-5">Assign a PBT Leader to each Mentorship-tier member.</p>
+      <p className="text-sm text-text-muted mb-5">Assign a PBT Leader to each PBT Masterplan Programme member.</p>
 
       {isLoading ? (
         <div className="space-y-3">
@@ -55,7 +55,7 @@ export function MentorshipAssignmentsCard() {
       ) : isError || !data ? (
         <ErrorState onRetry={() => refetch()} />
       ) : data.items.length === 0 ? (
-        <EmptyState icon={UserRoundCog} title="No Mentorship members yet" description="Members on the Mentorship tier will appear here for mentor assignment." />
+        <EmptyState icon={UserRoundCog} title="No Masterplan Programme members yet" description="Members on the PBT Masterplan Programme tier will appear here for mentor assignment." />
       ) : (
         <>
           <div className={`space-y-1 transition-opacity ${isFetching ? "opacity-60" : "opacity-100"}`}>

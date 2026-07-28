@@ -23,7 +23,7 @@ export function MentorshipView() {
   if (memberLoading || (hasAccess && isLoading)) {
     return (
       <div className="space-y-6">
-        <PageHeader title="PBT Mentorship" description="Your premium 1:1 mentorship membership." />
+        <PageHeader title="PBT Masterplan Programme" description="Your premium 1:1 Masterplan Programme membership." />
         <Skeleton className="h-44 w-full rounded-[var(--radius-card)]" />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Skeleton className="h-64 lg:col-span-2 rounded-[var(--radius-card)]" />
@@ -36,7 +36,7 @@ export function MentorshipView() {
   if (!member) {
     return (
       <div className="space-y-6">
-        <PageHeader title="PBT Mentorship" description="Your premium 1:1 mentorship membership." />
+        <PageHeader title="PBT Masterplan Programme" description="Your premium 1:1 Masterplan Programme membership." />
         <ErrorState onRetry={() => refetch()} />
       </div>
     );
@@ -45,7 +45,7 @@ export function MentorshipView() {
   if (!hasAccess) {
     return (
       <div className="space-y-6">
-        <PageHeader title="PBT Mentorship" description="Your premium 1:1 mentorship membership." />
+        <PageHeader title="PBT Masterplan Programme" description="Your premium 1:1 Masterplan Programme membership." />
         <SubscriptionGate requiredTier="Mentorship" currentTier={member.membershipTier} />
       </div>
     );
@@ -54,7 +54,7 @@ export function MentorshipView() {
   if (isError || !data) {
     return (
       <div className="space-y-6">
-        <PageHeader title="PBT Mentorship" description="Your premium 1:1 mentorship membership." />
+        <PageHeader title="PBT Masterplan Programme" description="Your premium 1:1 Masterplan Programme membership." />
         <ErrorState onRetry={() => refetch()} />
       </div>
     );
@@ -62,7 +62,7 @@ export function MentorshipView() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="PBT Mentorship" description="Your premium 1:1 mentorship membership." />
+      <PageHeader title="PBT Masterplan Programme" description="Your premium 1:1 Masterplan Programme membership." />
 
       <Card className="bg-linear-to-r from-navy-950 to-sky-600 border-none">
         <div className="flex items-start justify-between gap-6 flex-wrap">
@@ -88,7 +88,7 @@ export function MentorshipView() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <Card className="lg:col-span-2">
-          <h3 className="font-display text-lg font-semibold text-text-primary mb-1">Mentorship Benefits</h3>
+          <h3 className="font-display text-lg font-semibold text-text-primary mb-1">Masterplan Programme Benefits</h3>
           <p className="text-sm text-text-muted mb-5">Everything in PBT Plus, plus:</p>
           <ul className="divide-y divide-border">
             {data.benefits.map((benefit) => (

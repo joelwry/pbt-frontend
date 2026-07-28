@@ -34,7 +34,7 @@ export function MyLearningView() {
   if (yearsLoading || (isLoading && !roadmap)) {
     return (
       <div className="space-y-6">
-        <PageHeader title="My Learning" description="Your growth roadmap, at your own pace — no fixed end date." />
+        <PageHeader title="PBT Pathway" description="Your growth roadmap, at your own pace — no fixed end date." />
         <MyLearningSkeleton />
       </div>
     );
@@ -43,7 +43,7 @@ export function MyLearningView() {
   if (isError || !roadmap || !years) {
     return (
       <div className="space-y-6">
-        <PageHeader title="My Learning" description="Your growth roadmap, at your own pace — no fixed end date." />
+        <PageHeader title="PBT Pathway" description="Your growth roadmap, at your own pace — no fixed end date." />
         <ErrorState onRetry={() => refetch()} />
       </div>
     );
@@ -51,7 +51,7 @@ export function MyLearningView() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="My Learning" description="Your growth roadmap, at your own pace — no fixed end date." />
+      <PageHeader title="PBT Pathway" description="Your growth roadmap, at your own pace — no fixed end date." />
 
       <div className="flex items-center justify-between flex-wrap gap-3">
         <YearTabs years={years} activeYear={year} onSelect={setActiveYear} />

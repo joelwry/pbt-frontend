@@ -227,8 +227,8 @@ export function EventEditorView({ eventId }: { eventId: string }) {
                 <div className="space-y-3">
                   {[
                     { value: "all", label: "All tiers" },
-                    { value: "plus-mentorship", label: "Plus & Mentorship only" },
-                    { value: "mentorship", label: "Mentorship only" },
+                    { value: "plus-mentorship", label: "Plus & Masterplan Programme only" },
+                    { value: "mentorship", label: "Masterplan Programme only" },
                   ].map((option) => (
                     <label key={option.value} className="flex items-center gap-2.5 cursor-pointer select-none">
                       <input

@@ -52,8 +52,8 @@ export function LessonDetailView({ lessonId }: { lessonId: string }) {
   return (
     <div className="space-y-6">
       <nav className="flex items-center gap-1.5 text-xs text-text-muted flex-wrap">
-        <Link href="/my-learning" className="hover:text-text-primary hover:underline">
-          My Learning
+        <Link href="/pbt-pathway" className="hover:text-text-primary hover:underline">
+          PBT Pathway
         </Link>
         <Crumb className="h-3 w-3" />
         <span className="text-text-secondary font-medium">{moduleTitle}</span>
@@ -120,5 +120,5 @@ function PrevNextLink({
 
   if (disabled) return content;
 
-  return <Link href={`/my-learning/${lesson.id}`}>{content}</Link>;
+  return <Link href={`/pbt-pathway/${lesson.id}`}>{content}</Link>;
 }

@@ -12,7 +12,7 @@ export function StatsRow({ stats }: { stats: DashboardStats }) {
         value={String(stats.lessonsCompleted)}
         label="Lessons Completed"
         linkLabel="View history"
-        linkHref="/my-learning"
+        linkHref="/pbt-pathway"
       />
       <StatCard
         icon={Clock}
@@ -21,7 +21,7 @@ export function StatsRow({ stats }: { stats: DashboardStats }) {
         value={stats.studyHours.toString()}
         label="Study Hours"
         linkLabel="This month"
-        linkHref="/my-learning"
+        linkHref="/pbt-pathway"
       />
       <StatCard
         icon={Lock}
@@ -30,7 +30,7 @@ export function StatsRow({ stats }: { stats: DashboardStats }) {
         value={String(stats.contentUnlocked)}
         label="Content Unlocked (2026)"
         linkLabel="View timeline"
-        linkHref="/my-learning"
+        linkHref="/pbt-pathway"
       />
       <StatCard
         icon={Sparkle}
