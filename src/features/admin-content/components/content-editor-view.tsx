@@ -23,7 +23,16 @@ import {
   useUploadLessonAsset,
 } from "@/features/admin-content/hooks/use-admin-content";
 import { FileUploadDropzone } from "@/components/shared/file-upload-dropzone";
-import type { AdminLesson, AdminLessonType, LessonVisibility } from "@/features/admin-content/types";
+import { RichTextEditor } from "@/features/admin-content/components/rich-text-editor";
+import { QuizQuestionBuilder, newQuestion } from "@/features/admin-content/components/quiz-question-builder";
+import type { AdminLesson, AdminLessonType, AdminQuizQuestion, LessonVisibility } from "@/features/admin-content/types";
+
+const quizQuestionSchema = z.object({
+  id: z.string(),
+  question: z.string(),
+  options: z.array(z.string()),
+  correctIndex: z.number(),
+});
 
 const editorSchema = z.object({
   title: z.string().min(3, "Give the lesson a title"),
@@ -35,6 +44,9 @@ const editorSchema = z.object({
   unlockDate: z.string().min(1, "Choose an unlock date"),
   unlockTime: z.string().min(1, "Choose an unlock time"),
   visibility: z.enum(["all", "plus-mentorship", "mentorship"]),
+  transcript: z.string().optional(),
+  articleHtml: z.string().optional(),
+  questions: z.array(quizQuestionSchema).optional(),
 });
 type EditorFormValues = z.infer<typeof editorSchema>;
 
@@ -51,6 +63,9 @@ function defaultValues(): EditorFormValues {
     unlockDate: new Date().toISOString().slice(0, 10),
     unlockTime: "06:00",
     visibility: "all",
+    transcript: "",
+    articleHtml: "",
+    questions: [],
   };
 }
 
@@ -68,6 +83,9 @@ function buildLesson(values: EditorFormValues, moduleLabel: string, status: "Pub
     unlockTime: values.unlockTime,
     status,
     visibility: values.visibility as LessonVisibility,
+    transcript: values.transcript,
+    articleHtml: values.articleHtml,
+    questions: values.questions as AdminQuizQuestion[] | undefined,
   };
 }
 
@@ -98,10 +116,21 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
   // first" (previously this list silently dropped any such roadmap).
   const years = useMemo(() => [...(roadmapYears ?? [])], [roadmapYears]);
   const selectedYear = watch("programmeYear");
+  const selectedType = watch("type");
+  const questions = watch("questions");
   const modulesForYear = useMemo(
     () => (moduleOptions ?? []).filter((m) => m.year === selectedYear),
     [moduleOptions, selectedYear]
   );
+
+  // Switching to Quiz with no questions yet: seed one empty question so the
+  // builder isn't just a bare "Add Question" button.
+  useEffect(() => {
+    if (selectedType === "Quiz" && (questions ?? []).length === 0) {
+      setValue("questions", [newQuestion()]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedType]);
 
   // Once module options load, default a brand-new lesson to the current
   // roadmap year and its first module — the form can't know these until the
@@ -136,6 +165,9 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
         unlockDate: lesson.unlockDate,
         unlockTime: lesson.unlockTime,
         visibility: lesson.visibility,
+        transcript: lesson.transcript ?? "",
+        articleHtml: lesson.articleHtml ?? "",
+        questions: lesson.questions ?? [],
       });
     }
   }, [lesson, reset]);
@@ -296,10 +328,79 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
               {errors.description && <p className="text-xs text-error">{errors.description.message}</p>}
             </div>
 
-            <div className="space-y-2">
-              <Label>Upload Content</Label>
-              <FileUploadDropzone onFileSelected={setPendingFile} />
-            </div>
+            {selectedType === "Video" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Video File</Label>
+                  <FileUploadDropzone onFileSelected={setPendingFile} />
+                  {!pendingFile && lesson?.videoUrl && (
+                    <p className="text-xs text-text-muted">
+                      Current video:{" "}
+                      <a href={lesson.videoUrl} target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:underline">
+                        view file
+                      </a>
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="transcript">Transcript / Summary (optional)</Label>
+                  <textarea
+                    id="transcript"
+                    rows={4}
+                    placeholder="A written summary or transcript shown under the video player."
+                    className="flex w-full rounded-[var(--radius-input)] border border-border bg-white px-3.5 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                    {...register("transcript")}
+                  />
+                </div>
+              </>
+            )}
+
+            {selectedType === "Article" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="articleHtml">Article Content</Label>
+                  <Controller
+                    control={control}
+                    name="articleHtml"
+                    render={({ field }) => (
+                      <RichTextEditor value={field.value ?? ""} onChange={field.onChange} placeholder="Write the article here…" />
+                    )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Attach a file (optional)</Label>
+                  <FileUploadDropzone onFileSelected={setPendingFile} />
+                </div>
+              </>
+            )}
+
+            {selectedType === "Download" && (
+              <div className="space-y-2">
+                <Label>File to Download</Label>
+                <FileUploadDropzone onFileSelected={setPendingFile} />
+                {!pendingFile && lesson?.fileUrl && (
+                  <p className="text-xs text-text-muted">
+                    Current file:{" "}
+                    <a href={lesson.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:underline">
+                      view file
+                    </a>
+                  </p>
+                )}
+              </div>
+            )}
+
+            {selectedType === "Quiz" && (
+              <div className="space-y-2">
+                <Label>Quiz Questions</Label>
+                <Controller
+                  control={control}
+                  name="questions"
+                  render={({ field }) => (
+                    <QuizQuestionBuilder questions={(field.value as AdminQuizQuestion[]) ?? []} onChange={field.onChange} />
+                  )}
+                />
+              </div>
+            )}
           </div>
         </Card>
 

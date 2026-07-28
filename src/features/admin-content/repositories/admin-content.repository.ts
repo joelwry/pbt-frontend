@@ -39,7 +39,7 @@ interface BackendLessonBody {
   fileUrl?: string;
   summary?: string;
   questionCount?: number;
-  questions?: unknown[];
+  questions?: { id: string; question: string; options: string[]; correctIndex: number }[];
 }
 
 interface BackendLesson {
@@ -169,16 +169,39 @@ function toAdminLesson(item: BackendLessonWithContext): AdminLesson {
     unlockTime: time,
     status: statusOf(lesson),
     visibility: tierToVisibility(lesson.access.requiredTier),
+    videoUrl: lesson.body?.videoUrl,
+    transcript: lesson.body?.transcript,
+    articleHtml: lesson.body?.html,
+    fileUrl: lesson.body?.fileUrl,
+    questions: lesson.body?.questions ?? [],
   };
 }
 
-/** Builds the kind-specific body, preserving media fields an editor form never collects directly (video/file URLs come from the upload flow, not this form). */
-function buildBody(adminType: AdminLessonType, description: string, durationLabel: string): Record<string, unknown> {
-  const kind = adminType === "Video" ? "video" : adminType === "Article" ? "article" : adminType === "Download" ? "pdf" : "quiz";
-  const body: Record<string, unknown> = { kind, summary: description };
-  if (kind === "video") body.durationLabel = durationLabel;
-  if (kind === "article") body.readTimeLabel = durationLabel;
-  if (kind === "pdf") body.pageCountLabel = durationLabel;
+/**
+ * Builds the kind-specific body. Media URLs (videoUrl/fileUrl) are NOT set
+ * here -- they only exist once a file has actually been uploaded, and the
+ * upload endpoint persists them directly onto the lesson server-side (see
+ * admin-learning.service.ts#uploadLessonAsset). Sending an empty/stale value
+ * for those fields here would overwrite a real uploaded URL on every save.
+ */
+function buildBody(input: AdminLesson): Record<string, unknown> {
+  const kind =
+    input.type === "Video" ? "video" : input.type === "Article" ? "article" : input.type === "Download" ? "pdf" : "quiz";
+  const body: Record<string, unknown> = { kind, summary: input.description };
+  if (kind === "video") {
+    body.durationLabel = input.durationLabel;
+    body.transcript = input.transcript ?? "";
+  }
+  if (kind === "article") {
+    body.readTimeLabel = input.durationLabel;
+    body.html = input.articleHtml ?? "";
+  }
+  if (kind === "pdf") body.pageCountLabel = input.durationLabel;
+  if (kind === "quiz") {
+    const questions = input.questions ?? [];
+    body.questions = questions;
+    body.questionCount = questions.length;
+  }
   return body;
 }
 
@@ -193,7 +216,7 @@ function toLessonWritePayload(input: AdminLesson) {
     unlocksAt: `${input.unlockDate}T${input.unlockTime}`,
     requiredTier: visibilityToTier(input.visibility),
     isDraft: input.status === "Draft",
-    body: buildBody(input.type, input.description, input.durationLabel),
+    body: buildBody(input),
   };
 }
 

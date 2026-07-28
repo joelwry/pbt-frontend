@@ -2,6 +2,13 @@ export type AdminLessonType = "Video" | "Article" | "Download" | "Quiz";
 export type AdminLessonStatus = "Published" | "Scheduled" | "Draft";
 export type LessonVisibility = "all" | "plus-mentorship" | "mentorship";
 
+export interface AdminQuizQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctIndex: number;
+}
+
 export interface AdminLesson {
   id: string;
   title: string;
@@ -15,6 +22,16 @@ export interface AdminLesson {
   unlockTime: string; // "06:00"
   status: AdminLessonStatus;
   visibility: LessonVisibility;
+  /** Video type only -- set by the upload flow, read-only display. */
+  videoUrl?: string;
+  /** Video type only -- optional written transcript/summary shown under the player. */
+  transcript?: string;
+  /** Article type only -- the article's own formatted body. */
+  articleHtml?: string;
+  /** Download type only -- set by the upload flow, read-only display. */
+  fileUrl?: string;
+  /** Quiz type only. */
+  questions?: AdminQuizQuestion[];
 }
 
 export interface AdminContentStats {
