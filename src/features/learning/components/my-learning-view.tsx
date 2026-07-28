@@ -5,6 +5,7 @@ import { SearchX } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Button } from "@/components/ui/button";
 import { useLearningYears, useRoadmap, useContinueLearning } from "@/features/learning/hooks/use-learning";
 import { MyLearningSkeleton } from "@/features/learning/components/my-learning-skeleton";
 import { YearTabs } from "@/features/learning/components/year-tabs";
@@ -14,13 +15,23 @@ import { LessonCard } from "@/features/learning/components/lesson-card";
 import { ModuleSection } from "@/features/learning/components/module-section";
 import { CheckpointWeekCard } from "@/features/learning/components/checkpoint-week-card";
 
+// Weeks revealed per "Load More" click. Each visible week mounts a
+// ModuleSection per module, and each of those fires its own lesson-content
+// fetch — rendering every week in a year up front meant dozens of those
+// firing simultaneously on every page load. Revealing incrementally keeps
+// that to only what's actually on screen.
+const WEEKS_PAGE_SIZE = 4;
+
 export function MyLearningView() {
   const { data: years, isLoading: yearsLoading } = useLearningYears();
   const [activeYear, setActiveYear] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [visibleCount, setVisibleCount] = useState(WEEKS_PAGE_SIZE);
 
   const year = activeYear ?? years?.find((y) => y.isCurrent)?.year ?? years?.[0]?.year ?? "";
-  const { data: roadmap, isLoading, isError, refetch } = useRoadmap(year);
+  // PBT Pathway shows Pathway-tier content only — Plus/Masterplan lessons
+  // live on their own dedicated pages, never mixed in here.
+  const { data: roadmap, isLoading, isError, refetch } = useRoadmap(year, "Pathway");
   const { data: continueLearning } = useContinueLearning();
 
   const filteredWeeks = useMemo(() => {
@@ -31,6 +42,9 @@ export function MyLearningView() {
       .map((week) => ({ ...week, modules: week.modules.filter((m) => m.title.toLowerCase().includes(q)) }))
       .filter((week) => week.isCheckpoint || week.modules.length > 0);
   }, [roadmap, search]);
+
+  const visibleWeeks = search.trim() ? filteredWeeks : filteredWeeks.slice(0, visibleCount);
+  const hasMoreWeeks = !search.trim() && visibleCount < filteredWeeks.length;
 
   if (yearsLoading || (isLoading && !roadmap)) {
     return (
@@ -82,7 +96,7 @@ export function MyLearningView() {
         <EmptyState icon={SearchX} title="No modules match your search" description="Try a different keyword." />
       ) : (
         <div className="space-y-12">
-          {filteredWeeks.map((week) =>
+          {visibleWeeks.map((week) =>
             week.isCheckpoint ? (
               <CheckpointWeekCard key={week.id} week={week} />
             ) : (
@@ -99,11 +113,19 @@ export function MyLearningView() {
 
                 <div className="space-y-10">
                   {week.modules.map((learningModule) => (
-                    <ModuleSection key={learningModule.id} moduleSummary={learningModule} />
+                    <ModuleSection key={learningModule.id} moduleSummary={learningModule} contentTier="Pathway" />
                   ))}
                 </div>
               </section>
             )
+          )}
+
+          {hasMoreWeeks && (
+            <div className="flex justify-center">
+              <Button variant="secondary" onClick={() => setVisibleCount((c) => c + WEEKS_PAGE_SIZE)}>
+                Load More Weeks
+              </Button>
+            </div>
           )}
         </div>
       )}

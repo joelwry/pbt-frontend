@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { learningService } from "@/features/learning/services/learning.service";
 import { useCurrentMember } from "@/features/session/hooks/use-current-member";
+import type { MembershipTier } from "@/features/session/types";
 
 export function useLearningYears() {
   return useQuery({
@@ -10,10 +11,16 @@ export function useLearningYears() {
   });
 }
 
-export function useRoadmap(year: string) {
+/**
+ * `contentTier` selects which tier's own lesson pool this roadmap call
+ * loads — 'Pathway' for the shared PBT Pathway page, 'Plus' / 'Mentorship'
+ * for their own dedicated learning pages. Defaults to 'Pathway' since
+ * that's the only page this hook served before the tier split.
+ */
+export function useRoadmap(year: string, contentTier: MembershipTier = "Pathway") {
   return useQuery({
-    queryKey: ["learning", "roadmap", year],
-    queryFn: () => learningService.getRoadmap(year),
+    queryKey: ["learning", "roadmap", year, contentTier],
+    queryFn: () => learningService.getRoadmap(year, contentTier),
     enabled: Boolean(year),
   });
 }
@@ -37,12 +44,17 @@ export function useSubmitQuestion() {
 
 const MODULE_LESSONS_PAGE_SIZE = 4;
 
-export function useModuleLessons(moduleId: string, page: number, limit: number = MODULE_LESSONS_PAGE_SIZE) {
+export function useModuleLessons(
+  moduleId: string,
+  page: number,
+  limit: number = MODULE_LESSONS_PAGE_SIZE,
+  contentTier: MembershipTier = "Pathway"
+) {
   const { data: member } = useCurrentMember();
 
   return useQuery({
-    queryKey: ["learning", "module-lessons", moduleId, page, limit, member?.membershipTier],
-    queryFn: () => learningService.getModuleLessonsPage(moduleId, page, limit, member!.membershipTier),
+    queryKey: ["learning", "module-lessons", moduleId, page, limit, contentTier, member?.membershipTier],
+    queryFn: () => learningService.getModuleLessonsPage(moduleId, page, limit, member!.membershipTier, contentTier),
     enabled: Boolean(member) && Boolean(moduleId),
     placeholderData: keepPreviousData,
   });
@@ -63,12 +75,12 @@ export function useCompleteLesson() {
   });
 }
 
-export function useLessonContext(lessonId: string) {
+export function useLessonContext(lessonId: string, contentTier: MembershipTier = "Pathway") {
   const { data: member } = useCurrentMember();
 
   return useQuery({
-    queryKey: ["learning", "lesson", lessonId, member?.membershipTier],
-    queryFn: () => learningService.getLessonContext(lessonId, member!.membershipTier),
+    queryKey: ["learning", "lesson", lessonId, contentTier, member?.membershipTier],
+    queryFn: () => learningService.getLessonContext(lessonId, member!.membershipTier, contentTier),
     enabled: Boolean(member) && Boolean(lessonId),
   });
 }

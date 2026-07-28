@@ -27,8 +27,8 @@ export const learningService = {
     return response.data;
   },
 
-  async getRoadmap(year: string): Promise<ResolvedRoadmap> {
-    const response = await learningRepository.getRoadmap(year);
+  async getRoadmap(year: string, tier: MembershipTier): Promise<ResolvedRoadmap> {
+    const response = await learningRepository.getRoadmap(year, tier);
     return response.data;
   },
 
@@ -41,8 +41,8 @@ export const learningService = {
     return response.data.map((lesson) => resolveLessonAccess(lesson, memberTier));
   },
 
-  async getModuleLessonsPage(moduleId: string, page: number, limit: number, memberTier: MembershipTier): Promise<ResolvedLessonPage> {
-    const response = await learningRepository.getModuleLessonsPage(moduleId, page, limit);
+  async getModuleLessonsPage(moduleId: string, page: number, limit: number, memberTier: MembershipTier, contentTier: MembershipTier): Promise<ResolvedLessonPage> {
+    const response = await learningRepository.getModuleLessonsPage(moduleId, page, limit, contentTier);
     return {
       items: response.data.map((lesson) => resolveLessonAccess(lesson, memberTier)),
       pagination: response.pagination,
@@ -53,8 +53,8 @@ export const learningService = {
     await learningRepository.completeLesson(lessonId, moduleId, timeSpentMinutes);
   },
 
-  async getLessonContext(lessonId: string, memberTier: MembershipTier): Promise<ResolvedLessonContext> {
-    const response = await learningRepository.getLessonContext(lessonId);
+  async getLessonContext(lessonId: string, memberTier: MembershipTier, contentTier: MembershipTier): Promise<ResolvedLessonContext> {
+    const response = await learningRepository.getLessonContext(lessonId, contentTier);
     const { lesson, moduleTitle, moduleLessons } = response.data;
 
     const resolved = resolveLessonAccess(lesson, memberTier);

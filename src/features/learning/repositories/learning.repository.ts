@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/api-client";
 import type { ApiSuccess, ApiPaginated } from "@/types/api";
 import type { YearOption, Roadmap, Lesson } from "@/features/learning/types";
+import type { MembershipTier } from "@/features/session/types";
 
 export class LearningNotFoundError extends Error {}
 
@@ -27,8 +28,14 @@ export const learningRepository = {
     };
   },
 
-  async getRoadmap(year: string): Promise<ApiSuccess<Roadmap>> {
-    const { data } = await apiClient.get<ApiSuccess<Roadmap>>(`/learning/roadmap/${year}`);
+  /**
+   * `tier` restricts the whole roadmap to lessons written for exactly that
+   * tier — the Pathway page passes 'Pathway' so Plus/Masterplan-only lessons
+   * never load there at all (they live on their own dedicated pages), and
+   * those dedicated pages reuse this same call with 'Plus' / 'Mentorship'.
+   */
+  async getRoadmap(year: string, tier: MembershipTier): Promise<ApiSuccess<Roadmap>> {
+    const { data } = await apiClient.get<ApiSuccess<Roadmap>>(`/learning/roadmap/${year}`, { params: { tier } });
     return data;
   },
 
@@ -37,29 +44,10 @@ export const learningRepository = {
     return data;
   },
 
-  /**
-   * The backend returns a module's full lesson list in one call (modules are
-   * small) — paginated here client-side to preserve the existing paged UI.
-   */
-  async getModuleLessonsPage(moduleId: string, page: number, limit: number): Promise<ApiPaginated<Lesson>> {
-    const { data } = await apiClient.get<ApiSuccess<Lesson[]>>(`/learning/modules/${moduleId}`);
-    const all = data.data;
-    const start = (page - 1) * limit;
-    const items = all.slice(start, start + limit);
-    const totalPages = Math.max(1, Math.ceil(all.length / limit));
-
-    return {
-      success: true,
-      data: items,
-      pagination: {
-        page,
-        limit,
-        totalItems: all.length,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
-    };
+  /** Real server-side pagination — a module's lessons are no longer fetched all at once and sliced client-side. */
+  async getModuleLessonsPage(moduleId: string, page: number, limit: number, tier: MembershipTier): Promise<ApiPaginated<Lesson>> {
+    const { data } = await apiClient.get<ApiPaginated<Lesson>>(`/learning/modules/${moduleId}`, { params: { page, limit, tier } });
+    return data;
   },
 
   async completeLesson(lessonId: string, moduleId: string, timeSpentMinutes: number): Promise<void> {
@@ -76,7 +64,7 @@ export const learningRepository = {
     await apiClient.post("/questions", { title, description, category });
   },
 
-  async getLessonContext(lessonId: string): Promise<ApiSuccess<LessonContext>> {
+  async getLessonContext(lessonId: string, tier: MembershipTier): Promise<ApiSuccess<LessonContext>> {
     const { data: lessonResponse } = await apiClient.get<
       ApiSuccess<Omit<Lesson, "moduleId"> & { moduleId: { _id: string; title: string } | string }>
     >(`/learning/lessons/${lessonId}`);
@@ -84,7 +72,11 @@ export const learningRepository = {
     const moduleId = typeof rawLesson.moduleId === "string" ? rawLesson.moduleId : rawLesson.moduleId._id;
     const moduleTitle = typeof rawLesson.moduleId === "string" ? "" : rawLesson.moduleId.title;
 
-    const { data: moduleLessonsResponse } = await apiClient.get<ApiSuccess<Lesson[]>>(`/learning/modules/${moduleId}`);
+    // Full module context (not just one page) so prev/next navigation still
+    // works across a module's entire lesson list, not just the first page.
+    const { data: moduleLessonsResponse } = await apiClient.get<ApiPaginated<Lesson>>(`/learning/modules/${moduleId}`, {
+      params: { page: 1, limit: 100, tier },
+    });
 
     return {
       success: true,
