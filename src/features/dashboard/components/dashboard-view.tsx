@@ -9,6 +9,7 @@ import { StatsRow } from "@/features/dashboard/components/stats-row";
 import { RoadmapProgressCard } from "@/features/dashboard/components/roadmap-progress-card";
 import { ContinueLearningCard } from "@/features/dashboard/components/continue-learning-card";
 import { QuickAccessGrid } from "@/features/dashboard/components/quick-access-grid";
+import { WorkshopsPromoCard } from "@/features/dashboard/components/workshops-promo-card";
 import { UpcomingEventsCard } from "@/features/dashboard/components/upcoming-events-card";
 import { CommunityActivityCard } from "@/features/dashboard/components/community-activity-card";
 import { ConnectWithPbtCard } from "@/features/dashboard/components/connect-with-pbt-card";
@@ -38,6 +39,8 @@ export function DashboardView() {
       />
 
       <StatsRow stats={data.stats} />
+
+      <WorkshopsPromoCard promo={data.workshopsPromo} memberTier={member?.membershipTier ?? "Pathway"} />
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
         <div className="xl:col-span-2 space-y-6">

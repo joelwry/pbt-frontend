@@ -90,5 +90,11 @@ export const dashboardMock: ApiSuccess<DashboardData> = {
         kind: "reply",
       },
     ],
+    workshopsPromo: {
+      upcomingCount: 3,
+      nextWorkshopTitle: "Build & Scale Workshop",
+      nextWorkshopDateLabel: "10 September",
+      requiredTier: "Plus",
+    },
   },
 };

@@ -57,6 +57,13 @@ export interface CommunityActivityItem {
   kind: "post" | "announcement" | "reply";
 }
 
+export interface WorkshopsPromo {
+  upcomingCount: number;
+  nextWorkshopTitle: string | null;
+  nextWorkshopDateLabel: string | null;
+  requiredTier: "Pathway" | "Plus" | "Mentorship";
+}
+
 export interface DashboardData {
   memberFirstName: string;
   stats: DashboardStats;
@@ -65,4 +72,5 @@ export interface DashboardData {
   quickAccess: QuickAccessTile[];
   upcomingEvents: UpcomingEvent[];
   communityActivity: CommunityActivityItem[];
+  workshopsPromo: WorkshopsPromo;
 }
