@@ -19,6 +19,7 @@ import {
   useAdminLesson,
   useSaveLesson,
   useAdminModuleOptions,
+  useAdminRoadmapYears,
   useUploadLessonAsset,
 } from "@/features/admin-content/hooks/use-admin-content";
 import { FileUploadDropzone } from "@/components/shared/file-upload-dropzone";
@@ -76,6 +77,7 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
   const { toast } = useToast();
   const { data: lesson, isLoading, isError, refetch } = useAdminLesson(lessonId);
   const { data: moduleOptions, isLoading: moduleOptionsLoading } = useAdminModuleOptions();
+  const { data: roadmapYears, isLoading: roadmapYearsLoading } = useAdminRoadmapYears();
   const { mutate: saveLesson, isPending } = useSaveLesson();
   const { mutateAsync: uploadAsset, isPending: isUploading } = useUploadLessonAsset();
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -90,7 +92,11 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
     formState: { errors },
   } = useForm<EditorFormValues>({ resolver: zodResolver(editorSchema), defaultValues: defaultValues() });
 
-  const years = useMemo(() => [...new Set((moduleOptions ?? []).map((m) => m.year))].sort().reverse(), [moduleOptions]);
+  // Sourced from the real roadmap list, not from moduleOptions — a
+  // brand-new roadmap with no weeks/modules yet still needs to appear here,
+  // otherwise there's no way to even select it to be told "create a module
+  // first" (previously this list silently dropped any such roadmap).
+  const years = useMemo(() => [...(roadmapYears ?? [])], [roadmapYears]);
   const selectedYear = watch("programmeYear");
   const modulesForYear = useMemo(
     () => (moduleOptions ?? []).filter((m) => m.year === selectedYear),
@@ -218,7 +224,7 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
                   id="programmeYear"
                   value={selectedYear}
                   onChange={(e) => handleYearChange(e.target.value)}
-                  disabled={moduleOptionsLoading}
+                  disabled={roadmapYearsLoading}
                   className="flex h-11 w-full rounded-[var(--radius-input)] border border-border bg-white px-3.5 text-sm text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                 >
                   {years.length === 0 && <option value="">No roadmaps yet</option>}

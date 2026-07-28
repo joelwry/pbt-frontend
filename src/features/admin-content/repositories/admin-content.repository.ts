@@ -280,13 +280,18 @@ export const adminContentRepository = {
 
         const perWeek = await Promise.all(
           weeksRes.data.map(async (week) => {
-            const { data: modulesRes } = await adminApiClient.get<ApiSuccess<{ _id: string; title: string }[]>>(
+            const { data: modulesRes } = await adminApiClient.get<ApiSuccess<{ _id: string; title: string; moduleNumber: number }[]>>(
               `/admin/learning/weeks/${week._id}/modules`
             );
             return modulesRes.data.map(
               (learningModule): AdminModuleOption => ({
                 id: learningModule._id,
-                label: `${roadmap.year} · Week ${week.weekNumber} · ${learningModule.title}`,
+                // Week [N], Module [N] — [Title]: the year is already picked
+                // one step earlier by the cascading select above this one, so
+                // repeating it here just made two different modules in the
+                // same week (a common case) look identical apart from title —
+                // leading with both numbers disambiguates at a glance.
+                label: `Week ${week.weekNumber}, Module ${learningModule.moduleNumber} — ${learningModule.title}`,
                 year: roadmap.year,
               })
             );
