@@ -13,6 +13,7 @@ import {
   UserCircle,
   CreditCard,
   Gift,
+  Handshake,
 } from "lucide-react";
 
 export interface NavItem {
@@ -26,10 +27,11 @@ export interface NavSection {
   items: NavItem[];
 }
 
-// Power Team is intentionally not a nav item -- per client direction it's
-// restricted to Plus/Masterplan members and discovered via those tiers'
-// pages (see MEMBERSHIP_TIERS features) rather than a top-level link
-// available to everyone including Pathway members.
+// Power Team is a visible nav item for every member -- content access is
+// gated by subscription tier on the page itself (PowerTeamGate shows a
+// Plus/Masterplan upgrade prompt to a Pathway member), not by hiding the
+// link. Reversed from an earlier decision to remove it from the nav
+// entirely; the client wants it discoverable, just restricted.
 export const NAV_SECTIONS: NavSection[] = [
   {
     label: "Main Menu",
@@ -39,6 +41,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Events", href: "/events", icon: Ticket },
       { label: "Resources", href: "/resources", icon: FolderOpen },
       { label: "PBT Leaders", href: "/pbt-leaders", icon: MapPin },
+      { label: "Power Team", href: "/power-team", icon: Handshake },
       { label: "Community Group", href: "/community", icon: Users },
       { label: "Facebook Group", href: "/facebook-group", icon: ExternalLink },
       { label: "Calendar", href: "/calendar", icon: Calendar },
