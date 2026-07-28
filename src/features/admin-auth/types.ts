@@ -14,7 +14,8 @@ export type AdminSection =
   | "pbtLeaders"
   | "powerTeam"
   | "subscriptions"
-  | "analytics";
+  | "analytics"
+  | "referrals";
 
 export interface AdminUser {
   id: string;

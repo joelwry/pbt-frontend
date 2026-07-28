@@ -12,6 +12,7 @@ import {
   BarChart3,
   ShieldCheck,
   UserCircle,
+  Gift,
 } from "lucide-react";
 import type { AdminSection } from "@/features/admin-auth/types";
 
@@ -54,6 +55,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     items: [
       { label: "Subscriptions & Billing", href: "/admin/subscriptions", icon: CreditCard, section: "subscriptions" },
       { label: "Analytics & Reports", href: "/admin/analytics", icon: BarChart3, section: "analytics" },
+      { label: "Referrals", href: "/admin/referrals", icon: Gift, section: "referrals" },
     ],
   },
   {

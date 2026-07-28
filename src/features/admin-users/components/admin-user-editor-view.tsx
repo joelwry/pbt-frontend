@@ -35,6 +35,7 @@ const SECTION_DESCRIPTIONS: Record<AdminSection, string> = {
   powerTeam: "Manage vetted Power Team partners",
   subscriptions: "View revenue, invoices and payment status",
   analytics: "View platform-wide analytics and reports",
+  referrals: "View member referrals and rewards issued",
 };
 
 const editorSchema = z.object({
