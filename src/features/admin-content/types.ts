@@ -43,6 +43,8 @@ export interface AdminRoadmapWeek {
   weekNumber: number;
   title: string;
   description?: string;
+  /** A milestone week -- shown to members as a "Checkpoint Week" (review + video summary + submit a question) instead of ordinary modules. */
+  isCheckpoint?: boolean;
 }
 
 export interface AdminModuleItem {

@@ -54,9 +54,9 @@ export const adminContentService = {
   deleteRoadmap: (id: string) => adminContentRepository.deleteRoadmap(id),
 
   listWeeks: (roadmapId: string) => adminContentRepository.listWeeks(roadmapId),
-  createWeek: (roadmapId: string, input: { weekNumber: number; title: string; description?: string }) =>
+  createWeek: (roadmapId: string, input: { weekNumber: number; title: string; description?: string; isCheckpoint?: boolean }) =>
     adminContentRepository.createWeek(roadmapId, input),
-  updateWeek: (weekId: string, input: { weekNumber: number; title: string; description?: string }) =>
+  updateWeek: (weekId: string, input: { weekNumber: number; title: string; description?: string; isCheckpoint?: boolean }) =>
     adminContentRepository.updateWeek(weekId, input),
   deleteWeek: (weekId: string) => adminContentRepository.deleteWeek(weekId),
 

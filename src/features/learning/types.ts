@@ -58,6 +58,8 @@ export interface RoadmapWeekSummary {
   weekNumber: number;
   title: string;
   description?: string;
+  /** A milestone week -- shown as a "Checkpoint Week" review page (video summary + submit a question) instead of ordinary modules. */
+  isCheckpoint: boolean;
   progressPercent: number;
   modules: LearningModuleSummary[];
 }

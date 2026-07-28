@@ -12,6 +12,7 @@ import { LearningToolbar } from "@/features/learning/components/learning-toolbar
 import { RoadmapSummaryCard } from "@/features/learning/components/roadmap-summary-card";
 import { LessonCard } from "@/features/learning/components/lesson-card";
 import { ModuleSection } from "@/features/learning/components/module-section";
+import { CheckpointWeekCard } from "@/features/learning/components/checkpoint-week-card";
 
 export function MyLearningView() {
   const { data: years, isLoading: yearsLoading } = useLearningYears();
@@ -28,7 +29,7 @@ export function MyLearningView() {
     const q = search.trim().toLowerCase();
     return roadmap.weeks
       .map((week) => ({ ...week, modules: week.modules.filter((m) => m.title.toLowerCase().includes(q)) }))
-      .filter((week) => week.modules.length > 0);
+      .filter((week) => week.isCheckpoint || week.modules.length > 0);
   }, [roadmap, search]);
 
   if (yearsLoading || (isLoading && !roadmap)) {
@@ -81,25 +82,29 @@ export function MyLearningView() {
         <EmptyState icon={SearchX} title="No modules match your search" description="Try a different keyword." />
       ) : (
         <div className="space-y-12">
-          {filteredWeeks.map((week) => (
-            <section key={week.id} className="space-y-6">
-              <div className="flex items-center justify-between flex-wrap gap-2 border-b border-border pb-3">
-                <div>
-                  <h2 className="font-display text-lg font-semibold text-text-primary">
-                    Week {week.weekNumber} · {week.title}
-                  </h2>
-                  {week.description && <p className="text-sm text-text-muted mt-0.5">{week.description}</p>}
+          {filteredWeeks.map((week) =>
+            week.isCheckpoint ? (
+              <CheckpointWeekCard key={week.id} week={week} />
+            ) : (
+              <section key={week.id} className="space-y-6">
+                <div className="flex items-center justify-between flex-wrap gap-2 border-b border-border pb-3">
+                  <div>
+                    <h2 className="font-display text-lg font-semibold text-text-primary">
+                      Week {week.weekNumber} · {week.title}
+                    </h2>
+                    {week.description && <p className="text-sm text-text-muted mt-0.5">{week.description}</p>}
+                  </div>
+                  <span className="text-xs font-semibold text-text-muted">{week.progressPercent}% complete</span>
                 </div>
-                <span className="text-xs font-semibold text-text-muted">{week.progressPercent}% complete</span>
-              </div>
 
-              <div className="space-y-10">
-                {week.modules.map((learningModule) => (
-                  <ModuleSection key={learningModule.id} moduleSummary={learningModule} />
-                ))}
-              </div>
-            </section>
-          ))}
+                <div className="space-y-10">
+                  {week.modules.map((learningModule) => (
+                    <ModuleSection key={learningModule.id} moduleSummary={learningModule} />
+                  ))}
+                </div>
+              </section>
+            )
+          )}
         </div>
       )}
     </div>

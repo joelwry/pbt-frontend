@@ -71,6 +71,11 @@ export const learningRepository = {
     });
   },
 
+  /** Wired to the existing /questions module -- a checkpoint week's "Submit a Question" tab. */
+  async submitQuestion(title: string, description: string, category: string): Promise<void> {
+    await apiClient.post("/questions", { title, description, category });
+  },
+
   async getLessonContext(lessonId: string): Promise<ApiSuccess<LessonContext>> {
     const { data: lessonResponse } = await apiClient.get<
       ApiSuccess<Omit<Lesson, "moduleId"> & { moduleId: { _id: string; title: string } | string }>

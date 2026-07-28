@@ -32,6 +32,10 @@ export const learningService = {
     return response.data;
   },
 
+  async submitQuestion(title: string, description: string, category: string): Promise<void> {
+    await learningRepository.submitQuestion(title, description, category);
+  },
+
   async getContinueLearning(memberTier: MembershipTier): Promise<ResolvedLesson[]> {
     const response = await learningRepository.getContinueLearning();
     return response.data.map((lesson) => resolveLessonAccess(lesson, memberTier));

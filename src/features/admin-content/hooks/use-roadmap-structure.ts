@@ -47,7 +47,7 @@ export function useAdminWeeks(roadmapId: string, enabled: boolean) {
 export function useSaveWeek(roadmapId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { id?: string; weekNumber: number; title: string; description?: string }) =>
+    mutationFn: (input: { id?: string; weekNumber: number; title: string; description?: string; isCheckpoint?: boolean }) =>
       input.id ? adminContentService.updateWeek(input.id, input) : adminContentService.createWeek(roadmapId, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "content", "weeks", roadmapId] });

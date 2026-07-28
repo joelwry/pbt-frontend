@@ -28,6 +28,13 @@ export function useContinueLearning() {
   });
 }
 
+export function useSubmitQuestion() {
+  return useMutation({
+    mutationFn: ({ title, description, category }: { title: string; description: string; category: string }) =>
+      learningService.submitQuestion(title, description, category),
+  });
+}
+
 const MODULE_LESSONS_PAGE_SIZE = 4;
 
 export function useModuleLessons(moduleId: string, page: number, limit: number = MODULE_LESSONS_PAGE_SIZE) {

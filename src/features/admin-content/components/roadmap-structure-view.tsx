@@ -172,12 +172,13 @@ function WeekFormDialog({
   const [weekNumber, setWeekNumber] = useState(String(existing?.weekNumber ?? nextWeekNumber));
   const [title, setTitle] = useState(existing?.title ?? "");
   const [description, setDescription] = useState(existing?.description ?? "");
+  const [isCheckpoint, setIsCheckpoint] = useState(existing?.isCheckpoint ?? false);
 
   function handleSave() {
     const parsedNumber = parseInt(weekNumber, 10);
     if (!title.trim() || Number.isNaN(parsedNumber)) return;
     save(
-      { id: existing?.id, weekNumber: parsedNumber, title: title.trim(), description: description.trim() || undefined },
+      { id: existing?.id, weekNumber: parsedNumber, title: title.trim(), description: description.trim() || undefined, isCheckpoint },
       {
         onSuccess: () => {
           toast({ variant: "success", title: existing ? "Week updated" : "Week created" });
@@ -213,6 +214,15 @@ function WeekFormDialog({
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <Checkbox checked={isCheckpoint} onCheckedChange={(v) => setIsCheckpoint(Boolean(v))} className="mt-0.5" />
+            <span>
+              <span className="text-sm font-medium text-text-primary block">Checkpoint Week</span>
+              <span className="text-xs text-text-muted">
+                Members see a milestone review page here (video summary + submit a question) instead of ordinary modules.
+              </span>
+            </span>
+          </label>
         </div>
         <div className="flex items-center gap-3 mt-5">
           <DialogClose asChild>

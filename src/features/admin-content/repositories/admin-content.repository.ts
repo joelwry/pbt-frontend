@@ -74,6 +74,7 @@ interface BackendRoadmapWeek {
   weekNumber: number;
   title: string;
   description?: string;
+  isCheckpoint?: boolean;
 }
 
 interface BackendModule {
@@ -90,7 +91,14 @@ function toAdminRoadmap(r: BackendRoadmap): AdminRoadmap {
 }
 
 function toAdminWeek(w: BackendRoadmapWeek): AdminRoadmapWeek {
-  return { id: w._id, roadmapId: w.roadmapId, weekNumber: w.weekNumber, title: w.title, description: w.description };
+  return {
+    id: w._id,
+    roadmapId: w.roadmapId,
+    weekNumber: w.weekNumber,
+    title: w.title,
+    description: w.description,
+    isCheckpoint: w.isCheckpoint ?? false,
+  };
 }
 
 function toAdminModule(m: BackendModule): AdminModuleItem {
@@ -318,12 +326,12 @@ export const adminContentRepository = {
     return data.data.map(toAdminWeek);
   },
 
-  async createWeek(roadmapId: string, input: { weekNumber: number; title: string; description?: string }): Promise<AdminRoadmapWeek> {
+  async createWeek(roadmapId: string, input: { weekNumber: number; title: string; description?: string; isCheckpoint?: boolean }): Promise<AdminRoadmapWeek> {
     const { data } = await adminApiClient.post<ApiSuccess<BackendRoadmapWeek>>(`/admin/learning/roadmaps/${roadmapId}/weeks`, input);
     return toAdminWeek(data.data);
   },
 
-  async updateWeek(weekId: string, input: { weekNumber: number; title: string; description?: string }): Promise<AdminRoadmapWeek> {
+  async updateWeek(weekId: string, input: { weekNumber: number; title: string; description?: string; isCheckpoint?: boolean }): Promise<AdminRoadmapWeek> {
     const { data } = await adminApiClient.patch<ApiSuccess<BackendRoadmapWeek>>(`/admin/learning/weeks/${weekId}`, input);
     return toAdminWeek(data.data);
   },
