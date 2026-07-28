@@ -67,7 +67,7 @@ export function DiscussionDetailView({ discussionId }: { discussionId: string })
 
   return (
     <div className="space-y-6">
-      <BackLink href="/community" label="Back to Community" />
+      <BackLink href="/community" label="Back to Community Group" />
 
       <PageHeader title={discussion.title} />
 
