@@ -11,9 +11,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCompleteLesson, useLessonContext } from "@/features/learning/hooks/use-learning";
 import { LessonBodyRenderer } from "@/features/learning/components/lesson-body-renderer";
 import { LessonLockedState } from "@/features/learning/components/lesson-locked-state";
+import type { MembershipTier } from "@/features/session/types";
 
-export function LessonDetailView({ lessonId }: { lessonId: string }) {
-  const { data, isLoading, isError, refetch } = useLessonContext(lessonId);
+interface LessonDetailViewProps {
+  lessonId: string;
+  contentTier?: MembershipTier;
+  basePath?: string;
+  homeLabel?: string;
+}
+
+export function LessonDetailView({
+  lessonId,
+  contentTier = "Pathway",
+  basePath = "/pbt-pathway",
+  homeLabel = "PBT Pathway",
+}: LessonDetailViewProps) {
+  const { data, isLoading, isError, refetch } = useLessonContext(lessonId, contentTier);
   const completeLesson = useCompleteLesson();
 
   // Elapsed time spent viewing this lesson, sent along with "Mark as
@@ -52,8 +65,8 @@ export function LessonDetailView({ lessonId }: { lessonId: string }) {
   return (
     <div className="space-y-6">
       <nav className="flex items-center gap-1.5 text-xs text-text-muted flex-wrap">
-        <Link href="/pbt-pathway" className="hover:text-text-primary hover:underline">
-          PBT Pathway
+        <Link href={basePath} className="hover:text-text-primary hover:underline">
+          {homeLabel}
         </Link>
         <Crumb className="h-3 w-3" />
         <span className="text-text-secondary font-medium">{moduleTitle}</span>
@@ -86,8 +99,8 @@ export function LessonDetailView({ lessonId }: { lessonId: string }) {
           <LessonBodyRenderer body={lesson.body} />
 
           <Card className="flex items-center justify-between gap-4 flex-wrap">
-            <PrevNextLink direction="prev" lesson={previousLesson} />
-            <PrevNextLink direction="next" lesson={nextLesson} />
+            <PrevNextLink direction="prev" lesson={previousLesson} basePath={basePath} />
+            <PrevNextLink direction="next" lesson={nextLesson} basePath={basePath} />
           </Card>
         </>
       )}
@@ -98,9 +111,11 @@ export function LessonDetailView({ lessonId }: { lessonId: string }) {
 function PrevNextLink({
   direction,
   lesson,
+  basePath,
 }: {
   direction: "prev" | "next";
   lesson: { id: string; title: string; isLocked: boolean } | null;
+  basePath: string;
 }) {
   if (!lesson) {
     return <div />;
@@ -120,5 +135,5 @@ function PrevNextLink({
 
   if (disabled) return content;
 
-  return <Link href={`/pbt-pathway/${lesson.id}`}>{content}</Link>;
+  return <Link href={`${basePath}/${lesson.id}`}>{content}</Link>;
 }

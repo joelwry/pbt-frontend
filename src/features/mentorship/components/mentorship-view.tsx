@@ -1,6 +1,7 @@
 "use client";
 
-import { Crown, Check, UserRoundSearch } from "lucide-react";
+import Link from "next/link";
+import { Crown, Check, UserRoundSearch, GraduationCap, ArrowRight } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { ErrorState } from "@/components/shared/error-state";
 import { Card } from "@/components/ui/card";
@@ -85,6 +86,21 @@ export function MentorshipView() {
           </div>
         </div>
       </Card>
+
+      <Link href="/pbt-masterplan/learning" className="block group">
+        <Card className="flex items-center justify-between gap-4 flex-wrap bg-linear-to-r from-navy-950 to-navy-900 border-none group-hover:opacity-95 transition-opacity">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-white/10 text-orange-500 flex items-center justify-center shrink-0">
+              <GraduationCap className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="font-display text-base font-semibold text-white">PBT Masterplan Learning</p>
+              <p className="text-sm text-white/70 mt-0.5">Lessons reserved exclusively for PBT Masterplan Programme members.</p>
+            </div>
+          </div>
+          <ArrowRight className="h-5 w-5 text-white/70 shrink-0" />
+        </Card>
+      </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <Card className="lg:col-span-2">
