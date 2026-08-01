@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { AlertTriangle, CreditCard, Loader2, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,9 +11,8 @@ import { useRenewSubscription } from "@/features/renew-subscription/hooks/use-re
 import { MEMBERSHIP_TIERS } from "@/features/membership/tiers";
 
 export function RenewSubscriptionView() {
-  const { member, updateMember, logout } = useAuth();
+  const { member, logout } = useAuth();
   const { toast } = useToast();
-  const router = useRouter();
   const { mutate, isPending } = useRenewSubscription();
 
   if (!member) return null;
@@ -24,22 +22,13 @@ export function RenewSubscriptionView() {
   function handleRenew() {
     if (!member) return;
     mutate(member.membershipTier, {
-      onSuccess: (confirmation) => {
-        updateMember({
-          subscriptionStatus: confirmation.subscriptionStatus,
-          subscriptionDate: confirmation.nextBillingDate,
-        });
-        toast({
-          variant: "success",
-          title: "Subscription renewed",
-          description: `Your PBT ${confirmation.tier} membership is active again.`,
-        });
-        router.push("/dashboard");
+      onSuccess: (session) => {
+        window.location.href = session.checkoutUrl;
       },
       onError: () => {
         toast({
           variant: "error",
-          title: "Payment couldn't be processed",
+          title: "Couldn't start checkout",
           description: "Please try again, or contact support if this keeps happening.",
         });
       },
@@ -86,7 +75,7 @@ export function RenewSubscriptionView() {
 
         <Button size="lg" className="w-full mt-6" onClick={handleRenew} disabled={isPending}>
           {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-          {isPending ? "Processing payment via Stripe…" : "Renew with Stripe Checkout"}
+          {isPending ? "Redirecting to Stripe…" : "Renew with Stripe Checkout"}
         </Button>
 
         <p className="flex items-center justify-center gap-1.5 text-xs text-text-muted mt-3">

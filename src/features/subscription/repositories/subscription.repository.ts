@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/api-client";
 import type { ApiSuccess, ApiPaginated } from "@/types/api";
 import type { Invoice } from "@/features/subscription/types";
+import type { MembershipTier } from "@/features/session/types";
 import { billingDetailsMock, type BillingDetails } from "@/features/subscription/mocks/subscription.mock";
 
 export interface BackendSubscription {
@@ -28,6 +29,12 @@ export const subscriptionRepository = {
 
   async cancelSubscription(): Promise<ApiSuccess<{ cancelled: boolean }>> {
     const { data } = await apiClient.post<ApiSuccess<{ cancelled: boolean }>>("/subscriptions/cancel", {});
+    return data;
+  },
+
+  /** Upgrading, downgrading, or switching billing cycle all go through the same real Stripe Checkout flow as a renewal. */
+  async createCheckoutSession(tier: MembershipTier, billingCycle: "monthly" | "annual"): Promise<ApiSuccess<{ checkoutUrl: string }>> {
+    const { data } = await apiClient.post<ApiSuccess<{ checkoutUrl: string }>>("/billing/checkout-session", { tier, billingCycle });
     return data;
   },
 };

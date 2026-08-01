@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { subscriptionService } from "@/features/subscription/services/subscription.service";
 import { useCurrentMember } from "@/features/session/hooks/use-current-member";
+import type { MembershipTier } from "@/features/session/types";
 
 export function useSubscription() {
   const { data: member, isLoading: memberLoading } = useCurrentMember();
@@ -30,5 +31,12 @@ export function useCancelSubscription(onCancelled: () => void) {
       onCancelled();
       queryClient.invalidateQueries({ queryKey: ["subscription", "summary"] });
     },
+  });
+}
+
+export function useChangeTierCheckout() {
+  return useMutation({
+    mutationFn: ({ tier, billingCycle }: { tier: MembershipTier; billingCycle: "monthly" | "annual" }) =>
+      subscriptionService.createCheckoutSession(tier, billingCycle),
   });
 }

@@ -1,6 +1,6 @@
 import { subscriptionRepository } from "@/features/subscription/repositories/subscription.repository";
 import { MEMBERSHIP_TIERS } from "@/features/membership/tiers";
-import type { CurrentMember } from "@/features/session/types";
+import type { CurrentMember, MembershipTier } from "@/features/session/types";
 import type { SubscriptionSummary, Invoice } from "@/features/subscription/types";
 import type { Pagination } from "@/types/api";
 
@@ -42,5 +42,10 @@ export const subscriptionService = {
   async cancelSubscription(): Promise<boolean> {
     const response = await subscriptionRepository.cancelSubscription();
     return response.data.cancelled;
+  },
+
+  async createCheckoutSession(tier: MembershipTier, billingCycle: "monthly" | "annual"): Promise<string> {
+    const response = await subscriptionRepository.createCheckoutSession(tier, billingCycle);
+    return response.data.checkoutUrl;
   },
 };

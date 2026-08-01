@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import Link from "next/link";
 import { CheckCircle2, ShieldCheck, Building2, Users2 } from "lucide-react";
 import { LoginForm } from "@/features/auth/components/login-form";
 import { DemoAccountsPanel } from "@/features/auth/components/demo-accounts-panel";
 import { BrandMark } from "@/components/shared/brand-mark";
+import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Sign In | Property Business Training",
@@ -87,16 +89,15 @@ export default function LoginPage() {
 
           <div className="rounded-xl bg-sky-tint px-4 py-4 flex gap-3">
             <CheckCircle2 className="h-5 w-5 text-sky-600 shrink-0 mt-0.5" />
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-semibold text-text-primary">New to PBT?</p>
               <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-                Membership access is set up after you subscribe on our main site. Check
-                your welcome email for your Client ID and login details, or contact{" "}
-                <span className="font-semibold text-text-primary">
-                  support@propertybusinesstraining.com
-                </span>
-                .
+                Choose a membership and pay securely with Stripe -- your account is set up the moment
+                payment completes.
               </p>
+              <Button asChild variant="secondary" size="sm" className="mt-3">
+                <Link href="/join">Join PBT</Link>
+              </Button>
             </div>
           </div>
 
