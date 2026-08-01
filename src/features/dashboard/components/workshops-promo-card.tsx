@@ -87,7 +87,7 @@ export function WorkshopsPromoCard({ promo, memberTier }: { promo: WorkshopsProm
         </Button>
       </div>
 
-      <WorkshopCalendarModal open={modalOpen} onOpenChange={setModalOpen} hasAccess={hasAccess} requiredTier={promo.requiredTier} />
+      <WorkshopCalendarModal open={modalOpen} onOpenChange={setModalOpen} hasAccess={hasAccess} />
     </Card>
   );
 }

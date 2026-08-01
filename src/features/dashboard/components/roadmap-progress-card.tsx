@@ -1,6 +1,5 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import type { RoadmapProgress } from "@/features/dashboard/types";
 
@@ -73,10 +72,9 @@ export function RoadmapProgressCard({ progress }: { progress: RoadmapProgress })
             Your learning journey (ongoing) — new content unlocks on schedule
           </p>
         </div>
-        <button className="inline-flex items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold text-text-primary bg-white">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold text-text-primary bg-white">
           {progress.roadmapLabel}
-          <ChevronDown className="h-3.5 w-3.5 text-text-muted" />
-        </button>
+        </span>
       </div>
 
       <div className="flex items-center gap-6 flex-wrap sm:flex-nowrap">

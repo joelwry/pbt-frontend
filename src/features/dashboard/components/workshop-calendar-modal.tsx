@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import { useMonthEvents } from "@/features/calendar/hooks/use-calendar";
 import { MonthGrid } from "@/features/calendar/components/month-grid";
 import { formatYearMonth } from "@/features/calendar/date-utils";
-import { MEMBERSHIP_TIERS } from "@/features/membership/tiers";
-import type { MembershipTier } from "@/features/session/types";
 
 const WORKSHOP_CATEGORIES = new Set(["Masterclass", "Mentorship"]);
 
@@ -30,12 +28,10 @@ export function WorkshopCalendarModal({
   open,
   onOpenChange,
   hasAccess,
-  requiredTier,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   hasAccess: boolean;
-  requiredTier: MembershipTier;
 }) {
   const today = todayParts();
   const [cursor, setCursor] = useState({ year: today.year, month0: today.month0 });
@@ -61,7 +57,7 @@ export function WorkshopCalendarModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CalendarDays className="h-5 w-5 text-sky-600" />
@@ -92,7 +88,7 @@ export function WorkshopCalendarModal({
           <div className="rounded-xl bg-orange-tint px-4 py-4">
             <p className="text-sm font-semibold text-text-primary flex items-center gap-1.5">
               <Lock className="h-4 w-4 text-orange-600" />
-              These workshops are exclusive to members who have upgraded to PBT {MEMBERSHIP_TIERS[requiredTier].label}
+              These workshops are exclusive to members who have upgraded to PBT Plus or the Masterplan Programme
             </p>
             <p className="text-sm text-text-secondary mt-1.5">
               Upgrade your membership to enrol in live workshops like these, plus everything else included at that tier.
