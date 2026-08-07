@@ -29,7 +29,9 @@ export const subscriptionService = {
         month: "long",
         year: "numeric",
       }),
-      amountLabel: tierDef.priceLabel.split("/")[0],
+      amountLabel: subscription.data
+        ? `£${subscription.data.amount.toLocaleString("en-GB")} + VAT/${subscription.data.billingCycle === "monthly" ? "month" : "year"}`
+        : "—",
       paymentMethodLabel: billing.data.paymentMethodLabel,
     };
   },

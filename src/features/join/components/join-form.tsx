@@ -9,17 +9,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { joinSchema, type JoinFormValues } from "@/features/join/join-schema";
 import { joinRepository, getJoinErrorMessage } from "@/features/join/repositories/join.repository";
+import { usePricing } from "@/features/pricing/hooks/use-pricing";
+import { formatAmount } from "@/features/pricing/services/pricing.service";
 import { MEMBERSHIP_TIERS, TIER_ORDER } from "@/features/membership/tiers";
-
-const MONTHLY_PRICE: Record<string, number> = { Pathway: 39, Plus: 79, Mentorship: 149 };
 
 export function JoinForm() {
   const searchParams = useSearchParams();
   const referralCode = searchParams.get("ref") ?? undefined;
   const preselectedTier = searchParams.get("tier");
+  const { data: pricing, isLoading: pricingLoading } = usePricing();
 
   const [isPending, setIsPending] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -84,7 +86,9 @@ export function JoinForm() {
                   <p className="text-sm font-semibold text-text-primary">{def.label}</p>
                   {isSelected && <Check className="h-4 w-4 text-orange-600" />}
                 </div>
-                <p className="text-xs text-text-muted mt-1">£{MONTHLY_PRICE[tier]}/month</p>
+                <p className="text-xs text-text-muted mt-1">
+                  {pricingLoading ? "…" : `${formatAmount(pricing?.[tier].monthly ?? 0)} + VAT/month`}
+                </p>
               </button>
             );
           })}
@@ -94,11 +98,15 @@ export function JoinForm() {
       <div className="flex items-center justify-between rounded-xl bg-[#F5F8FA] px-4 py-3">
         <div>
           <p className="text-sm font-semibold text-text-primary">Bill annually</p>
-          <p className="text-xs text-text-muted mt-0.5">
-            {billingCycle === "annual"
-              ? `£${MONTHLY_PRICE[selectedTier] * 10}/year (2 months free)`
-              : `£${MONTHLY_PRICE[selectedTier]}/month`}
-          </p>
+          {pricingLoading ? (
+            <Skeleton className="h-4 w-32 mt-1" />
+          ) : (
+            <p className="text-xs text-text-muted mt-0.5">
+              {billingCycle === "annual"
+                ? `${formatAmount(pricing?.[selectedTier].annual ?? 0)} + VAT/year (2 months free)`
+                : `${formatAmount(pricing?.[selectedTier].monthly ?? 0)} + VAT/month`}
+            </p>
+          )}
         </div>
         <Controller
           control={control}

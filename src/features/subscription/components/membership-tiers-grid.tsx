@@ -5,14 +5,18 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/providers/toast-provider";
 import { useChangeTierCheckout } from "@/features/subscription/hooks/use-subscription";
+import { usePricing } from "@/features/pricing/hooks/use-pricing";
+import { formatAmount } from "@/features/pricing/services/pricing.service";
 import { MEMBERSHIP_TIERS, TIER_ORDER } from "@/features/membership/tiers";
 import type { MembershipTier } from "@/features/session/types";
 
 export function MembershipTiersGrid({ currentTier }: { currentTier: MembershipTier }) {
   const { toast } = useToast();
   const { mutate, isPending, variables } = useChangeTierCheckout();
+  const { data: pricing, isLoading: pricingLoading } = usePricing();
 
   function handleSwitchTier(tier: MembershipTier) {
     mutate(
@@ -54,8 +58,14 @@ export function MembershipTiersGrid({ currentTier }: { currentTier: MembershipTi
               <Badge variant={isCurrent ? "sky" : "outline"} className="mb-3 self-start">
                 {def.label}
               </Badge>
-              <p className="font-display text-2xl font-bold text-text-primary">{def.priceLabel.split("/")[0]}</p>
-              <p className="text-xs text-text-muted mt-0.5">/{def.priceLabel.split("/")[1]}</p>
+              {pricingLoading ? (
+                <Skeleton className="h-8 w-24" />
+              ) : (
+                <p className="font-display text-2xl font-bold text-text-primary">
+                  {formatAmount(pricing?.[tier].monthly ?? 0)}
+                </p>
+              )}
+              <p className="text-xs text-text-muted mt-0.5">+ VAT/month</p>
               <p className="text-xs text-text-muted mt-3">{def.contractLabel}</p>
               <ul className="space-y-2 mt-4 flex-1">
                 {def.features.map((feature) => (

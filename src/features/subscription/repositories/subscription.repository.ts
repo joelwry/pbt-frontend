@@ -9,6 +9,9 @@ export interface BackendSubscription {
   status: "active" | "pending" | "cancelled" | "expired";
   endDate: string;
   cancelled: boolean;
+  /** What this member is actually paying -- may differ from current pricing if it changed since they subscribed. */
+  amount: number;
+  billingCycle: "monthly" | "annual";
 }
 
 export const subscriptionRepository = {

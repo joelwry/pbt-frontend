@@ -4,16 +4,20 @@ import { AlertTriangle, CreditCard, Loader2, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { BrandMark } from "@/components/shared/brand-mark";
 import { useAuth } from "@/providers/auth-provider";
 import { useToast } from "@/providers/toast-provider";
 import { useRenewSubscription } from "@/features/renew-subscription/hooks/use-renew-subscription";
+import { usePricing } from "@/features/pricing/hooks/use-pricing";
+import { formatAmount } from "@/features/pricing/services/pricing.service";
 import { MEMBERSHIP_TIERS } from "@/features/membership/tiers";
 
 export function RenewSubscriptionView() {
   const { member, logout } = useAuth();
   const { toast } = useToast();
   const { mutate, isPending } = useRenewSubscription();
+  const { data: pricing, isLoading: pricingLoading } = usePricing();
 
   if (!member) return null;
 
@@ -68,8 +72,14 @@ export function RenewSubscriptionView() {
             <p className="text-xs text-text-muted mt-2">{tierDef.contractLabel}</p>
           </div>
           <div className="text-right">
-            <p className="font-display text-xl font-bold text-text-primary">{tierDef.priceLabel.split("/")[0]}</p>
-            <p className="text-xs text-text-muted">/{tierDef.priceLabel.split("/")[1]}</p>
+            {pricingLoading ? (
+              <Skeleton className="h-7 w-16 ml-auto" />
+            ) : (
+              <p className="font-display text-xl font-bold text-text-primary">
+                {formatAmount(pricing?.[member.membershipTier].monthly ?? 0)}
+              </p>
+            )}
+            <p className="text-xs text-text-muted">+ VAT/month</p>
           </div>
         </div>
 

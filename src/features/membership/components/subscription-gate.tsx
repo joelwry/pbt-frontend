@@ -30,7 +30,7 @@ export function SubscriptionGate({
         </h2>
         <p className="text-sm text-text-muted mt-2 max-w-md mx-auto leading-relaxed">
           Your current plan is <span className="font-semibold text-text-primary">PBT {current.label}</span>.
-          Upgrade to PBT {required.label} ({required.priceLabel}) to unlock this page.
+          Upgrade to PBT {required.label} to unlock this page.
         </p>
 
         <div className="flex items-center justify-center gap-3 mt-7 flex-wrap">

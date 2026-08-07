@@ -14,6 +14,7 @@ import { RevenueByTierCard } from "@/features/admin-subscriptions/components/rev
 import { InvoicesToolbar } from "@/features/admin-subscriptions/components/invoices-toolbar";
 import { InvoicesTable } from "@/features/admin-subscriptions/components/invoices-table";
 import { MentorshipAssignmentsCard } from "@/features/admin-subscriptions/components/mentorship-assignments-card";
+import { PricingSettingsCard } from "@/features/admin-pricing/components/pricing-settings-card";
 import type { InvoiceStatus } from "@/features/admin-subscriptions/types";
 
 export function SubscriptionsBillingView() {
@@ -52,6 +53,8 @@ export function SubscriptionsBillingView() {
       )}
 
       <RevenueByTierCard />
+
+      <PricingSettingsCard />
 
       <MentorshipAssignmentsCard />
 
