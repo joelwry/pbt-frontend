@@ -9,6 +9,7 @@ import { tierMeetsRequirement } from "@/features/session/tier-rank";
 import { useMonthEvents } from "@/features/calendar/hooks/use-calendar";
 import { formatYearMonth } from "@/features/calendar/date-utils";
 import { WorkshopCalendarModal } from "@/features/dashboard/components/workshop-calendar-modal";
+import { useSiteSettings } from "@/features/site-settings/hooks/use-site-settings";
 import type { MembershipTier } from "@/features/session/types";
 import type { WorkshopsPromo } from "@/features/dashboard/types";
 
@@ -53,7 +54,9 @@ function MiniMonthStrip() {
 
 export function WorkshopsPromoCard({ promo, memberTier }: { promo: WorkshopsPromo; memberTier: MembershipTier }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const { workshopLabel } = useSiteSettings();
   const hasAccess = tierMeetsRequirement(memberTier, promo.requiredTier);
+  const workshopLabelLower = workshopLabel.toLowerCase();
 
   return (
     <Card className="relative overflow-hidden bg-linear-to-r from-navy-950 via-navy-900 to-sky-600 border-none !p-0">
@@ -65,8 +68,8 @@ export function WorkshopsPromoCard({ promo, memberTier }: { promo: WorkshopsProm
           </span>
           <h3 className="font-display text-xl font-bold text-white leading-snug">
             {promo.upcomingCount > 0
-              ? `${promo.upcomingCount} upcoming ${promo.upcomingCount === 1 ? "workshop is" : "workshops are"} now open for booking!`
-              : "New workshops are coming soon."}
+              ? `${promo.upcomingCount} upcoming ${workshopLabelLower}${promo.upcomingCount === 1 ? " is" : "s are"} now open for booking!`
+              : `New ${workshopLabelLower}s are coming soon.`}
           </h3>
           {promo.nextWorkshopTitle && (
             <p className="text-sm text-white/70 mt-2 flex items-center gap-1.5">
@@ -77,7 +80,7 @@ export function WorkshopsPromoCard({ promo, memberTier }: { promo: WorkshopsProm
           )}
           <div className="mt-4">
             <MiniMonthStrip />
-            <p className="text-[11px] text-white/50 mt-1.5">This month&apos;s workshop schedule at a glance</p>
+            <p className="text-[11px] text-white/50 mt-1.5">This month&apos;s {workshopLabelLower} schedule at a glance</p>
           </div>
         </div>
 

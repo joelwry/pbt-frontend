@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useEventsPage, useCancelRsvp } from "@/features/events/hooks/use-events";
 import { useCurrentMember } from "@/features/session/hooks/use-current-member";
+import { useSiteSettings } from "@/features/site-settings/hooks/use-site-settings";
 import { EventCard } from "@/features/events/components/event-card";
 
 const WORKSHOP_CATEGORIES = new Set(["Masterclass", "Mentorship"]);
@@ -26,12 +27,13 @@ export function WorkshopsView() {
   const { data, isLoading, isError, refetch, isFetching } = useEventsPage("upcoming", page);
   const { mutate: cancelRsvp, isPending, variables: pendingId } = useCancelRsvp();
   const { data: member } = useCurrentMember();
+  const { workshopLabel } = useSiteSettings();
 
   const workshops = useMemo(() => (data?.items ?? []).filter((e) => WORKSHOP_CATEGORIES.has(e.category)), [data]);
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Workshops" description="Live masterclasses and mentorship workshops — enrol below." />
+      <PageHeader title={`${workshopLabel}s`} description={`Live masterclasses and mentorship ${workshopLabel.toLowerCase()}s — enrol below.`} />
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -48,7 +50,7 @@ export function WorkshopsView() {
       ) : isError || !data ? (
         <ErrorState onRetry={() => refetch()} />
       ) : workshops.length === 0 ? (
-        <EmptyState icon={CalendarX2} title="No workshops scheduled" description="Check back soon for new workshop dates." />
+        <EmptyState icon={CalendarX2} title={`No ${workshopLabel.toLowerCase()}s scheduled`} description={`Check back soon for new ${workshopLabel.toLowerCase()} dates.`} />
       ) : (
         <>
           <div className={cn("grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 transition-opacity", isFetching && "opacity-60")}>

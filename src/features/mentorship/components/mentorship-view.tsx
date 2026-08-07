@@ -13,9 +13,11 @@ import { tierMeetsRequirement } from "@/features/session/tier-rank";
 import { SubscriptionGate } from "@/features/membership/components/subscription-gate";
 import { BookCallDialog } from "@/features/mentorship/components/book-call-dialog";
 import { MentorshipCallsTable } from "@/features/mentorship/components/mentorship-calls-table";
+import { useSiteSettings } from "@/features/site-settings/hooks/use-site-settings";
 
 export function MentorshipView() {
   const { data: member, isLoading: memberLoading } = useCurrentMember();
+  const { workshopLabel } = useSiteSettings();
   const hasAccess = Boolean(member) && tierMeetsRequirement(member!.membershipTier, "Mentorship");
   // The backend enforces this same tier gate server-side (403s otherwise), so the
   // page query is only fired once we already know it's allowed to succeed.
@@ -110,8 +112,8 @@ export function MentorshipView() {
                 <CalendarDays className="h-6 w-6" />
               </div>
               <div>
-                <p className="font-display text-base font-semibold text-white">Workshops</p>
-                <p className="text-sm text-white/70 mt-0.5">Enrol in exclusive live workshops.</p>
+                <p className="font-display text-base font-semibold text-white">{workshopLabel}s</p>
+                <p className="text-sm text-white/70 mt-0.5">Enrol in exclusive live {workshopLabel.toLowerCase()}s.</p>
               </div>
             </div>
             <ArrowRight className="h-5 w-5 text-white/70 shrink-0" />

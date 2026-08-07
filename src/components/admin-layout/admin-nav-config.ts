@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   UserCircle,
   Gift,
+  Settings,
 } from "lucide-react";
 import type { AdminSection } from "@/features/admin-auth/types";
 
@@ -62,6 +63,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     label: "Account",
     items: [
       { label: "Admin Users & Roles", href: "/admin/admin-users", icon: ShieldCheck, superAdminOnly: true },
+      { label: "Site Settings", href: "/admin/settings", icon: Settings },
       { label: "Profile", href: "/admin/profile", icon: UserCircle },
     ],
   },

@@ -12,10 +12,12 @@ import { useCurrentMember } from "@/features/session/hooks/use-current-member";
 import { tierMeetsRequirement } from "@/features/session/tier-rank";
 import { TierComparisonCard } from "@/features/membership/components/tier-comparison-card";
 import { SubscriptionGate } from "@/features/membership/components/subscription-gate";
+import { useSiteSettings } from "@/features/site-settings/hooks/use-site-settings";
 
 export function PlusView() {
   const { data, isLoading, isError, refetch } = usePlusPage();
   const { data: member, isLoading: memberLoading } = useCurrentMember();
+  const { workshopLabel } = useSiteSettings();
 
   if (isLoading || memberLoading) {
     return (
@@ -99,8 +101,8 @@ export function PlusView() {
                 <CalendarDays className="h-6 w-6" />
               </div>
               <div>
-                <p className="font-display text-base font-semibold text-white">Workshops</p>
-                <p className="text-sm text-white/70 mt-0.5">Enrol in exclusive live workshops.</p>
+                <p className="font-display text-base font-semibold text-white">{workshopLabel}s</p>
+                <p className="text-sm text-white/70 mt-0.5">Enrol in exclusive live {workshopLabel.toLowerCase()}s.</p>
               </div>
             </div>
             <ArrowRight className="h-5 w-5 text-white/70 shrink-0" />
