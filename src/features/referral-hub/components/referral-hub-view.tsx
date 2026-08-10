@@ -7,11 +7,13 @@ import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/shared/pagination";
 import { useToast } from "@/providers/toast-provider";
 import { useReferralSummary, useReferredMembers } from "@/features/referral-hub/hooks/use-referral-hub";
 import { ShareButtons } from "@/features/referral-hub/components/share-buttons";
+import type { ReferralStatus } from "@/features/referral-hub/types";
 
 function useCopyToClipboard() {
   const [copied, setCopied] = useState(false);
@@ -22,6 +24,16 @@ function useCopyToClipboard() {
   }
   return { copied, copy };
 }
+
+const STATUS_VARIANT: Record<ReferralStatus, "slate" | "warning" | "sky" | "success"> = {
+  REFERRED: "slate",
+  CUSTOMER_SIGNED_UP: "slate",
+  AWAITING_FIRST_PAYMENT: "warning",
+  FIRST_PAYMENT_RECEIVED: "sky",
+  REWARD_EARNED: "sky",
+  PAYMENT_PENDING: "warning",
+  PAID: "success",
+};
 
 export function ReferralHubView() {
   const { data: summary, isLoading, isError, refetch } = useReferralSummary();
@@ -34,8 +46,10 @@ export function ReferralHubView() {
     return (
       <div className="space-y-6">
         <PageHeader title="Referral Hub" description="Invite friends to PBT and earn rewards for every successful referral." />
+        <Skeleton className="h-56 w-full rounded-[var(--radius-card)]" />
         <Skeleton className="h-44 w-full rounded-[var(--radius-card)]" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Skeleton className="h-28 rounded-[var(--radius-card)]" />
           <Skeleton className="h-28 rounded-[var(--radius-card)]" />
           <Skeleton className="h-28 rounded-[var(--radius-card)]" />
         </div>
@@ -81,6 +95,11 @@ export function ReferralHubView() {
     <div className="space-y-6">
       <PageHeader title="Referral Hub" description="Invite friends to PBT and earn rewards for every successful referral." />
 
+      <Card className="p-0 overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element -- static local asset, no next/image usage precedent elsewhere in this codebase */}
+        <img src="/referrals/referral-hero.png" alt="Earn extra cash with the PBT referral programme" className="w-full h-auto block" />
+      </Card>
+
       <Card className="relative overflow-hidden bg-linear-to-r from-navy-950 to-sky-600 border-none">
         <div className="relative">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-orange-500 mb-4">
@@ -88,8 +107,12 @@ export function ReferralHubView() {
             Invite Friends
           </span>
           <h2 className="font-display text-xl font-bold text-white leading-snug max-w-lg">
-            Share PBT with someone building their property business — {summary.rewardPerReferralLabel.toLowerCase()}.
+            Share PBT with someone building their property business — {summary.rewardDescriptionLabel.toLowerCase()}.
           </h2>
+          <p className="text-sm text-white/70 mt-2 max-w-lg">
+            e.g. they join PBT Pathway (£99) → you earn £9.90. They join PBT Plus (£249) → you earn £24.90. It&apos;s a
+            one-time reward on their first payment only — not on every month they stay subscribed.
+          </p>
 
           <div className="mt-5 flex items-center gap-2 rounded-xl bg-white/10 px-4 py-3 max-w-xl">
             <span className="text-sm text-white/90 font-mono truncate flex-1">{summary.referralLink}</span>
@@ -103,7 +126,7 @@ export function ReferralHubView() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="flex items-center gap-4">
           <div className="h-12 w-12 rounded-xl bg-sky-tint text-sky-600 flex items-center justify-center shrink-0">
             <Users className="h-5 w-5" />
@@ -120,6 +143,15 @@ export function ReferralHubView() {
           <div>
             <p className="font-display text-2xl font-bold text-text-primary">£{summary.rewardsEarned}</p>
             <p className="text-sm text-text-muted">Rewards Earned</p>
+          </div>
+        </Card>
+        <Card className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-xl bg-navy-900 text-white flex items-center justify-center shrink-0">
+            <Wallet className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="font-display text-2xl font-bold text-text-primary">£{summary.rewardsPaid}</p>
+            <p className="text-sm text-text-muted">Rewards Paid</p>
           </div>
         </Card>
       </div>
@@ -146,7 +178,10 @@ export function ReferralHubView() {
                   <tr className="text-left text-[11px] font-semibold text-text-muted uppercase tracking-wide border-b border-border">
                     <th className="py-2.5 pr-4">Member</th>
                     <th className="py-2.5 pr-4">Joined</th>
-                    <th className="py-2.5 text-right">Reward</th>
+                    <th className="py-2.5 pr-4">Plan</th>
+                    <th className="py-2.5 pr-4">First Payment</th>
+                    <th className="py-2.5 pr-4 text-right">Reward</th>
+                    <th className="py-2.5 text-right">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -154,7 +189,16 @@ export function ReferralHubView() {
                     <tr key={member.id}>
                       <td className="py-3 pr-4 text-text-primary font-medium">{member.memberName}</td>
                       <td className="py-3 pr-4 text-text-secondary whitespace-nowrap">{member.joinedLabel}</td>
-                      <td className="py-3 text-right text-text-secondary whitespace-nowrap">£{member.rewardAmount}</td>
+                      <td className="py-3 pr-4 text-text-secondary whitespace-nowrap">{member.tierLabel ?? "—"}</td>
+                      <td className="py-3 pr-4 text-text-secondary whitespace-nowrap">
+                        {member.firstPaymentAmount !== null ? `£${member.firstPaymentAmount}` : "—"}
+                      </td>
+                      <td className="py-3 pr-4 text-right text-text-secondary whitespace-nowrap">
+                        {member.rewardAmount !== null ? `£${member.rewardAmount}` : "—"}
+                      </td>
+                      <td className="py-3 text-right whitespace-nowrap">
+                        <Badge variant={STATUS_VARIANT[member.status]}>{member.statusLabel}</Badge>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
