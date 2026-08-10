@@ -21,6 +21,7 @@ import type { AdminRole } from "@/features/admin-auth/types";
 
 const ROLE_VARIANT: Record<AdminRole, "navy" | "sky" | "outline"> = {
   "Super Admin": "navy",
+  Admin: "navy",
   "Content Manager": "sky",
   "Community Moderator": "sky",
   "Support Staff": "outline",

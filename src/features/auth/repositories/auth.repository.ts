@@ -1,9 +1,8 @@
+import axios from "axios";
+import { apiClient } from "@/lib/api-client";
 import type { ApiSuccess, ApiError } from "@/types/api";
 import type { LoginCredentials, AuthSession, RefreshedSession } from "@/features/auth/types";
-import { MOCK_USER_DIRECTORY } from "@/features/auth/mocks/user-directory.mock";
-import { createMockToken, decodeMockToken, isTokenExpired } from "@/features/auth/token-utils";
-
-const SIMULATED_LATENCY_MS = 700;
+import type { CurrentMember, MembershipTier } from "@/features/session/types";
 
 export class AuthApiError extends Error {
   errors: string[];
@@ -13,91 +12,190 @@ export class AuthApiError extends Error {
   }
 }
 
-// In-memory map of issued refresh tokens -> member email, so refresh() can look
-// the member back up. A real backend would persist this (hashed) per session
-// in the database instead, to support revocation.
-const issuedRefreshTokens = new Map<string, string>();
+function toAuthApiError(error: unknown): AuthApiError {
+  if (axios.isAxiosError(error) && error.response?.data) {
+    const payload = error.response.data as Partial<ApiError>;
+    return new AuthApiError({
+      success: false,
+      message: payload.message ?? "Something went wrong. Please try again.",
+      errors: payload.errors ?? [],
+    });
+  }
+  return new AuthApiError({
+    success: false,
+    message: "Something went wrong. Please try again.",
+    errors: [],
+  });
+}
+
+interface BackendUser {
+  id: string;
+  email: string;
+  fullName: string;
+  role: string;
+  clientId?: string;
+  avatarUrl?: string;
+}
+
+interface BackendTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
+interface BackendSubscription {
+  tier: "pathway" | "plus" | "mentorship";
+  status: "active" | "pending" | "cancelled" | "expired";
+  startDate: string;
+  endDate: string;
+}
+
+function toMembershipTier(tier: BackendSubscription["tier"]): MembershipTier {
+  return (tier.charAt(0).toUpperCase() + tier.slice(1)) as MembershipTier;
+}
+
+function initialsOf(fullName: string): string {
+  return fullName
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]!.toUpperCase())
+    .join("");
+}
+
+// JWTs carry their own `exp` claim — decoding it locally (no signature
+// verification needed, it's only used to schedule the proactive refresh)
+// keeps the frontend in sync with whatever access-token TTL the backend is
+// configured with, instead of duplicating that value.
+function expiresInFromJwt(token: string): number {
+  const payload = token.split(".")[1];
+  const decoded = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/"))) as { exp: number };
+  return Math.max(Math.floor(decoded.exp - Date.now() / 1000), 0);
+}
+
+// No subscription record exists for an account until one is created via the
+// real payment flow (see renew-subscription.repository.ts) — a 404 here is a
+// real "never subscribed" state, not an error, so it's treated conservatively
+// as an expired Pathway subscription rather than a broken request.
+async function fetchSubscription(accessToken: string): Promise<BackendSubscription | null> {
+  try {
+    const { data } = await apiClient.get<ApiSuccess<BackendSubscription>>("/subscriptions/current", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    return data.data;
+  } catch {
+    return null;
+  }
+}
+
+async function composeMember(user: BackendUser, accessToken: string): Promise<CurrentMember> {
+  const subscription = await fetchSubscription(accessToken);
+  return {
+    id: user.id,
+    clientId: user.clientId ?? user.id,
+    fullName: user.fullName,
+    initials: initialsOf(user.fullName),
+    email: user.email,
+    avatarUrl: user.avatarUrl,
+    membershipTier: subscription ? toMembershipTier(subscription.tier) : "Pathway",
+    subscriptionStatus: subscription?.status === "active" ? "active" : "expired",
+    subscriptionDate: subscription?.endDate ?? subscription?.startDate ?? new Date().toISOString(),
+  };
+}
 
 export const authRepository = {
   async login(credentials: LoginCredentials): Promise<ApiSuccess<AuthSession>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
+    try {
+      const { data } = await apiClient.post<ApiSuccess<{ user: BackendUser; tokens: BackendTokens }>>(
+        "/auth/login",
+        credentials
+      );
+      const { user, tokens } = data.data;
+      const member = await composeMember(user, tokens.accessToken);
 
-    const record = MOCK_USER_DIRECTORY[credentials.email.trim().toLowerCase()];
-
-    if (!record) {
-      throw new AuthApiError({
-        success: false,
-        message: "No account found for that email address",
-        errors: ["This email isn't registered. Membership access is set up after you subscribe on our main site."],
-      });
+      return {
+        success: true,
+        message: data.message,
+        data: {
+          accessToken: tokens.accessToken,
+          // Persistent sessions rely solely on the httpOnly refresh cookie —
+          // holding the value in JS memory too would defeat that protection.
+          refreshToken: credentials.rememberMe ? undefined : tokens.refreshToken,
+          expiresIn: expiresInFromJwt(tokens.accessToken),
+          member,
+        },
+      };
+    } catch (error) {
+      throw toAuthApiError(error);
     }
-
-    if (record.password !== credentials.password) {
-      throw new AuthApiError({
-        success: false,
-        message: "Incorrect password",
-        errors: ["The password you entered is incorrect."],
-      });
-    }
-
-    const accessToken = createMockToken(record.member.id, "access", record.accessTokenTtl);
-    const refreshToken = createMockToken(record.member.id, "refresh", record.refreshTokenTtl);
-    issuedRefreshTokens.set(refreshToken, credentials.email.trim().toLowerCase());
-
-    return {
-      success: true,
-      message: "Signed in successfully",
-      data: { accessToken, refreshToken, expiresIn: record.accessTokenTtl, member: record.member },
-    };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.post<ApiSuccess<AuthSession>>("/auth/login", credentials);
-    // return data;
   },
 
-  async refresh(refreshToken: string): Promise<ApiSuccess<RefreshedSession>> {
-    await new Promise((resolve) => setTimeout(resolve, 400));
+  /** Pass null to refresh via the httpOnly cookie (persistent sessions). */
+  async refresh(refreshToken: string | null): Promise<ApiSuccess<RefreshedSession>> {
+    try {
+      const { data } = await apiClient.post<ApiSuccess<BackendTokens>>(
+        "/auth/refresh-token",
+        refreshToken ? { refreshToken } : {}
+      );
 
-    if (isTokenExpired(refreshToken)) {
-      throw new AuthApiError({
-        success: false,
-        message: "Session expired",
-        errors: ["Your refresh token has expired. Please log in again."],
-      });
+      return {
+        success: true,
+        message: data.message,
+        data: {
+          accessToken: data.data.accessToken,
+          refreshToken: refreshToken ? data.data.refreshToken : undefined,
+          expiresIn: expiresInFromJwt(data.data.accessToken),
+        },
+      };
+    } catch (error) {
+      throw toAuthApiError(error);
     }
-
-    const email = issuedRefreshTokens.get(refreshToken);
-    const decoded = decodeMockToken(refreshToken);
-    if (!email || !decoded) {
-      throw new AuthApiError({
-        success: false,
-        message: "Invalid refresh token",
-        errors: ["This session could not be verified. Please log in again."],
-      });
-    }
-
-    const record = MOCK_USER_DIRECTORY[email];
-    if (!record) {
-      throw new AuthApiError({
-        success: false,
-        message: "Invalid refresh token",
-        errors: ["This session could not be verified. Please log in again."],
-      });
-    }
-
-    const accessToken = createMockToken(record.member.id, "access", record.accessTokenTtl);
-    return { success: true, message: "Token refreshed successfully", data: { accessToken, expiresIn: record.accessTokenTtl } };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.post<ApiSuccess<RefreshedSession>>("/auth/refresh", { refreshToken });
-    // return data;
   },
 
-  async logout(refreshToken: string): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    issuedRefreshTokens.delete(refreshToken);
+  /** Attempts to restore a persistent session from the httpOnly refresh cookie on app boot. Returns null if there is none (or it's expired) — this is an expected, silent outcome, not an error. */
+  async restoreSession(): Promise<ApiSuccess<AuthSession> | null> {
+    try {
+      const { data: tokenData } = await apiClient.post<ApiSuccess<BackendTokens>>("/auth/refresh-token", {});
+      const { accessToken } = tokenData.data;
 
-    // Live implementation, once the Express API exists:
-    // await apiClient.post("/auth/logout", { refreshToken });
+      const { data: userData } = await apiClient.get<ApiSuccess<BackendUser>>("/auth/me", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const member = await composeMember(userData.data, accessToken);
+
+      return {
+        success: true,
+        message: tokenData.message,
+        data: { accessToken, expiresIn: expiresInFromJwt(accessToken), member },
+      };
+    } catch {
+      return null;
+    }
+  },
+
+  async logout(): Promise<void> {
+    try {
+      // Explicit {} body — axios omits Content-Type on a bodyless POST, which
+      // the backend's requestValidationMiddleware then rejects with 415.
+      await apiClient.post("/auth/logout", {});
+    } catch {
+      // Best-effort — local state is cleared regardless.
+    }
+  },
+
+  /**
+   * Used both by "forgot password" and by the first-time account-setup link
+   * (admin-created member, or eventually a first-ever Stripe subscription) —
+   * the backend's reset-password endpoint is the same token-gated mechanism
+   * either way, only the surrounding page copy differs.
+   */
+  async setNewPassword(token: string, newPassword: string): Promise<void> {
+    try {
+      // Backend requires confirmPassword in the body too (defense against a
+      // client-only mismatch check) — the form already validated equality.
+      await apiClient.post("/auth/reset-password", { token, newPassword, confirmPassword: newPassword });
+    } catch (error) {
+      throw toAuthApiError(error);
+    }
   },
 };

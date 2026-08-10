@@ -9,10 +9,17 @@ import { ErrorState } from "@/components/shared/error-state";
 import { LessonCard } from "@/features/learning/components/lesson-card";
 import { useModuleLessons } from "@/features/learning/hooks/use-learning";
 import type { LearningModuleSummary } from "@/features/learning/types";
+import type { MembershipTier } from "@/features/session/types";
 
-export function ModuleSection({ moduleSummary }: { moduleSummary: LearningModuleSummary }) {
+export function ModuleSection({
+  moduleSummary,
+  contentTier = "Pathway",
+}: {
+  moduleSummary: LearningModuleSummary;
+  contentTier?: MembershipTier;
+}) {
   const [page, setPage] = useState(1);
-  const { data, isLoading, isFetching, isError, refetch } = useModuleLessons(moduleSummary.id, page);
+  const { data, isLoading, isFetching, isError, refetch } = useModuleLessons(moduleSummary.id, page, undefined, contentTier);
 
   return (
     <section>

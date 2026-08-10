@@ -69,3 +69,44 @@ export function useDeleteMember() {
     onSuccess: invalidate,
   });
 }
+
+export function useCreateMember() {
+  const invalidate = useInvalidateMembers();
+  return useMutation({
+    mutationFn: (input: { fullName: string; email: string; tier: MembershipTier }) => adminMembersService.createMember(input),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateMember() {
+  const invalidate = useInvalidateMembers();
+  return useMutation({
+    mutationFn: ({
+      id,
+      ...input
+    }: {
+      id: string;
+      fullName?: string;
+      phone?: string;
+      location?: string;
+      assignedLeaderId?: string | null;
+    }) => adminMembersService.updateMember(id, input),
+    onSuccess: invalidate,
+  });
+}
+
+export function useMemberBilling(id: string, page: number) {
+  return useQuery({
+    queryKey: ["admin", "members", "billing", id, page],
+    queryFn: () => adminMembersService.getMemberBilling(id, page, 5),
+    enabled: Boolean(id),
+  });
+}
+
+export function useMemberLearningProgress(id: string) {
+  return useQuery({
+    queryKey: ["admin", "members", "learning-progress", id],
+    queryFn: () => adminMembersService.getMemberLearningProgress(id),
+    enabled: Boolean(id),
+  });
+}

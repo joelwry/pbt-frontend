@@ -1,6 +1,5 @@
 import type { Lesson, LessonStatus } from "@/features/learning/types";
 import type { MembershipTier } from "@/features/session/types";
-import { TIER_RANK } from "@/features/session/tier-rank";
 
 export interface ResolvedLesson extends Lesson {
   isLocked: boolean;
@@ -9,26 +8,21 @@ export interface ResolvedLesson extends Lesson {
 }
 
 /**
- * A lesson is locked when either:
- *  - its scheduled unlock date/time hasn't passed yet, or
- *  - the member's current membership tier doesn't meet the lesson's required tier.
- * This runs client-side against mock data today, but is the exact rule the
- * backend must enforce server-side once the real API exists (never trust the
- * frontend lock state alone for authorization).
+ * A lesson in My Learning is locked purely by its scheduled unlock date/time
+ * — see docs/ui_adjustment.md: My Learning content is available to every
+ * subscription tier, so `requiredTier` (still stored per-lesson for the
+ * dedicated PBT Plus / Mentorship areas) is intentionally not enforced here.
+ * This mirrors the backend's `canAccessLesson`, which is the real gate —
+ * never trust the frontend lock state alone for authorization.
  */
-export function resolveLessonAccess(lesson: Lesson, memberTier: MembershipTier, now: Date = new Date()): ResolvedLesson {
+export function resolveLessonAccess(lesson: Lesson, _memberTier: MembershipTier, now: Date = new Date()): ResolvedLesson {
   const unlockDate = new Date(lesson.access.unlocksAt);
-  const notYetReleased = now < unlockDate;
-  const tierTooLow = TIER_RANK[memberTier] < TIER_RANK[lesson.access.requiredTier];
-  const isLocked = notYetReleased || tierTooLow;
+  const isLocked = now < unlockDate;
 
   if (!isLocked) {
     return { ...lesson, isLocked: false, resolvedStatus: lesson.status === "locked" ? "not-started" : lesson.status };
   }
 
-  const reason = tierTooLow
-    ? `Requires PBT ${lesson.access.requiredTier} or higher`
-    : `Unlocks ${unlockDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
-
+  const reason = `Unlocks ${unlockDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
   return { ...lesson, isLocked: true, resolvedStatus: "locked", resolvedLockReason: reason };
 }

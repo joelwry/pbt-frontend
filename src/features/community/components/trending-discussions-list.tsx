@@ -12,7 +12,7 @@ const ROLE_BADGE_VARIANT = {
   "PBT Leader": "orange" as const,
   "Power Team": "sky" as const,
   "PBT Plus": "success" as const,
-  "PBT Mentorship": "navy" as const,
+  "PBT Masterplan Programme": "navy" as const,
 };
 
 interface TrendingDiscussionsListProps {

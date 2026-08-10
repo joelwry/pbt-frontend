@@ -27,5 +27,6 @@ export interface MentorshipPageData {
   description: string;
   renewsLabel: string;
   benefits: MentorshipBenefit[];
-  assignedMentor: AssignedMentor;
+  /** Null until an admin assigns a Leader as this member's mentor (see admin-subscriptions). */
+  assignedMentor: AssignedMentor | null;
 }

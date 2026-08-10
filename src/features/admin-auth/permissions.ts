@@ -10,6 +10,7 @@ export const ADMIN_SECTION_LABELS: Record<AdminSection, string> = {
   powerTeam: "Power Team",
   subscriptions: "Subscriptions & Billing",
   analytics: "Analytics & Reports",
+  referrals: "Referrals",
 };
 
 export const ADMIN_SECTION_ROUTES: Record<AdminSection, string> = {
@@ -22,11 +23,13 @@ export const ADMIN_SECTION_ROUTES: Record<AdminSection, string> = {
   powerTeam: "/admin/power-team",
   subscriptions: "/admin/subscriptions",
   analytics: "/admin/analytics",
+  referrals: "/admin/referrals",
 };
 
 /** Suggested default access when a role is picked in the Invite Admin User form. Editable afterward. */
 export const ROLE_DEFAULT_SECTIONS: Record<AdminRole, AdminSection[]> = {
   "Super Admin": Object.keys(ADMIN_SECTION_LABELS) as AdminSection[],
+  Admin: Object.keys(ADMIN_SECTION_LABELS) as AdminSection[],
   "Content Manager": ["content", "resources"],
   "Community Moderator": ["community", "events"],
   "Support Staff": ["members"],

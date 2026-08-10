@@ -18,7 +18,7 @@ export const mentorshipService = {
     return { items: response.data, pagination: response.pagination };
   },
 
-  async bookCall(input: { topic: string; dateLabel: string; mentorName: string }): Promise<MentorshipCall> {
+  async bookCall(input: { topic: string; scheduledAt: string }): Promise<MentorshipCall> {
     const response = await mentorshipRepository.bookCall(input);
     return response.data;
   },

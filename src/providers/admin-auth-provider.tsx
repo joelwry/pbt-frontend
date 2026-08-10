@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { useRouter, usePathname } from "next/navigation";
 import { adminAuthService } from "@/features/admin-auth/services/admin-auth.service";
 import { getAdminAuthErrorMessage } from "@/features/admin-auth/error-utils";
+import { setAdminAccessToken as setStoredAdminAccessToken } from "@/lib/admin-access-token-store";
 import { useToast } from "@/providers/toast-provider";
 import type { AdminUser, AdminLoginCredentials } from "@/features/admin-auth/types";
 
@@ -15,6 +16,7 @@ interface AdminAuthState {
 interface AdminAuthContextValue {
   admin: AdminUser | null;
   isAuthenticated: boolean;
+  /** True while the initial session-restore attempt (silent refresh from the httpOnly cookie) is in flight. */
   isLoading: boolean;
   login: (credentials: AdminLoginCredentials) => Promise<AdminUser>;
   logout: () => void;
@@ -24,14 +26,26 @@ const AdminAuthContext = createContext<AdminAuthContextValue | null>(null);
 
 const REFRESH_BUFFER_MS = 5000;
 
+// Same hybrid strategy as the member AuthProvider: "memory" holds the
+// refresh token in JS only (rememberDevice off), "persistent" relies solely
+// on the httpOnly refresh cookie.
+type SessionMode = "memory" | "persistent" | null;
+
 export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
 
   const [state, setState] = useState<AdminAuthState>({ admin: null, accessToken: null });
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
   const refreshTokenRef = useRef<string | null>(null);
+  const modeRef = useRef<SessionMode>(null);
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const setAccessToken = useCallback((token: string | null) => {
+    setStoredAdminAccessToken(token);
+    setState((prev) => ({ ...prev, accessToken: token }));
+  }, []);
 
   const clearRefreshTimer = useCallback(() => {
     if (refreshTimerRef.current) {
@@ -45,6 +59,8 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       clearRefreshTimer();
       const returnTo = pathname && pathname !== "/admin/login" ? pathname : undefined;
       refreshTokenRef.current = null;
+      modeRef.current = null;
+      setStoredAdminAccessToken(null);
       setState({ admin: null, accessToken: null });
 
       if (reason === "expired") {
@@ -66,12 +82,15 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       const delay = Math.max(expiresInSeconds * 1000 - REFRESH_BUFFER_MS, 0);
 
       const runRefresh = async () => {
-        const currentRefreshToken = refreshTokenRef.current;
-        if (!currentRefreshToken) return;
+        const mode = modeRef.current;
+        if (!mode) return;
 
         try {
-          const refreshed = await adminAuthService.refresh(currentRefreshToken);
-          setState((prev) => ({ ...prev, accessToken: refreshed.accessToken }));
+          const refreshed = await adminAuthService.refresh(mode === "memory" ? refreshTokenRef.current : null);
+          if (mode === "memory" && refreshed.refreshToken) {
+            refreshTokenRef.current = refreshed.refreshToken;
+          }
+          setAccessToken(refreshed.accessToken);
           scheduleRefreshRef.current(refreshed.expiresIn);
         } catch {
           forceLogout("expired");
@@ -80,18 +99,45 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
       refreshTimerRef.current = setTimeout(runRefresh, delay);
     },
-    [clearRefreshTimer, forceLogout]
+    [clearRefreshTimer, forceLogout, setAccessToken]
   );
 
   useEffect(() => {
     scheduleRefreshRef.current = scheduleRefresh;
   }, [scheduleRefresh]);
 
+  // On mount, try to restore a persistent admin session from the httpOnly
+  // refresh cookie — same silent-by-design behavior as the member provider.
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const session = await adminAuthService.restoreSession();
+      if (cancelled) return;
+
+      if (session) {
+        modeRef.current = "persistent";
+        refreshTokenRef.current = null;
+        setStoredAdminAccessToken(session.accessToken);
+        setState({ admin: session.admin, accessToken: session.accessToken });
+        scheduleRefresh(session.expiresIn);
+      }
+      setIsBootstrapping(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const login = useCallback(
     async (credentials: AdminLoginCredentials): Promise<AdminUser> => {
       try {
         const session = await adminAuthService.login(credentials);
-        refreshTokenRef.current = session.refreshToken;
+        modeRef.current = credentials.rememberDevice ? "persistent" : "memory";
+        refreshTokenRef.current = credentials.rememberDevice ? null : (session.refreshToken ?? null);
+        setStoredAdminAccessToken(session.accessToken);
         setState({ admin: session.admin, accessToken: session.accessToken });
         scheduleRefresh(session.expiresIn);
         return session.admin;
@@ -104,15 +150,19 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const logout = useCallback(() => {
-    if (refreshTokenRef.current) {
-      adminAuthService.logout(refreshTokenRef.current).catch(() => {});
-    }
+    adminAuthService.logout().catch(() => {});
     forceLogout("manual");
   }, [forceLogout]);
 
   return (
     <AdminAuthContext.Provider
-      value={{ admin: state.admin, isAuthenticated: Boolean(state.admin), isLoading: false, login, logout }}
+      value={{
+        admin: state.admin,
+        isAuthenticated: Boolean(state.admin),
+        isLoading: isBootstrapping,
+        login,
+        logout,
+      }}
     >
       {children}
     </AdminAuthContext.Provider>

@@ -25,6 +25,7 @@ export interface AdminMemberDetail extends AdminMemberListItem {
   phone: string;
   location: string;
   assignedLeader: string;
+  assignedLeaderId: string | null;
   renewalDateLabel: string;
   paymentMethodLabel: string;
   memberSinceLabel: string;
@@ -40,4 +41,20 @@ export interface AdminMembersStats {
   newMembersThisWeek: number;
   failedPayments: number;
   pausedAccounts: number;
+}
+
+export interface MemberBillingRow {
+  id: string;
+  label: string;
+  dateLabel: string;
+  amount: number;
+  status: "Paid";
+}
+
+export interface MemberLearningProgress {
+  completedLessonsCount: number;
+  completedModulesCount: number;
+  overallProgress: number;
+  totalLearningMinutes: number;
+  streakDays: number;
 }

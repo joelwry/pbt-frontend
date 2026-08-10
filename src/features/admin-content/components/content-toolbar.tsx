@@ -3,13 +3,7 @@ import { Search, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
-const YEAR_TABS = [
-  { value: "2026", label: "2026" },
-  { value: "2025", label: "2025" },
-  { value: "2024", label: "2024" },
-  { value: "All", label: "All Years" },
-];
+import { useAdminRoadmapYears } from "@/features/admin-content/hooks/use-admin-content";
 
 interface ContentToolbarProps {
   search: string;
@@ -19,6 +13,9 @@ interface ContentToolbarProps {
 }
 
 export function ContentToolbar({ search, onSearchChange, year, onYearChange }: ContentToolbarProps) {
+  const { data: roadmapYears } = useAdminRoadmapYears();
+  const yearTabs = [...(roadmapYears ?? []).map((y) => ({ value: y, label: y })), { value: "All", label: "All Years" }];
+
   return (
     <div className="flex items-center justify-between gap-3 flex-wrap">
       <div className="relative flex-1 min-w-[240px] max-w-sm">
@@ -32,7 +29,7 @@ export function ContentToolbar({ search, onSearchChange, year, onYearChange }: C
       </div>
 
       <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-white p-1 overflow-x-auto max-w-full">
-        {YEAR_TABS.map((t) => (
+        {yearTabs.map((t) => (
           <button
             key={t.value}
             onClick={() => onYearChange(t.value)}

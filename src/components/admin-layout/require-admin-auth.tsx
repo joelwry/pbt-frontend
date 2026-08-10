@@ -8,17 +8,21 @@ import { isAdminRouteAllowed } from "@/features/admin-auth/permissions";
 import { Loader2 } from "lucide-react";
 
 export function RequireAdminAuth({ children }: { children: React.ReactNode }) {
-  const { admin, isAuthenticated } = useAdminAuth();
+  const { admin, isAuthenticated, isLoading } = useAdminAuth();
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Wait for the initial session-restore attempt (silent refresh from the
+    // httpOnly cookie) before deciding there's no session — otherwise every
+    // page reload would bounce a persistent admin session straight to
+    // /admin/login. See docs/ui_adjustment.md.
+    if (!isLoading && !isAuthenticated) {
       router.replace(`/admin/login?returnTo=${encodeURIComponent(pathname)}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, pathname]);
+  }, [isLoading, isAuthenticated, pathname]);
 
   useEffect(() => {
     if (isAuthenticated && admin && !isAdminRouteAllowed(admin, pathname)) {
@@ -28,7 +32,7 @@ export function RequireAdminAuth({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, admin, pathname]);
 
-  if (!isAuthenticated || (admin && !isAdminRouteAllowed(admin, pathname))) {
+  if (isLoading || !isAuthenticated || (admin && !isAdminRouteAllowed(admin, pathname))) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-sky-600" />

@@ -9,14 +9,14 @@ export interface DashboardStats {
   nextUnlockLabel: string;
 }
 
-export interface ProgrammeProgress {
+export interface RoadmapProgress {
   overallPercent: number;
   encouragement: string;
   completed: number;
   unlockedInProgress: number;
   upcoming: number;
   totalThisYear: number;
-  programmeLabel: string;
+  roadmapLabel: string;
 }
 
 export type LessonType = "Video" | "Article" | "Download" | "Quiz";
@@ -57,12 +57,20 @@ export interface CommunityActivityItem {
   kind: "post" | "announcement" | "reply";
 }
 
+export interface WorkshopsPromo {
+  upcomingCount: number;
+  nextWorkshopTitle: string | null;
+  nextWorkshopDateLabel: string | null;
+  requiredTier: "Pathway" | "Plus" | "Mentorship";
+}
+
 export interface DashboardData {
   memberFirstName: string;
   stats: DashboardStats;
-  programmeProgress: ProgrammeProgress;
+  roadmapProgress: RoadmapProgress;
   continueLearning: ContinueLearningLesson | null;
   quickAccess: QuickAccessTile[];
   upcomingEvents: UpcomingEvent[];
   communityActivity: CommunityActivityItem[];
+  workshopsPromo: WorkshopsPromo;
 }

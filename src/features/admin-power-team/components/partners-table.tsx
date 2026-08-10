@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { useDeletePartner } from "@/features/admin-power-team/hooks/use-admin-power-team";
 import { useToast } from "@/providers/toast-provider";
+import { Avatar } from "@/components/shared/avatar";
 import type { AdminPartner } from "@/features/admin-power-team/types";
 
 export function PartnersTable({ partners }: { partners: AdminPartner[] }) {
@@ -58,9 +59,12 @@ function PartnerRow({ partner }: { partner: AdminPartner }) {
     <tr>
       <td className="py-3.5 pr-4">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-full bg-navy-900 text-white text-xs font-bold flex items-center justify-center shrink-0">
-            {partner.initials}
-          </div>
+          <Avatar
+            src={partner.logoUrl}
+            alt={partner.name}
+            initials={partner.initials}
+            className="h-9 w-9 rounded-full bg-navy-900 text-xs shrink-0"
+          />
           <p className="font-semibold text-text-primary truncate">{partner.name}</p>
         </div>
       </td>

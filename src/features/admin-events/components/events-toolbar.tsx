@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { EventFilterTab } from "@/features/admin-events/types";
 
-const TABS: EventFilterTab[] = ["Upcoming", "Past", "Live Online", "In-Person", "Workshop"];
+const TABS: EventFilterTab[] = ["Upcoming", "Past", "Mentorship", "In-Person", "Community", "Masterclass", "Onboarding"];
 
 interface EventsToolbarProps {
   search: string;

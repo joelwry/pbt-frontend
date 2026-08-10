@@ -12,6 +12,8 @@ import {
   BarChart3,
   ShieldCheck,
   UserCircle,
+  Gift,
+  Settings,
 } from "lucide-react";
 import type { AdminSection } from "@/features/admin-auth/types";
 
@@ -54,12 +56,14 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     items: [
       { label: "Subscriptions & Billing", href: "/admin/subscriptions", icon: CreditCard, section: "subscriptions" },
       { label: "Analytics & Reports", href: "/admin/analytics", icon: BarChart3, section: "analytics" },
+      { label: "Referrals", href: "/admin/referrals", icon: Gift, section: "referrals" },
     ],
   },
   {
     label: "Account",
     items: [
       { label: "Admin Users & Roles", href: "/admin/admin-users", icon: ShieldCheck, superAdminOnly: true },
+      { label: "Site Settings", href: "/admin/settings", icon: Settings },
       { label: "Profile", href: "/admin/profile", icon: UserCircle },
     ],
   },

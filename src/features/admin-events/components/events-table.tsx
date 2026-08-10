@@ -17,10 +17,12 @@ import { useDeleteEvent } from "@/features/admin-events/hooks/use-admin-events";
 import { useToast } from "@/providers/toast-provider";
 import type { AdminEvent, AdminEventType } from "@/features/admin-events/types";
 
-const TYPE_VARIANT: Record<AdminEventType, "sky" | "orange" | "outline"> = {
-  "Live Online": "sky",
-  Workshop: "orange",
-  "In-Person": "outline",
+const TYPE_VARIANT: Record<AdminEventType, "sky" | "orange" | "success" | "navy" | "outline"> = {
+  Mentorship: "orange",
+  "In-Person": "sky",
+  Community: "success",
+  Masterclass: "navy",
+  Onboarding: "outline",
 };
 const STATUS_VARIANT = { Upcoming: "success" as const, Completed: "outline" as const, Cancelled: "error" as const };
 

@@ -7,11 +7,15 @@ export interface AdminLeader {
   initials: string;
   region: AdminLeaderRegion;
   specialty: string;
+  specialties: string[];
   email: string;
   bio: string;
   status: AdminLeaderStatus;
   membersAssigned: number;
   isTopMentor?: boolean;
+  location: string;
+  yearsActive: number;
+  profileImageUrl: string;
 }
 
 export interface AdminLeadersStats {

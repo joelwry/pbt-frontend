@@ -10,12 +10,13 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useEventsPage, useCancelRsvp } from "@/features/events/hooks/use-events";
+import { useCurrentMember } from "@/features/session/hooks/use-current-member";
 import { EventCard } from "@/features/events/components/event-card";
 import type { EventsTab } from "@/features/events/types";
 
 const TABS: { value: EventsTab; label: string }[] = [
   { value: "upcoming", label: "Upcoming" },
-  { value: "past", label: "Past Events" },
+  { value: "past", label: "Previous Events" },
   { value: "my-rsvps", label: "My RSVPs" },
 ];
 
@@ -24,6 +25,7 @@ export function EventsView() {
   const [page, setPage] = useState(1);
   const { data, isLoading, isError, refetch, isFetching } = useEventsPage(tab, page);
   const { mutate: cancelRsvp, isPending, variables: pendingId } = useCancelRsvp();
+  const { data: member } = useCurrentMember();
 
   function handleTabChange(next: EventsTab) {
     setTab(next);
@@ -81,6 +83,7 @@ export function EventsView() {
               <EventCard
                 key={event.id}
                 event={event}
+                memberTier={member?.membershipTier ?? "Pathway"}
                 isPast={tab === "past"}
                 onCancelRsvp={(id) => cancelRsvp(id)}
                 isPending={isPending && pendingId === event.id}

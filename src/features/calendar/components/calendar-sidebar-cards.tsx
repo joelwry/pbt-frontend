@@ -9,6 +9,8 @@ const TYPE_DOT: Record<CalendarEventType, string> = {
   Mentorship: "bg-sky-500",
   "In-Person": "bg-orange-500",
   Masterclass: "bg-navy-900",
+  Community: "bg-[#16A34A]",
+  Onboarding: "bg-slate-400",
 };
 
 function formatDayMonth(iso: string) {

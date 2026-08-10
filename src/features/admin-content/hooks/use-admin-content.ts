@@ -44,3 +44,26 @@ export function useDeleteLesson() {
     },
   });
 }
+
+export function useAdminModuleOptions() {
+  return useQuery({
+    queryKey: ["admin", "content", "module-options"],
+    queryFn: adminContentService.getModuleOptions,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useAdminRoadmapYears() {
+  return useQuery({
+    queryKey: ["admin", "content", "roadmap-years"],
+    queryFn: adminContentService.getRoadmapYears,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useUploadLessonAsset() {
+  return useMutation({
+    mutationFn: ({ lessonId, file }: { lessonId: string; file: File }) =>
+      adminContentService.uploadLessonAsset(lessonId, file),
+  });
+}

@@ -31,7 +31,7 @@ export function CommunityView() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Community" description="Discussions, announcements and groups across the PBT network." />
+        <PageHeader title="Community Group" description="Discussions, announcements and groups across the PBT network." />
         <Skeleton className="h-40 w-full rounded-[var(--radius-card)]" />
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <Card className="xl:col-span-2">
@@ -48,7 +48,7 @@ export function CommunityView() {
   if (isError || !meta || !feed) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Community" description="Discussions, announcements and groups across the PBT network." />
+        <PageHeader title="Community Group" description="Discussions, announcements and groups across the PBT network." />
         <ErrorState
           onRetry={() => {
             refetchMeta();
@@ -64,7 +64,7 @@ export function CommunityView() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Community" description="Discussions, announcements and groups across the PBT network." />
+      <PageHeader title="Community Group" description="Discussions, announcements and groups across the PBT network." />
 
       {meta.pinnedAnnouncement && <PinnedAnnouncementBanner announcement={meta.pinnedAnnouncement} />}
 

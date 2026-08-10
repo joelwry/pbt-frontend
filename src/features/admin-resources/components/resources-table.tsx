@@ -18,9 +18,12 @@ import { useToast } from "@/providers/toast-provider";
 import type { AdminResource, AdminResourceCategory } from "@/features/admin-resources/types";
 
 const CATEGORY_VARIANT: Record<AdminResourceCategory, "outline" | "sky" | "orange"> = {
+  Download: "outline",
   Template: "outline",
   Guide: "sky",
-  Webinar: "orange",
+  Worksheet: "sky",
+  Video: "orange",
+  Checklist: "sky",
   Toolkit: "sky",
 };
 const STATUS_VARIANT = { Published: "success" as const, Draft: "orange" as const };

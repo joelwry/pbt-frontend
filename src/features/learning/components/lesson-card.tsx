@@ -28,7 +28,7 @@ export function LessonCard({ lesson }: { lesson: ResolvedLesson }) {
       <div
         className={cn(
           "relative h-28 flex items-center justify-between px-4",
-          isQuiz ? "bg-gradient-to-br from-orange-500 to-[#B96A00]" : "bg-gradient-to-br from-navy-950 to-navy-900"
+          isQuiz ? "bg-linear-to-br from-orange-500 to-[#B96A00]" : "bg-linear-to-br from-navy-950 to-navy-900"
         )}
       >
         <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur px-2.5 py-1 text-[11px] font-semibold text-white">
@@ -82,7 +82,7 @@ export function LessonCard({ lesson }: { lesson: ResolvedLesson }) {
   }
 
   return (
-    <Link href={`/my-learning/${lesson.id}`} className="block h-full">
+    <Link href={`/pbt-pathway/${lesson.id}`} className="block h-full">
       {cardInner}
     </Link>
   );

@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { GraduationCap } from "lucide-react";
+import Link from "next/link";
+import { GraduationCap, Map } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Pagination } from "@/components/shared/pagination";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAdminContentStats, useAdminLessonsPage } from "@/features/admin-content/hooks/use-admin-content";
 import { AdminContentStatsRow } from "@/features/admin-content/components/admin-content-stats-row";
@@ -15,7 +17,7 @@ import { LessonsTable } from "@/features/admin-content/components/lessons-table"
 
 export function ContentManagementView() {
   const { data: stats, isLoading: statsLoading } = useAdminContentStats();
-  const [year, setYear] = useState("2026");
+  const [year, setYear] = useState("All");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
@@ -32,7 +34,18 @@ export function ContentManagementView() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Content Management" description="Manage the drip-fed learning schedule for every programme year." />
+      <PageHeader
+        title="Content Management"
+        description="Manage the drip-fed learning schedule for every programme year."
+        actions={
+          <Button variant="secondary" asChild>
+            <Link href="/admin/content/roadmaps">
+              <Map className="h-4 w-4" />
+              Manage Roadmap Structure
+            </Link>
+          </Button>
+        }
+      />
 
       {statsLoading || !stats ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">

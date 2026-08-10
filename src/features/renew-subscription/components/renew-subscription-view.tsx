@@ -1,21 +1,23 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { AlertTriangle, CreditCard, Loader2, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { BrandMark } from "@/components/shared/brand-mark";
 import { useAuth } from "@/providers/auth-provider";
 import { useToast } from "@/providers/toast-provider";
 import { useRenewSubscription } from "@/features/renew-subscription/hooks/use-renew-subscription";
+import { usePricing } from "@/features/pricing/hooks/use-pricing";
+import { formatAmount } from "@/features/pricing/services/pricing.service";
 import { MEMBERSHIP_TIERS } from "@/features/membership/tiers";
 
 export function RenewSubscriptionView() {
-  const { member, updateMember, logout } = useAuth();
+  const { member, logout } = useAuth();
   const { toast } = useToast();
-  const router = useRouter();
   const { mutate, isPending } = useRenewSubscription();
+  const { data: pricing, isLoading: pricingLoading } = usePricing();
 
   if (!member) return null;
 
@@ -24,22 +26,13 @@ export function RenewSubscriptionView() {
   function handleRenew() {
     if (!member) return;
     mutate(member.membershipTier, {
-      onSuccess: (confirmation) => {
-        updateMember({
-          subscriptionStatus: confirmation.subscriptionStatus,
-          subscriptionDate: confirmation.nextBillingDate,
-        });
-        toast({
-          variant: "success",
-          title: "Subscription renewed",
-          description: `Your PBT ${confirmation.tier} membership is active again.`,
-        });
-        router.push("/dashboard");
+      onSuccess: (session) => {
+        window.location.href = session.checkoutUrl;
       },
       onError: () => {
         toast({
           variant: "error",
-          title: "Payment couldn't be processed",
+          title: "Couldn't start checkout",
           description: "Please try again, or contact support if this keeps happening.",
         });
       },
@@ -79,14 +72,20 @@ export function RenewSubscriptionView() {
             <p className="text-xs text-text-muted mt-2">{tierDef.contractLabel}</p>
           </div>
           <div className="text-right">
-            <p className="font-display text-xl font-bold text-text-primary">{tierDef.priceLabel.split("/")[0]}</p>
-            <p className="text-xs text-text-muted">/{tierDef.priceLabel.split("/")[1]}</p>
+            {pricingLoading ? (
+              <Skeleton className="h-7 w-16 ml-auto" />
+            ) : (
+              <p className="font-display text-xl font-bold text-text-primary">
+                {formatAmount(pricing?.[member.membershipTier].monthly ?? 0)}
+              </p>
+            )}
+            <p className="text-xs text-text-muted">+ VAT/month</p>
           </div>
         </div>
 
         <Button size="lg" className="w-full mt-6" onClick={handleRenew} disabled={isPending}>
           {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-          {isPending ? "Processing payment via Stripe…" : "Renew with Stripe Checkout"}
+          {isPending ? "Redirecting to Stripe…" : "Renew with Stripe Checkout"}
         </Button>
 
         <p className="flex items-center justify-center gap-1.5 text-xs text-text-muted mt-3">

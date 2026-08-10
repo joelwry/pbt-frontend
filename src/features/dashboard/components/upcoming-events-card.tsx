@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { CalendarDays } from "lucide-react";
+import { useSiteSettings } from "@/features/site-settings/hooks/use-site-settings";
 import type { UpcomingEvent } from "@/features/dashboard/types";
 
 const FORMAT_VARIANT = {
@@ -12,6 +13,13 @@ const FORMAT_VARIANT = {
 };
 
 export function UpcomingEventsCard({ events }: { events: UpcomingEvent[] }) {
+  const { workshopLabel } = useSiteSettings();
+  const FORMAT_LABEL: Record<UpcomingEvent["format"], string> = {
+    "Live Online": "Live Online",
+    "In-Person": "In-Person",
+    Workshop: workshopLabel,
+  };
+
   return (
     <Card>
       <div className="flex items-center justify-between mb-4">
@@ -35,7 +43,7 @@ export function UpcomingEventsCard({ events }: { events: UpcomingEvent[] }) {
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-sm font-semibold text-text-primary leading-snug">{event.title}</p>
                   <Badge variant={FORMAT_VARIANT[event.format]} className="shrink-0">
-                    {event.format}
+                    {FORMAT_LABEL[event.format]}
                   </Badge>
                 </div>
                 <p className="text-xs text-text-muted mt-1">{event.timeLabel}</p>

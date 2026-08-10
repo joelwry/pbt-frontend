@@ -4,12 +4,22 @@ import { useState } from "react";
 import { UploadCloud, FileCheck2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function FileUploadDropzone({ existingFileName }: { existingFileName?: string }) {
+export function FileUploadDropzone({
+  existingFileName,
+  onFileSelected,
+}: {
+  existingFileName?: string;
+  /** Called with the raw File once the user picks or drops one, so a parent can upload it. */
+  onFileSelected?: (file: File) => void;
+}) {
   const [fileName, setFileName] = useState<string | null>(existingFileName ?? null);
   const [isDragging, setIsDragging] = useState(false);
 
   function handleFiles(files: FileList | null) {
-    if (files && files[0]) setFileName(files[0].name);
+    if (files && files[0]) {
+      setFileName(files[0].name);
+      onFileSelected?.(files[0]);
+    }
   }
 
   return (

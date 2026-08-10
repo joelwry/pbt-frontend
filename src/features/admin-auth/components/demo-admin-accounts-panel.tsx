@@ -4,9 +4,10 @@ import { useState } from "react";
 import { ChevronDown, FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Real seeded accounts against the live backend (not mock data) — see
+// pbt_integration_progress_log.md's test-account convention.
 const DEMO_ADMINS = [
-  { email: "amaka@propertybusinesstraining.com", label: "Super Admin", note: "Full access to every admin page" },
-  { email: "jenny.t@propertybusinesstraining.com", label: "Content Manager", note: "Restricted view — only Content, Resources and Profile" },
+  { email: "admintest@example.com", label: "Admin", note: "Full access — promoted to the backend's 'admin' role" },
 ];
 
 export function DemoAdminAccountsPanel() {

@@ -1,9 +1,6 @@
+import { adminApiClient } from "@/lib/admin-api-client";
 import type { ApiSuccess, ApiPaginated } from "@/types/api";
 import type { AdminPartner, AdminPartnerCategory, AdminPowerTeamStats } from "@/features/admin-power-team/types";
-import { adminPowerTeamStatsMock, adminPartnersMock } from "@/features/admin-power-team/mocks/admin-power-team.mock";
-
-const SIMULATED_LATENCY_MS = 500;
-const partnersStore: AdminPartner[] = [...adminPartnersMock];
 
 export class AdminPartnerNotFoundError extends Error {}
 
@@ -14,75 +11,82 @@ export interface AdminPartnersQuery {
   limit: number;
 }
 
+type BackendAdminPartner = AdminPartner & { id: string };
+
+function toAdminPartner(p: BackendAdminPartner): AdminPartner {
+  return {
+    id: p.id,
+    name: p.name,
+    initials: p.initials,
+    category: p.category,
+    categoryLabel: p.categoryLabel,
+    region: p.region,
+    status: p.status,
+    email: p.email,
+    phone: p.phone,
+    bio: p.bio,
+    website: p.website,
+    logoUrl: p.logoUrl,
+  };
+}
+
+function toWritePayload(input: AdminPartner) {
+  return {
+    name: input.name,
+    category: input.category,
+    categoryLabel: input.categoryLabel,
+    region: input.region,
+    email: input.email,
+    phone: input.phone,
+    bio: input.bio,
+    website: input.website,
+    status: input.status,
+  };
+}
+
 export const adminPowerTeamRepository = {
   async getStats(): Promise<ApiSuccess<AdminPowerTeamStats>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    return adminPowerTeamStatsMock;
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiSuccess<AdminPowerTeamStats>>("/admin/power-team/stats");
-    // return data;
+    const { data } = await adminApiClient.get<ApiSuccess<AdminPowerTeamStats>>("/admin/power-team/stats");
+    return data;
   },
 
   async getPartnersPage(query: AdminPartnersQuery): Promise<ApiPaginated<AdminPartner>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-
-    const q = query.search.trim().toLowerCase();
-    const filtered = partnersStore.filter((p) => {
-      const matchesCategory = query.category === "All" || p.category === query.category;
-      const matchesSearch = !q || p.name.toLowerCase().includes(q) || p.region.toLowerCase().includes(q);
-      return matchesCategory && matchesSearch;
+    const { data } = await adminApiClient.get<ApiPaginated<BackendAdminPartner>>("/admin/power-team", {
+      params: { category: query.category, search: query.search || undefined, page: query.page, limit: query.limit },
     });
-
-    const start = (query.page - 1) * query.limit;
-    const items = filtered.slice(start, start + query.limit);
-    const totalPages = Math.max(1, Math.ceil(filtered.length / query.limit));
-
-    return {
-      success: true,
-      data: items,
-      pagination: {
-        page: query.page,
-        limit: query.limit,
-        totalItems: filtered.length,
-        totalPages,
-        hasNextPage: query.page < totalPages,
-        hasPreviousPage: query.page > 1,
-      },
-    };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiPaginated<AdminPartner>>("/admin/power-team", { params: query });
-    // return data;
+    return { success: true, data: data.data.map(toAdminPartner), pagination: data.pagination };
   },
 
   async getPartnerById(id: string): Promise<ApiSuccess<AdminPartner>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    const match = partnersStore.find((p) => p.id === id);
-    if (!match) throw new AdminPartnerNotFoundError(`No partner found for id ${id}`);
-    return { success: true, message: "Partner retrieved successfully", data: match };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiSuccess<AdminPartner>>(`/admin/power-team/${id}`);
-    // return data;
+    try {
+      const { data } = await adminApiClient.get<ApiSuccess<BackendAdminPartner>>(`/admin/power-team/${id}`);
+      return { success: true, message: data.message, data: toAdminPartner(data.data) };
+    } catch {
+      throw new AdminPartnerNotFoundError(`No partner found for id ${id}`);
+    }
   },
 
   async savePartner(input: AdminPartner): Promise<ApiSuccess<AdminPartner>> {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    const index = partnersStore.findIndex((p) => p.id === input.id);
-    if (index >= 0) {
-      partnersStore[index] = input;
-    } else {
-      partnersStore.unshift(input);
-    }
-    return { success: true, message: "Partner saved successfully", data: input };
+    const payload = toWritePayload(input);
+    const { data } = input.id
+      ? await adminApiClient.patch<ApiSuccess<BackendAdminPartner>>(`/admin/power-team/${input.id}`, payload)
+      : await adminApiClient.post<ApiSuccess<BackendAdminPartner>>("/admin/power-team", payload);
+    return { success: true, message: data.message, data: toAdminPartner(data.data) };
   },
 
   async deletePartner(id: string): Promise<ApiSuccess<{ deleted: boolean }>> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    const index = partnersStore.findIndex((p) => p.id === id);
-    if (index === -1) throw new AdminPartnerNotFoundError(`No partner found for id ${id}`);
-    partnersStore.splice(index, 1);
+    await adminApiClient.delete(`/admin/power-team/${id}`);
     return { success: true, message: "Partner deleted", data: { deleted: true } };
+  },
+
+  async uploadLogo(partnerId: string, file: File): Promise<AdminPartner> {
+    const form = new FormData();
+    form.append("file", file);
+    const { data } = await adminApiClient.post<ApiSuccess<BackendAdminPartner>>(
+      `/admin/power-team/${partnerId}/logo`,
+      form,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+    return toAdminPartner(data.data);
   },
 };

@@ -1,4 +1,5 @@
-import type { ApiSuccess } from "@/types/api";
+import { adminApiClient } from "@/lib/admin-api-client";
+import type { ApiSuccess, ApiPaginated } from "@/types/api";
 import type {
   CommunityStats,
   FlaggedPost,
@@ -6,73 +7,63 @@ import type {
   CommunityPostSummary,
   CommunityGroupSummary,
 } from "@/features/admin-community/types";
-import {
-  communityStatsMock,
-  flaggedPostsMock,
-  pinnedAnnouncementsMock,
-  communityPostsMock,
-  communityGroupsMock,
-} from "@/features/admin-community/mocks/admin-community.mock";
 
-const SIMULATED_LATENCY_MS = 500;
-const flaggedStore: FlaggedPost[] = [...flaggedPostsMock];
-const pinnedStore: PinnedAnnouncementItem[] = [...pinnedAnnouncementsMock];
+export interface AdminPostsQuery {
+  search: string;
+  page: number;
+  limit: number;
+}
 
 export const adminCommunityRepository = {
   async getStats(): Promise<ApiSuccess<CommunityStats>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    return { ...communityStatsMock, data: { ...communityStatsMock.data, flaggedCount: flaggedStore.length, pinnedCount: pinnedStore.length } };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiSuccess<CommunityStats>>("/admin/community/stats");
-    // return data;
+    const { data } = await adminApiClient.get<ApiSuccess<CommunityStats>>("/admin/community/stats");
+    return data;
   },
 
   async getFlaggedPosts(): Promise<ApiSuccess<FlaggedPost[]>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    return { success: true, message: "Flagged posts retrieved successfully", data: flaggedStore };
+    const { data } = await adminApiClient.get<ApiSuccess<FlaggedPost[]>>("/admin/community/flagged");
+    return data;
   },
 
   async getPinnedAnnouncements(): Promise<ApiSuccess<PinnedAnnouncementItem[]>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    return { success: true, message: "Pinned announcements retrieved successfully", data: pinnedStore };
+    const { data } = await adminApiClient.get<ApiSuccess<PinnedAnnouncementItem[]>>("/admin/community/pinned");
+    return data;
   },
 
-  async getAllPosts(): Promise<ApiSuccess<CommunityPostSummary[]>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    return { success: true, message: "Posts retrieved successfully", data: communityPostsMock };
+  async getAllPosts(query: AdminPostsQuery): Promise<ApiPaginated<CommunityPostSummary>> {
+    const { data } = await adminApiClient.get<ApiPaginated<CommunityPostSummary>>("/admin/community/posts", {
+      params: { search: query.search || undefined, page: query.page, limit: query.limit },
+    });
+    return data;
   },
 
   async getGroups(): Promise<ApiSuccess<CommunityGroupSummary[]>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    return { success: true, message: "Groups retrieved successfully", data: communityGroupsMock };
+    const { data } = await adminApiClient.get<ApiSuccess<CommunityGroupSummary[]>>("/admin/community/groups");
+    return data;
+  },
+
+  async togglePin(id: string): Promise<ApiSuccess<{ pinned: boolean }>> {
+    const { data } = await adminApiClient.post<ApiSuccess<{ pinned: boolean }>>(`/admin/community/posts/${id}/pin`, {});
+    return data;
   },
 
   async approvePost(id: string): Promise<ApiSuccess<{ approved: boolean }>> {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    const index = flaggedStore.findIndex((p) => p.id === id);
-    if (index >= 0) flaggedStore.splice(index, 1);
-    return { success: true, message: "Post approved", data: { approved: true } };
+    const { data } = await adminApiClient.post<ApiSuccess<{ approved: boolean }>>(`/admin/community/flagged/${id}/approve`, {});
+    return data;
   },
 
   async removePost(id: string): Promise<ApiSuccess<{ removed: boolean }>> {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    const index = flaggedStore.findIndex((p) => p.id === id);
-    if (index >= 0) flaggedStore.splice(index, 1);
-    return { success: true, message: "Post removed", data: { removed: true } };
+    const { data } = await adminApiClient.post<ApiSuccess<{ removed: boolean }>>(`/admin/community/flagged/${id}/remove`, {});
+    return data;
   },
 
-  async createPinnedAnnouncement(title: string): Promise<ApiSuccess<PinnedAnnouncementItem>> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    const item: PinnedAnnouncementItem = { id: `pin_${Date.now()}`, title, pinnedTimeLabel: "Pinned just now" };
-    pinnedStore.unshift(item);
-    return { success: true, message: "Announcement pinned", data: item };
+  async createPinnedAnnouncement(title: string, body: string): Promise<ApiSuccess<PinnedAnnouncementItem>> {
+    const { data } = await adminApiClient.post<ApiSuccess<PinnedAnnouncementItem>>("/admin/community/pinned", { title, body });
+    return data;
   },
 
   async unpinAnnouncement(id: string): Promise<ApiSuccess<{ unpinned: boolean }>> {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    const index = pinnedStore.findIndex((p) => p.id === id);
-    if (index >= 0) pinnedStore.splice(index, 1);
-    return { success: true, message: "Announcement unpinned", data: { unpinned: true } };
+    const { data } = await adminApiClient.delete<ApiSuccess<{ unpinned: boolean }>>(`/admin/community/pinned/${id}`);
+    return data;
   },
 };

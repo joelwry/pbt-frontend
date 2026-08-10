@@ -12,7 +12,7 @@ import { MembershipTiersGrid } from "@/features/subscription/components/membersh
 import { BillingHistoryTable } from "@/features/subscription/components/billing-history-table";
 
 export function SubscriptionView() {
-  const { data: subscription, isLoading, isError, refetch, markCancelled } = useSubscription();
+  const { data: subscription, isLoading, isError, refetch } = useSubscription();
   const { toast } = useToast();
 
   if (isLoading) {
@@ -49,7 +49,6 @@ export function SubscriptionView() {
         <SubscriptionActionsCard
           subscription={subscription}
           onCancelled={() => {
-            markCancelled();
             toast({
               variant: "info",
               title: "Cancellation scheduled",

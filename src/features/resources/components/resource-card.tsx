@@ -1,7 +1,8 @@
-import { FileSpreadsheet, FileText, Video, FileType2, Download } from "lucide-react";
+import { FileSpreadsheet, FileText, Video, FileType2, Archive, Download } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useTrackDownload } from "@/features/resources/hooks/use-resources";
 import type { Resource, ResourceFileType } from "@/features/resources/types";
 
 const FILE_TYPE_ICON: Record<ResourceFileType, typeof FileText> = {
@@ -9,6 +10,7 @@ const FILE_TYPE_ICON: Record<ResourceFileType, typeof FileText> = {
   PDF: FileText,
   MP4: Video,
   DOCX: FileType2,
+  ZIP: Archive,
 };
 
 const FILE_TYPE_COLOR: Record<ResourceFileType, string> = {
@@ -16,10 +18,12 @@ const FILE_TYPE_COLOR: Record<ResourceFileType, string> = {
   PDF: "bg-orange-tint text-orange-500",
   MP4: "bg-[#F1F5F9] text-slate-500",
   DOCX: "bg-sky-tint text-sky-600",
+  ZIP: "bg-[#F1F5F9] text-slate-500",
 };
 
 export function ResourceCard({ resource }: { resource: Resource }) {
   const Icon = FILE_TYPE_ICON[resource.fileType];
+  const { mutate: trackDownload } = useTrackDownload();
 
   return (
     <Card className="pbt-hover-lift h-full flex flex-col">
@@ -32,7 +36,7 @@ export function ResourceCard({ resource }: { resource: Resource }) {
       <p className="font-semibold text-text-primary text-sm mt-4 leading-snug flex-1">{resource.title}</p>
       <p className="text-xs text-text-muted mt-1.5">{resource.metaLabel}</p>
       <Button variant="secondary" size="sm" className="w-full mt-4" asChild>
-        <a href={resource.downloadUrl} download>
+        <a href={resource.downloadUrl} download onClick={() => trackDownload(resource.id)}>
           <Download className="h-3.5 w-3.5" />
           Download
         </a>

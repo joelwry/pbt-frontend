@@ -3,11 +3,13 @@ import { mentorshipService } from "@/features/mentorship/services/mentorship.ser
 
 const CALLS_PAGE_SIZE = 3;
 
-export function useMentorshipPage() {
+/** enabled: false when the member's tier can't access this page -- avoids firing a request the backend will 403 (it enforces the same tier gate server-side), so the client-side gate is what renders instead of a generic error. */
+export function useMentorshipPage(enabled: boolean = true) {
   return useQuery({
     queryKey: ["mentorship", "page"],
     queryFn: mentorshipService.getMentorshipPage,
     staleTime: 10 * 60 * 1000,
+    enabled,
   });
 }
 
@@ -22,7 +24,7 @@ export function useMentorshipCalls(page: number) {
 export function useBookCall() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { topic: string; dateLabel: string; mentorName: string }) => mentorshipService.bookCall(input),
+    mutationFn: (input: { topic: string; scheduledAt: string }) => mentorshipService.bookCall(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["mentorship", "calls"] });
     },

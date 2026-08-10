@@ -1,9 +1,6 @@
+import { adminApiClient } from "@/lib/admin-api-client";
 import type { ApiSuccess, ApiPaginated } from "@/types/api";
-import type { AdminEvent, AdminEventsStats, EventFilterTab } from "@/features/admin-events/types";
-import { adminEventsStatsMock, adminEventsMock } from "@/features/admin-events/mocks/admin-events.mock";
-
-const SIMULATED_LATENCY_MS = 500;
-const eventsStore: AdminEvent[] = [...adminEventsMock];
+import type { AdminEvent, AdminEventsStats, AdminEventType, EventFilterTab, EventRsvpVisibility } from "@/features/admin-events/types";
 
 export class AdminEventNotFoundError extends Error {}
 
@@ -15,87 +12,112 @@ export interface AdminEventsQuery {
   todayIso: string;
 }
 
+type BackendTier = "Pathway" | "Plus" | "Mentorship";
+
+interface BackendAdminEvent {
+  id: string;
+  title: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  category: AdminEventType;
+  rsvpCount: number;
+  capacity: number;
+  status: AdminEvent["status"];
+  location: string;
+  description: string;
+  requiredTier: BackendTier;
+  photoGalleryUrl?: string;
+  recordingUrl?: string;
+  slidesUrl?: string;
+}
+
+function tierToVisibility(tier: BackendTier): EventRsvpVisibility {
+  if (tier === "Mentorship") return "mentorship";
+  if (tier === "Plus") return "plus-mentorship";
+  return "all";
+}
+
+function visibilityToTier(v: EventRsvpVisibility): BackendTier {
+  if (v === "mentorship") return "Mentorship";
+  if (v === "plus-mentorship") return "Plus";
+  return "Pathway";
+}
+
+function toAdminEvent(e: BackendAdminEvent): AdminEvent {
+  return {
+    id: e.id,
+    title: e.title,
+    date: e.date.slice(0, 10),
+    startTime: e.startTime,
+    endTime: e.endTime,
+    type: e.category,
+    rsvpCount: e.rsvpCount,
+    capacity: e.capacity,
+    status: e.status,
+    location: e.location,
+    description: e.description,
+    visibility: tierToVisibility(e.requiredTier),
+    photoGalleryUrl: e.photoGalleryUrl,
+    recordingUrl: e.recordingUrl,
+    slidesUrl: e.slidesUrl,
+  };
+}
+
+function toWritePayload(input: AdminEvent) {
+  return {
+    title: input.title,
+    category: input.type,
+    capacity: input.capacity,
+    date: input.date,
+    startTime: input.startTime,
+    endTime: input.endTime,
+    location: input.location,
+    description: input.description,
+    requiredTier: visibilityToTier(input.visibility),
+    photoGalleryUrl: input.photoGalleryUrl || undefined,
+    recordingUrl: input.recordingUrl || undefined,
+    slidesUrl: input.slidesUrl || undefined,
+  };
+}
+
 export const adminEventsRepository = {
   async getStats(): Promise<ApiSuccess<AdminEventsStats>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    return adminEventsStatsMock;
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiSuccess<AdminEventsStats>>("/admin/events/stats");
-    // return data;
+    const { data } = await adminApiClient.get<ApiSuccess<AdminEventsStats>>("/admin/events/stats");
+    return data;
   },
 
   async getEventsPage(query: AdminEventsQuery): Promise<ApiPaginated<AdminEvent>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-
-    const q = query.search.trim().toLowerCase();
-    let filtered = eventsStore.filter((e) => !q || e.title.toLowerCase().includes(q));
-
-    if (query.tab === "Upcoming") filtered = filtered.filter((e) => e.date >= query.todayIso);
-    else if (query.tab === "Past") filtered = filtered.filter((e) => e.date < query.todayIso);
-    else filtered = filtered.filter((e) => e.type === query.tab);
-
-    filtered = [...filtered].sort((a, b) =>
-      query.tab === "Past" ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)
-    );
-
-    const start = (query.page - 1) * query.limit;
-    const items = filtered.slice(start, start + query.limit);
-    const totalPages = Math.max(1, Math.ceil(filtered.length / query.limit));
-
-    return {
-      success: true,
-      data: items,
-      pagination: {
-        page: query.page,
-        limit: query.limit,
-        totalItems: filtered.length,
-        totalPages,
-        hasNextPage: query.page < totalPages,
-        hasPreviousPage: query.page > 1,
-      },
-    };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiPaginated<AdminEvent>>("/admin/events", { params: query });
-    // return data;
+    const { data } = await adminApiClient.get<ApiPaginated<BackendAdminEvent>>("/admin/events", {
+      params: { tab: query.tab, search: query.search || undefined, page: query.page, limit: query.limit },
+    });
+    return { success: true, data: data.data.map(toAdminEvent), pagination: data.pagination };
   },
 
   async getEventById(id: string): Promise<ApiSuccess<AdminEvent>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    const match = eventsStore.find((e) => e.id === id);
-    if (!match) throw new AdminEventNotFoundError(`No event found for id ${id}`);
-    return { success: true, message: "Event retrieved successfully", data: match };
+    try {
+      const { data } = await adminApiClient.get<ApiSuccess<BackendAdminEvent>>(`/admin/events/${id}`);
+      return { success: true, message: data.message, data: toAdminEvent(data.data) };
+    } catch {
+      throw new AdminEventNotFoundError(`No event found for id ${id}`);
+    }
   },
 
   async saveEvent(input: AdminEvent): Promise<ApiSuccess<AdminEvent>> {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    const index = eventsStore.findIndex((e) => e.id === input.id);
-    if (index >= 0) {
-      eventsStore[index] = input;
-    } else {
-      eventsStore.unshift(input);
-    }
-    return { success: true, message: "Event saved successfully", data: input };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.put<ApiSuccess<AdminEvent>>(`/admin/events/${input.id}`, input);
-    // return data;
+    const payload = toWritePayload(input);
+    const { data } = input.id
+      ? await adminApiClient.patch<ApiSuccess<BackendAdminEvent>>(`/admin/events/${input.id}`, payload)
+      : await adminApiClient.post<ApiSuccess<BackendAdminEvent>>("/admin/events", payload);
+    return { success: true, message: data.message, data: toAdminEvent(data.data) };
   },
 
   async cancelEvent(id: string): Promise<ApiSuccess<AdminEvent>> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    const event = eventsStore.find((e) => e.id === id);
-    if (!event) throw new AdminEventNotFoundError(`No event found for id ${id}`);
-    event.status = "Cancelled";
-    return { success: true, message: "Event cancelled", data: event };
+    const { data } = await adminApiClient.post<ApiSuccess<BackendAdminEvent>>(`/admin/events/${id}/cancel`, {});
+    return { success: true, message: data.message, data: toAdminEvent(data.data) };
   },
 
   async deleteEvent(id: string): Promise<ApiSuccess<{ deleted: boolean }>> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    const index = eventsStore.findIndex((e) => e.id === id);
-    if (index === -1) throw new AdminEventNotFoundError(`No event found for id ${id}`);
-    eventsStore.splice(index, 1);
+    await adminApiClient.delete(`/admin/events/${id}`);
     return { success: true, message: "Event deleted", data: { deleted: true } };
   },
 };

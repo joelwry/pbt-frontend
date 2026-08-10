@@ -16,7 +16,7 @@ export const MEMBERSHIP_BADGE: Record<
     badgeClass: "bg-sky-tint text-sky-600",
   },
   Mentorship: {
-    label: "PBT Mentorship",
+    label: "PBT Masterplan Programme",
     icon: Crown,
     badgeClass: "bg-orange-tint text-orange-500",
   },

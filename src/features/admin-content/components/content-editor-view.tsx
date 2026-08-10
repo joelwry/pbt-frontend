@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,51 +15,65 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/providers/toast-provider";
-import { useAdminLesson, useSaveLesson } from "@/features/admin-content/hooks/use-admin-content";
+import {
+  useAdminLesson,
+  useSaveLesson,
+  useAdminModuleOptions,
+  useAdminRoadmapYears,
+  useUploadLessonAsset,
+} from "@/features/admin-content/hooks/use-admin-content";
 import { FileUploadDropzone } from "@/components/shared/file-upload-dropzone";
-import { MODULE_OPTIONS, type AdminLesson, type AdminLessonType, type LessonVisibility } from "@/features/admin-content/types";
+import { RichTextEditor } from "@/features/admin-content/components/rich-text-editor";
+import { QuizQuestionBuilder, newQuestion } from "@/features/admin-content/components/quiz-question-builder";
+import type { AdminLesson, AdminLessonType, AdminQuizQuestion, LessonVisibility } from "@/features/admin-content/types";
+
+const quizQuestionSchema = z.object({
+  id: z.string(),
+  question: z.string(),
+  options: z.array(z.string()),
+  correctIndex: z.number(),
+});
 
 const editorSchema = z.object({
   title: z.string().min(3, "Give the lesson a title"),
   programmeYear: z.string(),
-  moduleId: z.string(),
+  moduleId: z.string().min(1, "Choose a module"),
   type: z.enum(["Video", "Article", "Download", "Quiz"]),
   durationLabel: z.string().min(1, "Add an estimated duration"),
   description: z.string().min(10, "Add a short description (at least 10 characters)"),
   unlockDate: z.string().min(1, "Choose an unlock date"),
   unlockTime: z.string().min(1, "Choose an unlock time"),
   visibility: z.enum(["all", "plus-mentorship", "mentorship"]),
+  transcript: z.string().optional(),
+  articleHtml: z.string().optional(),
+  questions: z.array(quizQuestionSchema).optional(),
 });
 type EditorFormValues = z.infer<typeof editorSchema>;
 
 const TYPE_OPTIONS: AdminLessonType[] = ["Video", "Article", "Download", "Quiz"];
-const YEAR_OPTIONS = ["2026", "2025", "2024"];
 
 function defaultValues(): EditorFormValues {
   return {
     title: "",
-    programmeYear: "2026",
-    moduleId: MODULE_OPTIONS[0].id,
+    programmeYear: "",
+    moduleId: "",
     type: "Video",
     durationLabel: "",
     description: "",
     unlockDate: new Date().toISOString().slice(0, 10),
     unlockTime: "06:00",
     visibility: "all",
+    transcript: "",
+    articleHtml: "",
+    questions: [],
   };
 }
 
-function buildLesson(
-  values: EditorFormValues,
-  status: "Published" | "Scheduled" | "Draft",
-  isNew: boolean,
-  lessonId: string
-): AdminLesson {
-  const moduleDef = MODULE_OPTIONS.find((m) => m.id === values.moduleId) ?? MODULE_OPTIONS[0];
+function buildLesson(values: EditorFormValues, moduleLabel: string, status: "Published" | "Scheduled" | "Draft", lessonId: string): AdminLesson {
   return {
-    id: isNew ? `l_${Date.now()}` : lessonId,
+    id: lessonId,
     title: values.title,
-    moduleLabel: moduleDef.label,
+    moduleLabel,
     moduleId: values.moduleId,
     programmeYear: values.programmeYear,
     type: values.type,
@@ -68,6 +83,9 @@ function buildLesson(
     unlockTime: values.unlockTime,
     status,
     visibility: values.visibility as LessonVisibility,
+    transcript: values.transcript,
+    articleHtml: values.articleHtml,
+    questions: values.questions as AdminQuizQuestion[] | undefined,
   };
 }
 
@@ -76,15 +94,64 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
   const router = useRouter();
   const { toast } = useToast();
   const { data: lesson, isLoading, isError, refetch } = useAdminLesson(lessonId);
+  const { data: moduleOptions, isLoading: moduleOptionsLoading } = useAdminModuleOptions();
+  const { data: roadmapYears, isLoading: roadmapYearsLoading } = useAdminRoadmapYears();
   const { mutate: saveLesson, isPending } = useSaveLesson();
+  const { mutateAsync: uploadAsset, isPending: isUploading } = useUploadLessonAsset();
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   const {
     register,
     handleSubmit,
     control,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<EditorFormValues>({ resolver: zodResolver(editorSchema), defaultValues: defaultValues() });
+
+  // Sourced from the real roadmap list, not from moduleOptions — a
+  // brand-new roadmap with no weeks/modules yet still needs to appear here,
+  // otherwise there's no way to even select it to be told "create a module
+  // first" (previously this list silently dropped any such roadmap).
+  const years = useMemo(() => [...(roadmapYears ?? [])], [roadmapYears]);
+  const selectedYear = watch("programmeYear");
+  const selectedType = watch("type");
+  const questions = watch("questions");
+  const modulesForYear = useMemo(
+    () => (moduleOptions ?? []).filter((m) => m.year === selectedYear),
+    [moduleOptions, selectedYear]
+  );
+
+  // Switching to Quiz with no questions yet: seed one empty question so the
+  // builder isn't just a bare "Add Question" button.
+  useEffect(() => {
+    if (selectedType === "Quiz" && (questions ?? []).length === 0) {
+      setValue("questions", [newQuestion()]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedType]);
+
+  // Once module options load, default a brand-new lesson to the current
+  // roadmap year and its first module — the form can't know these until the
+  // real hierarchy has been fetched.
+  useEffect(() => {
+    if (isNew && !selectedYear && years.length > 0) {
+      const year = years[0];
+      const firstModule = (moduleOptions ?? []).find((m) => m.year === year);
+      reset({ ...defaultValues(), programmeYear: year, moduleId: firstModule?.id ?? "" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNew, years, moduleOptions]);
+
+  // Switching the year: snap the module selection to the first module in
+  // that year, since the previously-selected module belongs to a different
+  // roadmap entirely.
+  function handleYearChange(year: string) {
+    setValue("programmeYear", year);
+    const firstModule = (moduleOptions ?? []).find((m) => m.year === year);
+    setValue("moduleId", firstModule?.id ?? "");
+  }
 
   useEffect(() => {
     if (lesson) {
@@ -98,15 +165,33 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
         unlockDate: lesson.unlockDate,
         unlockTime: lesson.unlockTime,
         visibility: lesson.visibility,
+        transcript: lesson.transcript ?? "",
+        articleHtml: lesson.articleHtml ?? "",
+        questions: lesson.questions ?? [],
       });
     }
   }, [lesson, reset]);
 
+  async function afterSave(saved: AdminLesson) {
+    if (pendingFile) {
+      try {
+        await uploadAsset({ lessonId: saved.id, file: pendingFile });
+      } catch {
+        toast({ variant: "error", title: "Lesson saved, but the file upload failed", description: "You can try uploading again from Edit Lesson." });
+      }
+    }
+  }
+
+  function currentModuleLabel(values: EditorFormValues): string {
+    return (moduleOptions ?? []).find((m) => m.id === values.moduleId)?.label ?? lesson?.moduleLabel ?? "";
+  }
+
   function handleSaveAndSchedule(values: EditorFormValues) {
     const unlockDateTime = new Date(`${values.unlockDate}T${values.unlockTime}`);
     const status = unlockDateTime <= new Date() ? "Published" : "Scheduled";
-    saveLesson(buildLesson(values, status, isNew, lessonId), {
-      onSuccess: () => {
+    saveLesson(buildLesson(values, currentModuleLabel(values), status, isNew ? "" : lessonId), {
+      onSuccess: async (saved) => {
+        await afterSave(saved);
         toast({
           variant: "success",
           title: isNew ? "Lesson created" : "Lesson updated",
@@ -118,8 +203,9 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
   }
 
   function handleSaveAsDraft(values: EditorFormValues) {
-    saveLesson(buildLesson(values, "Draft", isNew, lessonId), {
-      onSuccess: () => {
+    saveLesson(buildLesson(values, currentModuleLabel(values), "Draft", isNew ? "" : lessonId), {
+      onSuccess: async (saved) => {
+        await afterSave(saved);
         toast({ variant: "info", title: "Draft saved" });
         router.push("/admin/content");
       },
@@ -142,6 +228,8 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
     return <ErrorState onRetry={() => refetch()} />;
   }
 
+  const saving = isPending || isUploading;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -163,13 +251,16 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="space-y-2">
-                <Label htmlFor="programmeYear">Programme Year</Label>
+                <Label htmlFor="programmeYear">Roadmap Year</Label>
                 <select
                   id="programmeYear"
-                  {...register("programmeYear")}
+                  value={selectedYear}
+                  onChange={(e) => handleYearChange(e.target.value)}
+                  disabled={roadmapYearsLoading}
                   className="flex h-11 w-full rounded-[var(--radius-input)] border border-border bg-white px-3.5 text-sm text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                 >
-                  {YEAR_OPTIONS.map((y) => (
+                  {years.length === 0 && <option value="">No roadmaps yet</option>}
+                  {years.map((y) => (
                     <option key={y} value={y}>
                       {y}
                     </option>
@@ -181,14 +272,26 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
                 <select
                   id="moduleId"
                   {...register("moduleId")}
+                  disabled={moduleOptionsLoading || modulesForYear.length === 0}
                   className="flex h-11 w-full rounded-[var(--radius-input)] border border-border bg-white px-3.5 text-sm text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                 >
-                  {MODULE_OPTIONS.map((m) => (
+                  {modulesForYear.length === 0 && <option value="">No modules for this year</option>}
+                  {modulesForYear.map((m) => (
                     <option key={m.id} value={m.id}>
                       {m.label}
                     </option>
                   ))}
                 </select>
+                {errors.moduleId && <p className="text-xs text-error">{errors.moduleId.message}</p>}
+                {!moduleOptionsLoading && modulesForYear.length === 0 && (
+                  <p className="text-xs text-text-muted">
+                    No modules exist yet for this year.{" "}
+                    <Link href="/admin/content/roadmaps" className="text-sky-600 hover:underline">
+                      Create a roadmap week and module first
+                    </Link>
+                    .
+                  </p>
+                )}
               </div>
             </div>
 
@@ -225,10 +328,79 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
               {errors.description && <p className="text-xs text-error">{errors.description.message}</p>}
             </div>
 
-            <div className="space-y-2">
-              <Label>Upload Content</Label>
-              <FileUploadDropzone />
-            </div>
+            {selectedType === "Video" && (
+              <>
+                <div className="space-y-2">
+                  <Label>Video File</Label>
+                  <FileUploadDropzone onFileSelected={setPendingFile} />
+                  {!pendingFile && lesson?.videoUrl && (
+                    <p className="text-xs text-text-muted">
+                      Current video:{" "}
+                      <a href={lesson.videoUrl} target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:underline">
+                        view file
+                      </a>
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="transcript">Transcript / Summary (optional)</Label>
+                  <textarea
+                    id="transcript"
+                    rows={4}
+                    placeholder="A written summary or transcript shown under the video player."
+                    className="flex w-full rounded-[var(--radius-input)] border border-border bg-white px-3.5 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                    {...register("transcript")}
+                  />
+                </div>
+              </>
+            )}
+
+            {selectedType === "Article" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="articleHtml">Article Content</Label>
+                  <Controller
+                    control={control}
+                    name="articleHtml"
+                    render={({ field }) => (
+                      <RichTextEditor value={field.value ?? ""} onChange={field.onChange} placeholder="Write the article here…" />
+                    )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Attach a file (optional)</Label>
+                  <FileUploadDropzone onFileSelected={setPendingFile} />
+                </div>
+              </>
+            )}
+
+            {selectedType === "Download" && (
+              <div className="space-y-2">
+                <Label>File to Download</Label>
+                <FileUploadDropzone onFileSelected={setPendingFile} />
+                {!pendingFile && lesson?.fileUrl && (
+                  <p className="text-xs text-text-muted">
+                    Current file:{" "}
+                    <a href={lesson.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:underline">
+                      view file
+                    </a>
+                  </p>
+                )}
+              </div>
+            )}
+
+            {selectedType === "Quiz" && (
+              <div className="space-y-2">
+                <Label>Quiz Questions</Label>
+                <Controller
+                  control={control}
+                  name="questions"
+                  render={({ field }) => (
+                    <QuizQuestionBuilder questions={(field.value as AdminQuizQuestion[]) ?? []} onChange={field.onChange} />
+                  )}
+                />
+              </div>
+            )}
           </div>
         </Card>
 
@@ -242,7 +414,7 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
                 {errors.unlockDate && <p className="text-xs text-error">{errors.unlockDate.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="unlockTime">Unlock Time (GMT)</Label>
+                <Label htmlFor="unlockTime">Unlock Time</Label>
                 <Input id="unlockTime" type="time" {...register("unlockTime")} invalid={!!errors.unlockTime} />
                 {errors.unlockTime && <p className="text-xs text-error">{errors.unlockTime.message}</p>}
               </div>
@@ -261,9 +433,9 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
               render={({ field }) => (
                 <div className="space-y-3">
                   {[
-                    { value: "all", label: "All tiers (Pathway, Plus, Mentorship)" },
-                    { value: "plus-mentorship", label: "Plus & Mentorship only" },
-                    { value: "mentorship", label: "Mentorship only" },
+                    { value: "all", label: "All tiers (Pathway, Plus, Masterplan Programme)" },
+                    { value: "plus-mentorship", label: "Plus & Masterplan Programme only" },
+                    { value: "mentorship", label: "Masterplan Programme only" },
                   ].map((option) => (
                     <label key={option.value} className="flex items-center gap-2.5 cursor-pointer select-none">
                       <input
@@ -281,14 +453,14 @@ export function ContentEditorView({ lessonId }: { lessonId: string }) {
           </Card>
 
           <div className="space-y-2.5">
-            <Button className="w-full" disabled={isPending} onClick={handleSubmit(handleSaveAndSchedule)}>
-              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              {isPending ? "Saving…" : "Save & Schedule"}
+            <Button className="w-full" disabled={saving} onClick={handleSubmit(handleSaveAndSchedule)}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              {saving ? "Saving…" : "Save & Schedule"}
             </Button>
             <Button
               variant="secondary"
               className="w-full"
-              disabled={isPending}
+              disabled={saving}
               onClick={handleSubmit(handleSaveAsDraft)}
             >
               <FileEdit className="h-4 w-4" />

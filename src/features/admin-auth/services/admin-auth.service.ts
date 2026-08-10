@@ -7,12 +7,18 @@ export const adminAuthService = {
     return response.data;
   },
 
-  async refresh(refreshToken: string): Promise<AdminRefreshedSession> {
+  /** Pass null to refresh via the httpOnly cookie (persistent sessions). */
+  async refresh(refreshToken: string | null): Promise<AdminRefreshedSession> {
     const response = await adminAuthRepository.refresh(refreshToken);
     return response.data;
   },
 
-  async logout(refreshToken: string): Promise<void> {
-    await adminAuthRepository.logout(refreshToken);
+  async restoreSession(): Promise<AdminAuthSession | null> {
+    const response = await adminAuthRepository.restoreSession();
+    return response?.data ?? null;
+  },
+
+  async logout(): Promise<void> {
+    await adminAuthRepository.logout();
   },
 };

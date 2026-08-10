@@ -6,7 +6,7 @@ import type { PinnedAnnouncement } from "@/features/community/types";
 
 export function PinnedAnnouncementBanner({ announcement }: { announcement: PinnedAnnouncement }) {
   return (
-    <Card className="bg-gradient-to-r from-navy-950 to-sky-600 border-none">
+    <Card className="bg-linear-to-r from-navy-950 to-sky-600 border-none">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold text-orange-500 mb-3">

@@ -1,4 +1,9 @@
-export type AdminRole = "Super Admin" | "Content Manager" | "Community Moderator" | "Support Staff";
+// "Admin" corresponds to the backend's plain 'admin' role (see User.schema.ts
+// role enum) — the backend doesn't yet support granular per-admin section
+// permissions, so an "Admin" gets every section; "Content Manager" /
+// "Community Moderator" / "Support Staff" remain reserved for once that
+// finer-grained backend RBAC exists.
+export type AdminRole = "Super Admin" | "Admin" | "Content Manager" | "Community Moderator" | "Support Staff";
 
 export type AdminSection =
   | "members"
@@ -9,7 +14,8 @@ export type AdminSection =
   | "pbtLeaders"
   | "powerTeam"
   | "subscriptions"
-  | "analytics";
+  | "analytics"
+  | "referrals";
 
 export interface AdminUser {
   id: string;
@@ -30,12 +36,16 @@ export interface AdminLoginCredentials {
 
 export interface AdminAuthSession {
   accessToken: string;
-  refreshToken: string;
+  /** Absent for persistent (rememberDevice) sessions — those rely on the httpOnly refresh cookie instead. */
+  refreshToken?: string;
+  /** Access token lifetime in seconds. */
   expiresIn: number;
   admin: AdminUser;
 }
 
 export interface AdminRefreshedSession {
   accessToken: string;
+  /** Present only when the refresh call supplied a body token (memory-mode rotation). */
+  refreshToken?: string;
   expiresIn: number;
 }

@@ -28,4 +28,7 @@ export const adminLeadersService = {
     const response = await adminLeadersRepository.deleteLeader(id);
     return response.data.deleted;
   },
+  async uploadPhoto(leaderId: string, file: File): Promise<AdminLeader> {
+    return adminLeadersRepository.uploadPhoto(leaderId, file);
+  },
 };

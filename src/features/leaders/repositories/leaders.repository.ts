@@ -1,8 +1,6 @@
+import { apiClient } from "@/lib/api-client";
 import type { ApiSuccess, ApiPaginated } from "@/types/api";
 import type { Leader, LeaderRegion } from "@/features/leaders/types";
-import { leadersMock } from "@/features/leaders/mocks/leaders.mock";
-
-const SIMULATED_LATENCY_MS = 450;
 
 export class LeaderNotFoundError extends Error {}
 
@@ -13,43 +11,62 @@ export interface LeadersQuery {
   limit: number;
 }
 
+interface BackendLeader {
+  _id: string;
+  fullName: string;
+  specialty: string;
+  specialties: string[];
+  region: LeaderRegion;
+  location: string;
+  yearsActive: number;
+  isTopMentor: boolean;
+  email: string;
+  profileImageUrl: string;
+  bio: string;
+}
+
+function initialsFor(fullName: string): string {
+  return (
+    fullName
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((p) => p[0]?.toUpperCase() ?? "")
+      .join("") || "PL"
+  );
+}
+
+function toLeader(l: BackendLeader): Leader {
+  return {
+    id: l._id,
+    name: l.fullName,
+    initials: initialsFor(l.fullName),
+    specialtyBadge: l.specialty,
+    region: l.region,
+    location: l.location,
+    profileImageUrl: l.profileImageUrl || undefined,
+    isTopMentor: l.isTopMentor,
+    bio: l.bio,
+    specialties: l.specialties,
+    yearsActive: l.yearsActive,
+    email: l.email,
+  };
+}
+
 export const leadersRepository = {
   async getLeadersPage(query: LeadersQuery): Promise<ApiPaginated<Leader>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-
-    const q = query.search.trim().toLowerCase();
-    const filtered = leadersMock.data.filter((leader) => {
-      const matchesRegion = query.region === "All" || leader.region === query.region;
-      const matchesSearch = !q || leader.name.toLowerCase().includes(q) || leader.location.toLowerCase().includes(q);
-      return matchesRegion && matchesSearch;
+    const { data } = await apiClient.get<ApiPaginated<BackendLeader>>("/leaders", {
+      params: { region: query.region, search: query.search || undefined, page: query.page, limit: query.limit },
     });
-
-    const start = (query.page - 1) * query.limit;
-    const items = filtered.slice(start, start + query.limit);
-    const totalPages = Math.max(1, Math.ceil(filtered.length / query.limit));
-
-    return {
-      success: true,
-      data: items,
-      pagination: {
-        page: query.page,
-        limit: query.limit,
-        totalItems: filtered.length,
-        totalPages,
-        hasNextPage: query.page < totalPages,
-        hasPreviousPage: query.page > 1,
-      },
-    };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiPaginated<Leader>>("/leaders", { params: query });
-    // return data;
+    return { success: true, data: data.data.map(toLeader), pagination: data.pagination };
   },
 
   async getLeaderById(id: string): Promise<ApiSuccess<Leader>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    const match = leadersMock.data.find((l) => l.id === id);
-    if (!match) throw new LeaderNotFoundError(`No leader found for id ${id}`);
-    return { success: true, message: "Leader retrieved successfully", data: match };
+    try {
+      const { data } = await apiClient.get<ApiSuccess<BackendLeader>>(`/leaders/${id}`);
+      return { success: true, message: data.message, data: toLeader(data.data) };
+    } catch {
+      throw new LeaderNotFoundError(`No leader found for id ${id}`);
+    }
   },
 };

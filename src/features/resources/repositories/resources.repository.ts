@@ -1,8 +1,6 @@
+import { apiClient } from "@/lib/api-client";
 import type { ApiSuccess, ApiPaginated } from "@/types/api";
-import type { Resource, FeaturedToolkit, ResourceCategory } from "@/features/resources/types";
-import { resourcesMock, featuredToolkitMock } from "@/features/resources/mocks/resources.mock";
-
-const SIMULATED_LATENCY_MS = 450;
+import type { Resource, FeaturedToolkit, ResourceCategory, ResourceFileType } from "@/features/resources/types";
 
 export interface ResourcesQuery {
   category: ResourceCategory | "All";
@@ -11,41 +9,49 @@ export interface ResourcesQuery {
   limit: number;
 }
 
+interface BackendResource {
+  _id: string;
+  title: string;
+  type: ResourceCategory;
+  fileType: ResourceFileType;
+  metaLabel: string;
+  fileUrl: string;
+}
+
+function toResource(r: BackendResource): Resource {
+  return { id: r._id, title: r.title, category: r.type, fileType: r.fileType, metaLabel: r.metaLabel, downloadUrl: r.fileUrl };
+}
+
+function toFeaturedToolkit(r: BackendResource & { description: string }): FeaturedToolkit {
+  return {
+    id: r._id,
+    badgeLabel: "Featured Toolkit",
+    title: r.title,
+    description: r.description,
+    downloadUrl: r.fileUrl,
+  };
+}
+
 export const resourcesRepository = {
-  async getFeaturedToolkit(): Promise<ApiSuccess<FeaturedToolkit>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    return featuredToolkitMock;
+  async getFeaturedToolkit(): Promise<ApiSuccess<FeaturedToolkit> | null> {
+    try {
+      const { data } = await apiClient.get<ApiSuccess<BackendResource & { description: string }>>("/resources/featured");
+      return { success: true, message: data.message, data: toFeaturedToolkit(data.data) };
+    } catch {
+      // No resources exist yet — an honest empty state, not an error.
+      return null;
+    }
   },
 
   async getResourcesPage(query: ResourcesQuery): Promise<ApiPaginated<Resource>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-
-    const q = query.search.trim().toLowerCase();
-    const filtered = resourcesMock.data.filter((resource) => {
-      const matchesCategory = query.category === "All" || resource.category === query.category;
-      const matchesSearch = !q || resource.title.toLowerCase().includes(q);
-      return matchesCategory && matchesSearch;
+    const { data } = await apiClient.get<ApiPaginated<BackendResource>>("/resources", {
+      params: { type: query.category, search: query.search || undefined, page: query.page, limit: query.limit },
     });
+    return { success: true, data: data.data.map(toResource), pagination: data.pagination };
+  },
 
-    const start = (query.page - 1) * query.limit;
-    const items = filtered.slice(start, start + query.limit);
-    const totalPages = Math.max(1, Math.ceil(filtered.length / query.limit));
-
-    return {
-      success: true,
-      data: items,
-      pagination: {
-        page: query.page,
-        limit: query.limit,
-        totalItems: filtered.length,
-        totalPages,
-        hasNextPage: query.page < totalPages,
-        hasPreviousPage: query.page > 1,
-      },
-    };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiPaginated<Resource>>("/resources", { params: query });
-    // return data;
+  /** Fire-and-forget download tracking — the actual file fetch is the plain href, this just records it happened. */
+  async trackDownload(resourceId: string): Promise<void> {
+    await apiClient.post(`/resources/${resourceId}/download`, {});
   },
 };

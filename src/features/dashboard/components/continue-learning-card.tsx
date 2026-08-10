@@ -20,7 +20,7 @@ export function ContinueLearningCard({ lesson }: { lesson: ContinueLearningLesso
         <EmptyState
           icon={Lock}
           title="Nothing unlocked yet"
-          description="Your next lesson will appear here as soon as it's unlocked on the programme schedule."
+          description="Your next lesson will appear here as soon as it's unlocked on the roadmap schedule."
         />
       </Card>
     );
@@ -32,12 +32,12 @@ export function ContinueLearningCard({ lesson }: { lesson: ContinueLearningLesso
     <Card className="!p-0 overflow-hidden">
       <div className="flex items-center justify-between px-6 pt-6 pb-4">
         <h3 className="font-display text-lg font-semibold text-text-primary">Continue Learning</h3>
-        <Link href="/my-learning" className="text-xs font-semibold text-sky-600 hover:underline">
+        <Link href="/pbt-pathway" className="text-xs font-semibold text-sky-600 hover:underline">
           View all →
         </Link>
       </div>
       <div className="flex flex-col md:flex-row gap-0">
-        <div className="relative w-full md:w-64 h-40 md:h-auto shrink-0 bg-gradient-to-br from-navy-950 to-navy-900 flex items-center justify-center mx-6 md:mx-6 mb-5 md:mb-6 rounded-2xl">
+        <div className="relative w-full md:w-64 h-40 md:h-auto shrink-0 bg-linear-to-br from-navy-950 to-navy-900 flex items-center justify-center mx-6 md:mx-6 mb-5 md:mb-6 rounded-2xl">
           <span className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/15 backdrop-blur px-2.5 py-1 text-[11px] font-semibold text-white">
             <TypeIcon className="h-3 w-3" />
             {lesson.type}
@@ -68,7 +68,7 @@ export function ContinueLearningCard({ lesson }: { lesson: ContinueLearningLesso
               {lesson.timeLeftLabel}
             </span>
             <Button size="sm" asChild>
-              <Link href="/my-learning">
+              <Link href="/pbt-pathway">
                 Continue
                 <Play className="h-3.5 w-3.5" fill="currentColor" />
               </Link>

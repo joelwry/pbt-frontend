@@ -8,13 +8,16 @@ export interface LoginCredentials {
 
 export interface AuthSession {
   accessToken: string;
-  refreshToken: string;
-  /** Access token lifetime in seconds, as the real API would return it. */
+  /** Absent for persistent (rememberMe) sessions — those rely on the httpOnly refresh cookie instead. */
+  refreshToken?: string;
+  /** Access token lifetime in seconds. */
   expiresIn: number;
   member: CurrentMember;
 }
 
 export interface RefreshedSession {
   accessToken: string;
+  /** Present only when the refresh call supplied a body token (memory-mode rotation). */
+  refreshToken?: string;
   expiresIn: number;
 }

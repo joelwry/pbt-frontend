@@ -11,10 +11,10 @@ export function LessonLockedState({ reason }: { reason?: string }) {
       </div>
       <h2 className="font-display text-lg font-semibold text-text-primary">This lesson isn&apos;t available yet</h2>
       <p className="text-sm text-text-muted mt-1.5 max-w-sm mx-auto">
-        {reason ?? "Check back once it unlocks on your programme schedule."}
+        {reason ?? "Check back once it unlocks on your roadmap schedule."}
       </p>
       <Button variant="secondary" className="mt-6" asChild>
-        <Link href="/my-learning">Back to My Learning</Link>
+        <Link href="/pbt-pathway">Back to PBT Pathway</Link>
       </Button>
     </Card>
   );

@@ -7,7 +7,7 @@ export interface Leader {
   specialtyBadge: string;
   region: LeaderRegion;
   location: string;
-  profileUrl: string;
+  profileImageUrl?: string;
   isTopMentor?: boolean;
   bio: string;
   specialties: string[];

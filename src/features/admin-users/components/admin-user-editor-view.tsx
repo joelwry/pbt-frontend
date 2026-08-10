@@ -19,6 +19,9 @@ import { ADMIN_SECTION_LABELS, ROLE_DEFAULT_SECTIONS } from "@/features/admin-au
 import type { AdminAccount } from "@/features/admin-users/types";
 import type { AdminRole, AdminSection } from "@/features/admin-auth/types";
 
+// "Admin" (the backend's plain, section-less admin role) isn't offered when
+// inviting new staff — it only ever shows up when editing an account that
+// already has it, so the zod enum below still needs to accept it.
 const ROLES: AdminRole[] = ["Super Admin", "Content Manager", "Community Moderator", "Support Staff"];
 const SECTIONS = Object.keys(ADMIN_SECTION_LABELS) as AdminSection[];
 
@@ -32,12 +35,13 @@ const SECTION_DESCRIPTIONS: Record<AdminSection, string> = {
   powerTeam: "Manage vetted Power Team partners",
   subscriptions: "View revenue, invoices and payment status",
   analytics: "View platform-wide analytics and reports",
+  referrals: "View member referrals and rewards issued",
 };
 
 const editorSchema = z.object({
   fullName: z.string().min(2, "Enter the staff member's full name"),
   email: z.string().email("Enter a valid email address"),
-  role: z.enum(["Super Admin", "Content Manager", "Community Moderator", "Support Staff"]),
+  role: z.enum(["Super Admin", "Admin", "Content Manager", "Community Moderator", "Support Staff"]),
   sections: z.array(z.string()),
 });
 type EditorFormValues = z.infer<typeof editorSchema>;

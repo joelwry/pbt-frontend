@@ -1,9 +1,6 @@
+import { adminApiClient } from "@/lib/admin-api-client";
 import type { ApiSuccess, ApiPaginated } from "@/types/api";
 import type { AdminLeader, AdminLeaderRegion, AdminLeadersStats } from "@/features/admin-leaders/types";
-import { adminLeadersStatsMock, adminLeadersMock } from "@/features/admin-leaders/mocks/admin-leaders.mock";
-
-const SIMULATED_LATENCY_MS = 500;
-const leadersStore: AdminLeader[] = [...adminLeadersMock];
 
 export class AdminLeaderNotFoundError extends Error {}
 
@@ -14,75 +11,85 @@ export interface AdminLeadersQuery {
   limit: number;
 }
 
+type BackendAdminLeader = AdminLeader & { id: string };
+
+function toAdminLeader(l: BackendAdminLeader): AdminLeader {
+  return {
+    id: l.id,
+    fullName: l.fullName,
+    initials: l.initials,
+    region: l.region,
+    specialty: l.specialty,
+    specialties: l.specialties,
+    email: l.email,
+    bio: l.bio,
+    status: l.status,
+    membersAssigned: l.membersAssigned,
+    isTopMentor: l.isTopMentor,
+    location: l.location,
+    yearsActive: l.yearsActive,
+    profileImageUrl: l.profileImageUrl,
+  };
+}
+
+function toWritePayload(input: AdminLeader) {
+  return {
+    fullName: input.fullName,
+    region: input.region,
+    specialty: input.specialty,
+    specialties: input.specialties,
+    email: input.email,
+    bio: input.bio,
+    isActive: input.status === "Active",
+    isTopMentor: input.isTopMentor ?? false,
+    location: input.location,
+    yearsActive: input.yearsActive,
+  };
+}
+
 export const adminLeadersRepository = {
   async getStats(): Promise<ApiSuccess<AdminLeadersStats>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    return adminLeadersStatsMock;
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiSuccess<AdminLeadersStats>>("/admin/leaders/stats");
-    // return data;
+    const { data } = await adminApiClient.get<ApiSuccess<AdminLeadersStats>>("/admin/leaders/stats");
+    return data;
   },
 
   async getLeadersPage(query: AdminLeadersQuery): Promise<ApiPaginated<AdminLeader>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-
-    const q = query.search.trim().toLowerCase();
-    const filtered = leadersStore.filter((l) => {
-      const matchesRegion = query.region === "All" || l.region === query.region;
-      const matchesSearch = !q || l.fullName.toLowerCase().includes(q) || l.specialty.toLowerCase().includes(q);
-      return matchesRegion && matchesSearch;
+    const { data } = await adminApiClient.get<ApiPaginated<BackendAdminLeader>>("/admin/leaders", {
+      params: { region: query.region, search: query.search || undefined, page: query.page, limit: query.limit },
     });
-
-    const start = (query.page - 1) * query.limit;
-    const items = filtered.slice(start, start + query.limit);
-    const totalPages = Math.max(1, Math.ceil(filtered.length / query.limit));
-
-    return {
-      success: true,
-      data: items,
-      pagination: {
-        page: query.page,
-        limit: query.limit,
-        totalItems: filtered.length,
-        totalPages,
-        hasNextPage: query.page < totalPages,
-        hasPreviousPage: query.page > 1,
-      },
-    };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiPaginated<AdminLeader>>("/admin/leaders", { params: query });
-    // return data;
+    return { success: true, data: data.data.map(toAdminLeader), pagination: data.pagination };
   },
 
   async getLeaderById(id: string): Promise<ApiSuccess<AdminLeader>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    const match = leadersStore.find((l) => l.id === id);
-    if (!match) throw new AdminLeaderNotFoundError(`No leader found for id ${id}`);
-    return { success: true, message: "Leader retrieved successfully", data: match };
+    try {
+      const { data } = await adminApiClient.get<ApiSuccess<BackendAdminLeader>>(`/admin/leaders/${id}`);
+      return { success: true, message: data.message, data: toAdminLeader(data.data) };
+    } catch {
+      throw new AdminLeaderNotFoundError(`No leader found for id ${id}`);
+    }
   },
 
   async saveLeader(input: AdminLeader): Promise<ApiSuccess<AdminLeader>> {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    const index = leadersStore.findIndex((l) => l.id === input.id);
-    if (index >= 0) {
-      leadersStore[index] = input;
-    } else {
-      leadersStore.unshift(input);
-    }
-    return { success: true, message: "Leader saved successfully", data: input };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.put<ApiSuccess<AdminLeader>>(`/admin/leaders/${input.id}`, input);
-    // return data;
+    const payload = toWritePayload(input);
+    const { data } = input.id
+      ? await adminApiClient.patch<ApiSuccess<BackendAdminLeader>>(`/admin/leaders/${input.id}`, payload)
+      : await adminApiClient.post<ApiSuccess<BackendAdminLeader>>("/admin/leaders", payload);
+    return { success: true, message: data.message, data: toAdminLeader(data.data) };
   },
 
   async deleteLeader(id: string): Promise<ApiSuccess<{ deleted: boolean }>> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    const index = leadersStore.findIndex((l) => l.id === id);
-    if (index === -1) throw new AdminLeaderNotFoundError(`No leader found for id ${id}`);
-    leadersStore.splice(index, 1);
+    await adminApiClient.delete(`/admin/leaders/${id}`);
     return { success: true, message: "Leader deleted", data: { deleted: true } };
+  },
+
+  async uploadPhoto(leaderId: string, file: File): Promise<AdminLeader> {
+    const form = new FormData();
+    form.append("file", file);
+    const { data } = await adminApiClient.post<ApiSuccess<BackendAdminLeader>>(
+      `/admin/leaders/${leaderId}/photo`,
+      form,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+    return toAdminLeader(data.data);
   },
 };

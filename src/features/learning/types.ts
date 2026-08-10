@@ -5,7 +5,7 @@ export type LessonType = "Video" | "Article" | "PDF" | "Quiz";
 export type LessonStatus = "completed" | "in-progress" | "not-started" | "locked";
 
 export interface LessonAccess {
-  /** ISO datetime this lesson unlocks on the programme schedule. */
+  /** ISO datetime this lesson unlocks on the roadmap schedule. */
   unlocksAt: string;
   /** Minimum membership tier required to view this lesson, once unlocked. */
   requiredTier: MembershipTier;
@@ -52,14 +52,25 @@ export interface LearningModuleSummary {
   lessonCount: number;
 }
 
-export interface YearProgramme {
-  year: string;
-  label: string;
-  isCurrent: boolean;
-  overallPercent: number;
-  note: string;
-  continueWhereLeftOff: Lesson[];
+/** A time-boxed section of a Roadmap — see pbt_phase3_intgration_guide.md. */
+export interface RoadmapWeekSummary {
+  id: string;
+  weekNumber: number;
+  title: string;
+  description?: string;
+  /** A milestone week -- shown as a "Checkpoint Week" review page (video summary + submit a question) instead of ordinary modules. */
+  isCheckpoint: boolean;
+  progressPercent: number;
   modules: LearningModuleSummary[];
+}
+
+/** The Business Learning Journey for a given year — members progress through this, they don't enrol in it. */
+export interface Roadmap {
+  year: string;
+  title: string;
+  description?: string;
+  overallPercent: number;
+  weeks: RoadmapWeekSummary[];
 }
 
 export interface YearOption {

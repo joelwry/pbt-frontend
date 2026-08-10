@@ -1,10 +1,7 @@
+import { adminApiClient } from "@/lib/admin-api-client";
 import type { ApiSuccess, ApiPaginated } from "@/types/api";
 import type { MembershipTier } from "@/features/session/types";
-import type { AdminMemberDetail, AdminMembersStats } from "@/features/admin-members/types";
-import { adminMembersMock, adminMembersStatsMock } from "@/features/admin-members/mocks/admin-members.mock";
-
-const SIMULATED_LATENCY_MS = 500;
-const membersStore: AdminMemberDetail[] = [...adminMembersMock];
+import type { AdminMemberDetail, AdminMembersStats, MemberBillingRow, MemberLearningProgress } from "@/features/admin-members/types";
 
 export class AdminMemberNotFoundError extends Error {}
 
@@ -17,91 +14,73 @@ export interface AdminMembersQuery {
 
 export const adminMembersRepository = {
   async getStats(): Promise<ApiSuccess<AdminMembersStats>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    return adminMembersStatsMock;
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiSuccess<AdminMembersStats>>("/admin/members/stats");
-    // return data;
+    const { data } = await adminApiClient.get<ApiSuccess<AdminMembersStats>>("/admin/members/stats");
+    return data;
   },
 
   async getMembersPage(query: AdminMembersQuery): Promise<ApiPaginated<AdminMemberDetail>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-
-    const q = query.search.trim().toLowerCase();
-    const filtered = membersStore.filter((m) => {
-      const matchesTier = query.tier === "All" || m.tier === query.tier;
-      const matchesSearch =
-        !q || m.fullName.toLowerCase().includes(q) || m.email.toLowerCase().includes(q) || m.clientId.toLowerCase().includes(q);
-      return matchesTier && matchesSearch;
+    const { data } = await adminApiClient.get<ApiPaginated<AdminMemberDetail>>("/admin/members", {
+      params: { tier: query.tier, search: query.search || undefined, page: query.page, limit: query.limit },
     });
-
-    const start = (query.page - 1) * query.limit;
-    const items = filtered.slice(start, start + query.limit);
-    const totalPages = Math.max(1, Math.ceil(filtered.length / query.limit));
-
-    return {
-      success: true,
-      data: items,
-      pagination: {
-        page: query.page,
-        limit: query.limit,
-        totalItems: filtered.length,
-        totalPages,
-        hasNextPage: query.page < totalPages,
-        hasPreviousPage: query.page > 1,
-      },
-    };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiPaginated<AdminMemberDetail>>("/admin/members", { params: query });
-    // return data;
+    return data;
   },
 
   async getMemberById(id: string): Promise<ApiSuccess<AdminMemberDetail>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    const match = membersStore.find((m) => m.id === id);
-    if (!match) throw new AdminMemberNotFoundError(`No member found for id ${id}`);
-    return { success: true, message: "Member retrieved successfully", data: match };
+    try {
+      const { data } = await adminApiClient.get<ApiSuccess<AdminMemberDetail>>(`/admin/members/${id}`);
+      return data;
+    } catch {
+      throw new AdminMemberNotFoundError(`No member found for id ${id}`);
+    }
+  },
+
+  async createMember(input: { fullName: string; email: string; tier: MembershipTier }): Promise<ApiSuccess<AdminMemberDetail>> {
+    const { data } = await adminApiClient.post<ApiSuccess<AdminMemberDetail>>("/admin/members", input);
+    return data;
+  },
+
+  async updateMember(
+    id: string,
+    input: { fullName?: string; phone?: string; location?: string; assignedLeaderId?: string | null }
+  ): Promise<ApiSuccess<AdminMemberDetail>> {
+    const { data } = await adminApiClient.patch<ApiSuccess<AdminMemberDetail>>(`/admin/members/${id}`, input);
+    return data;
   },
 
   async changeTier(id: string, tier: MembershipTier): Promise<ApiSuccess<AdminMemberDetail>> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    const member = membersStore.find((m) => m.id === id);
-    if (!member) throw new AdminMemberNotFoundError(`No member found for id ${id}`);
-    member.tier = tier;
-    member.contractLabel = tier === "Pathway" ? "No contract" : tier === "Plus" ? "6-mo contract" : "12-mo renewable";
-    return { success: true, message: "Membership tier updated successfully", data: member };
+    const { data } = await adminApiClient.patch<ApiSuccess<AdminMemberDetail>>(`/admin/members/${id}/tier`, { tier });
+    return data;
   },
 
   async setPaused(id: string, paused: boolean): Promise<ApiSuccess<AdminMemberDetail>> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    const member = membersStore.find((m) => m.id === id);
-    if (!member) throw new AdminMemberNotFoundError(`No member found for id ${id}`);
-    member.status = paused ? "Paused" : "Active";
-    return { success: true, message: paused ? "Membership paused" : "Membership resumed", data: member };
+    const { data } = await adminApiClient.patch<ApiSuccess<AdminMemberDetail>>(`/admin/members/${id}/pause`, { paused });
+    return data;
   },
 
   async resendWelcomeEmail(id: string): Promise<ApiSuccess<{ sent: boolean }>> {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    const member = membersStore.find((m) => m.id === id);
-    if (!member) throw new AdminMemberNotFoundError(`No member found for id ${id}`);
-    return { success: true, message: "Welcome email sent", data: { sent: true } };
+    const { data } = await adminApiClient.post<ApiSuccess<{ sent: boolean }>>(`/admin/members/${id}/resend-welcome`, {});
+    return data;
   },
 
   async deactivateAccount(id: string): Promise<ApiSuccess<{ deactivated: boolean }>> {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    const index = membersStore.findIndex((m) => m.id === id);
-    if (index === -1) throw new AdminMemberNotFoundError(`No member found for id ${id}`);
-    membersStore[index] = { ...membersStore[index], status: "Paused" };
-    return { success: true, message: "Account deactivated", data: { deactivated: true } };
+    const { data } = await adminApiClient.post<ApiSuccess<{ deactivated: boolean }>>(`/admin/members/${id}/deactivate`, {});
+    return data;
   },
 
   async deleteMember(id: string): Promise<ApiSuccess<{ deleted: boolean }>> {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    const index = membersStore.findIndex((m) => m.id === id);
-    if (index === -1) throw new AdminMemberNotFoundError(`No member found for id ${id}`);
-    membersStore.splice(index, 1);
-    return { success: true, message: "Member deleted", data: { deleted: true } };
+    const { data } = await adminApiClient.delete<ApiSuccess<{ deleted: boolean }>>(`/admin/members/${id}`);
+    return data;
+  },
+
+  async getMemberBilling(id: string, page: number, limit: number): Promise<ApiPaginated<MemberBillingRow>> {
+    const { data } = await adminApiClient.get<ApiPaginated<MemberBillingRow>>(`/admin/members/${id}/billing`, {
+      params: { page, limit },
+    });
+    return data;
+  },
+
+  async getMemberLearningProgress(id: string): Promise<ApiSuccess<MemberLearningProgress>> {
+    const { data } = await adminApiClient.get<ApiSuccess<MemberLearningProgress>>(`/admin/members/${id}/learning-progress`);
+    return data;
   },
 };

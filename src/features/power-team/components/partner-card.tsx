@@ -2,15 +2,19 @@ import { Building2, MapPin, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/shared/avatar";
 import { PartnerProfileDialog } from "@/features/power-team/components/partner-profile-dialog";
 import type { Partner } from "@/features/power-team/types";
 
 export function PartnerCard({ partner }: { partner: Partner }) {
   return (
     <Card className="pbt-hover-lift text-center">
-      <div className="h-16 w-16 rounded-full bg-navy-900 text-white text-lg font-bold flex items-center justify-center mx-auto">
-        {partner.initials}
-      </div>
+      <Avatar
+        src={partner.logoUrl}
+        alt={partner.name}
+        initials={partner.initials}
+        className="h-16 w-16 rounded-full bg-navy-900 text-lg mx-auto"
+      />
       <p className="font-semibold text-text-primary mt-3">{partner.name}</p>
       <p className="text-xs text-text-muted mt-0.5 inline-flex items-center gap-1">
         <Building2 className="h-3 w-3" />

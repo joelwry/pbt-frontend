@@ -8,13 +8,17 @@ export interface ResourcesPage {
 }
 
 export const resourcesService = {
-  async getFeaturedToolkit(): Promise<FeaturedToolkit> {
+  async getFeaturedToolkit(): Promise<FeaturedToolkit | null> {
     const response = await resourcesRepository.getFeaturedToolkit();
-    return response.data;
+    return response ? response.data : null;
   },
 
   async getResourcesPage(query: ResourcesQuery): Promise<ResourcesPage> {
     const response = await resourcesRepository.getResourcesPage(query);
     return { items: response.data, pagination: response.pagination };
+  },
+
+  async trackDownload(resourceId: string): Promise<void> {
+    await resourcesRepository.trackDownload(resourceId);
   },
 };

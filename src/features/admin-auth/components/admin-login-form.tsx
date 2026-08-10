@@ -4,7 +4,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ export function AdminLoginForm() {
   const { toast } = useToast();
   const [isPending, setIsPending] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -36,7 +37,8 @@ export function AdminLoginForm() {
     formState: { errors },
   } = useForm<AdminLoginFormValues>({
     resolver: zodResolver(adminLoginSchema),
-    defaultValues: { email: "", password: "", rememberDevice: false },
+    // Persistent by default — see docs/ui_adjustment.md.
+    defaultValues: { email: "", password: "", rememberDevice: true },
   });
 
   async function onSubmit(values: AdminLoginFormValues) {
@@ -77,14 +79,26 @@ export function AdminLoginForm() {
 
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          placeholder="••••••••••"
-          autoComplete="current-password"
-          invalid={!!errors.password}
-          {...register("password")}
-        />
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="••••••••••"
+            autoComplete="current-password"
+            invalid={!!errors.password}
+            className="pr-11"
+            {...register("password")}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            tabIndex={-1}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
         {errors.password && <p className="text-xs text-error">{errors.password.message}</p>}
       </div>
 

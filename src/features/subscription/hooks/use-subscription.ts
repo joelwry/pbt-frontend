@@ -1,19 +1,18 @@
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { subscriptionService } from "@/features/subscription/services/subscription.service";
 import { useCurrentMember } from "@/features/session/hooks/use-current-member";
-import { useState } from "react";
+import type { MembershipTier } from "@/features/session/types";
 
 export function useSubscription() {
   const { data: member, isLoading: memberLoading } = useCurrentMember();
-  const [cancelled, setCancelled] = useState(false);
 
   const query = useQuery({
-    queryKey: ["subscription", "summary", member?.id, cancelled],
-    queryFn: () => subscriptionService.getSubscription(member!, cancelled),
+    queryKey: ["subscription", "summary", member?.id],
+    queryFn: () => subscriptionService.getSubscription(member!),
     enabled: Boolean(member),
   });
 
-  return { ...query, isLoading: memberLoading || query.isLoading, markCancelled: () => setCancelled(true) };
+  return { ...query, isLoading: memberLoading || query.isLoading };
 }
 
 export function useInvoicesPage(page: number) {
@@ -32,5 +31,12 @@ export function useCancelSubscription(onCancelled: () => void) {
       onCancelled();
       queryClient.invalidateQueries({ queryKey: ["subscription", "summary"] });
     },
+  });
+}
+
+export function useChangeTierCheckout() {
+  return useMutation({
+    mutationFn: ({ tier, billingCycle }: { tier: MembershipTier; billingCycle: "monthly" | "annual" }) =>
+      subscriptionService.createCheckoutSession(tier, billingCycle),
   });
 }

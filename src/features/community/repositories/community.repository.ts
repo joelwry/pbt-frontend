@@ -1,98 +1,77 @@
+import { apiClient } from "@/lib/api-client";
 import type { ApiSuccess, ApiPaginated } from "@/types/api";
-import type { CommunityMeta, Discussion } from "@/features/community/types";
-import { communityMetaMock, discussionsMock } from "@/features/community/mocks/community.mock";
+import type { CommunityMeta, Discussion, Reply, AuthorRoleTag } from "@/features/community/types";
 
-const SIMULATED_LATENCY_MS = 500;
+interface BackendReply {
+  id: string;
+  authorName: string;
+  authorInitials: string;
+  roleTag: AuthorRoleTag;
+  message: string;
+  postedAtLabel: string;
+}
 
-// Mutable in-memory store so create/like mutations persist for the session.
-const discussionsStore: Discussion[] = [...discussionsMock];
+interface BackendDiscussion {
+  id: string;
+  authorName: string;
+  authorInitials: string;
+  roleTag: AuthorRoleTag;
+  pinned: boolean;
+  title: string;
+  excerpt: string;
+  fullBody: string;
+  replyCount: number;
+  likeCount: number;
+  likedByMe: boolean;
+  postedAtLabel: string;
+  replies: BackendReply[];
+}
 
-export class CommunityNotFoundError extends Error {}
+function toReply(r: BackendReply): Reply {
+  return { ...r };
+}
+
+function toDiscussion(d: BackendDiscussion): Discussion {
+  return { ...d, replies: d.replies.map(toReply) };
+}
 
 export const communityRepository = {
   async getMeta(): Promise<ApiSuccess<CommunityMeta>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    return communityMetaMock;
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiSuccess<CommunityMeta>>("/community/meta");
-    // return data;
+    const { data } = await apiClient.get<ApiSuccess<CommunityMeta>>("/community/meta");
+    return data;
   },
 
   async getDiscussionsPage(page: number, limit: number): Promise<ApiPaginated<Discussion>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    const start = (page - 1) * limit;
-    const items = discussionsStore.slice(start, start + limit);
-    const totalPages = Math.max(1, Math.ceil(discussionsStore.length / limit));
-
-    return {
-      success: true,
-      data: items,
-      pagination: {
-        page,
-        limit,
-        totalItems: discussionsStore.length,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
-    };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiPaginated<Discussion>>("/community/discussions", { params: { page, limit } });
-    // return data;
+    const { data } = await apiClient.get<ApiPaginated<BackendDiscussion>>("/community", { params: { page, limit } });
+    return { success: true, data: data.data.map(toDiscussion), pagination: data.pagination };
   },
 
   async getDiscussionById(id: string): Promise<ApiSuccess<Discussion>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    const match = discussionsStore.find((d) => d.id === id);
-    if (!match) throw new CommunityNotFoundError(`No discussion found for id ${id}`);
-    return { success: true, message: "Discussion retrieved successfully", data: match };
+    const { data } = await apiClient.get<ApiSuccess<BackendDiscussion>>(`/community/${id}`);
+    return { success: true, message: data.message, data: toDiscussion(data.data) };
   },
 
-  async createDiscussion(input: { title: string; excerpt: string; authorName: string; authorInitials: string }): Promise<ApiSuccess<Discussion>> {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    const discussion: Discussion = {
-      id: `disc_${Date.now()}`,
-      authorName: input.authorName,
-      authorInitials: input.authorInitials,
-      roleTag: null,
-      pinned: false,
+  async createDiscussion(input: { title: string; excerpt: string }): Promise<ApiSuccess<Discussion>> {
+    const { data } = await apiClient.post<ApiSuccess<BackendDiscussion>>("/community", {
       title: input.title,
-      excerpt: input.excerpt,
-      fullBody: input.excerpt,
-      replyCount: 0,
-      likeCount: 0,
-      likedByMe: false,
-      postedAtLabel: "Just now",
-      replies: [],
-    };
-    discussionsStore.unshift(discussion);
-    return { success: true, message: "Discussion created successfully", data: discussion };
+      content: input.excerpt,
+    });
+    return { success: true, message: data.message, data: toDiscussion(data.data) };
   },
 
   async toggleLike(discussionId: string): Promise<ApiSuccess<Discussion>> {
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    const discussion = discussionsStore.find((d) => d.id === discussionId);
-    if (!discussion) throw new CommunityNotFoundError(`No discussion found for id ${discussionId}`);
-    discussion.likedByMe = !discussion.likedByMe;
-    discussion.likeCount += discussion.likedByMe ? 1 : -1;
-    return { success: true, message: "Updated", data: discussion };
+    const { data } = await apiClient.post<ApiSuccess<BackendDiscussion>>(`/community/${discussionId}/like`, {});
+    return { success: true, message: data.message, data: toDiscussion(data.data) };
   },
 
-  async addReply(discussionId: string, input: { authorName: string; authorInitials: string; message: string }): Promise<ApiSuccess<Discussion>> {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    const discussion = discussionsStore.find((d) => d.id === discussionId);
-    if (!discussion) throw new CommunityNotFoundError(`No discussion found for id ${discussionId}`);
-    discussion.replies.push({
-      id: `rep_${Date.now()}`,
-      authorName: input.authorName,
-      authorInitials: input.authorInitials,
-      roleTag: null,
-      message: input.message,
-      postedAtLabel: "Just now",
+  async addReply(discussionId: string, input: { message: string }): Promise<ApiSuccess<Discussion>> {
+    const { data } = await apiClient.post<ApiSuccess<BackendDiscussion>>(`/community/${discussionId}/replies`, {
+      content: input.message,
     });
-    discussion.replyCount += 1;
-    return { success: true, message: "Reply added successfully", data: discussion };
+    return { success: true, message: data.message, data: toDiscussion(data.data) };
+  },
+
+  async reportDiscussion(discussionId: string, reason: string): Promise<void> {
+    await apiClient.post(`/community/${discussionId}/report`, { reason });
   },
 };

@@ -5,9 +5,9 @@ import { ChevronDown, FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const DEMO_ACCOUNTS = [
-  { email: "kudirat@olowosaleproperty.co.uk", label: "Mentorship · active", note: "Full access, normal session length" },
-  { email: "alice.pathway@pbt.test", label: "Pathway · active", note: "Default tier, gated from Plus/Mentorship pages" },
-  { email: "ben.plus@pbt.test", label: "Plus · active", note: "Gated from Mentorship-only pages" },
+  { email: "kudirat@olowosaleproperty.co.uk", label: "Masterplan · active", note: "Full access, normal session length" },
+  { email: "alice.pathway@pbt.test", label: "Pathway · active", note: "Default tier, gated from Plus/Masterplan pages" },
+  { email: "ben.plus@pbt.test", label: "Plus · active", note: "Gated from Masterplan-only pages" },
   { email: "carla.expired@pbt.test", label: "Pathway · expired", note: "Redirected to Renew Subscription on login" },
   { email: "derek.silentrefresh@pbt.test", label: "Plus · 20s access token", note: "Refreshes silently in the background — no redirect" },
   { email: "erin.forcedlogout@pbt.test", label: "Pathway · 20s access / 25s refresh", note: "Refresh token also expires — forces logout ~20–25s in" },

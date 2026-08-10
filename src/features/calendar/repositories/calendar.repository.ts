@@ -1,44 +1,39 @@
+import { apiClient } from "@/lib/api-client";
 import type { ApiSuccess, ApiPaginated } from "@/types/api";
 import type { CalendarEvent } from "@/features/calendar/types";
-import { calendarEventsMock } from "@/features/calendar/mocks/calendar.mock";
 
-const SIMULATED_LATENCY_MS = 400;
+interface BackendEventItem {
+  id: string;
+  date: string; // full ISO datetime
+  title: string;
+  timeLabel: string;
+  location: string;
+  category: CalendarEvent["type"];
+  requiredTier: CalendarEvent["requiredTier"];
+}
+
+function toCalendarEvent(e: BackendEventItem): CalendarEvent {
+  return {
+    id: e.id,
+    date: e.date.slice(0, 10),
+    title: e.title,
+    timeLabel: e.timeLabel,
+    type: e.category,
+    location: e.location,
+    requiredTier: e.requiredTier,
+  };
+}
 
 export const calendarRepository = {
   /** Only the events for the requested month are fetched — never the whole calendar. */
   async getMonthEvents(yearMonth: string): Promise<ApiSuccess<CalendarEvent[]>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    const items = calendarEventsMock.data.filter((event) => event.date.startsWith(yearMonth));
-    return { success: true, message: "Month events retrieved successfully", data: items };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiSuccess<CalendarEvent[]>>("/calendar/events", { params: { month: yearMonth } });
-    // return data;
+    const [year, month] = yearMonth.split("-");
+    const { data } = await apiClient.get<ApiSuccess<BackendEventItem[]>>("/events/calendar", { params: { year, month } });
+    return { success: true, message: data.message, data: data.data.map(toCalendarEvent) };
   },
 
-  async getUpcomingEventsPage(fromDate: string, page: number, limit: number): Promise<ApiPaginated<CalendarEvent>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    const upcoming = calendarEventsMock.data.filter((event) => event.date >= fromDate).sort((a, b) => a.date.localeCompare(b.date));
-
-    const start = (page - 1) * limit;
-    const items = upcoming.slice(start, start + limit);
-    const totalPages = Math.max(1, Math.ceil(upcoming.length / limit));
-
-    return {
-      success: true,
-      data: items,
-      pagination: {
-        page,
-        limit,
-        totalItems: upcoming.length,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
-    };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiPaginated<CalendarEvent>>("/calendar/upcoming", { params: { from: fromDate, page, limit } });
-    // return data;
+  async getUpcomingEventsPage(_fromDate: string, page: number, limit: number): Promise<ApiPaginated<CalendarEvent>> {
+    const { data } = await apiClient.get<ApiPaginated<BackendEventItem>>("/events/upcoming", { params: { page, limit } });
+    return { success: true, data: data.data.map(toCalendarEvent), pagination: data.pagination };
   },
 };

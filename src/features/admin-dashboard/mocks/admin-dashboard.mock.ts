@@ -23,7 +23,7 @@ export const adminDashboardMock: ApiSuccess<AdminDashboardData> = {
       segments: [
         { tier: "Pathway", label: "PBT Pathway (no contract)", percent: 28 },
         { tier: "Plus", label: "PBT Plus (6-mo)", percent: 42 },
-        { tier: "Mentorship", label: "PBT Mentorship (12-mo)", percent: 30 },
+        { tier: "Mentorship", label: "PBT Masterplan Programme (12-mo)", percent: 30 },
       ],
     },
     recentlyJoined: [
@@ -42,7 +42,7 @@ export const adminDashboardMock: ApiSuccess<AdminDashboardData> = {
       {
         id: "att_2",
         icon: "payment",
-        title: "1 failed payment — Mentorship renewal",
+        title: "1 failed payment — Masterplan Programme renewal",
         subtitle: "Subscriptions & Billing",
         href: "/admin/subscriptions",
       },

@@ -1,4 +1,4 @@
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useMutation, useQuery, keepPreviousData } from "@tanstack/react-query";
 import { resourcesService } from "@/features/resources/services/resources.service";
 import type { ResourceCategory } from "@/features/resources/types";
 
@@ -16,5 +16,12 @@ export function useResourcesPage(category: ResourceCategory | "All", search: str
     queryKey: ["resources", "list", category, search, page],
     queryFn: () => resourcesService.getResourcesPage({ category, search, page, limit: RESOURCES_PAGE_SIZE }),
     placeholderData: keepPreviousData,
+  });
+}
+
+/** Fire-and-forget — a failed tracking call should never block or roll back the download itself. */
+export function useTrackDownload() {
+  return useMutation({
+    mutationFn: (resourceId: string) => resourcesService.trackDownload(resourceId),
   });
 }

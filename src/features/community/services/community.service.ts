@@ -23,7 +23,7 @@ export const communityService = {
     return response.data;
   },
 
-  async createDiscussion(input: { title: string; excerpt: string; authorName: string; authorInitials: string }): Promise<Discussion> {
+  async createDiscussion(input: { title: string; excerpt: string }): Promise<Discussion> {
     const response = await communityRepository.createDiscussion(input);
     return response.data;
   },
@@ -33,8 +33,12 @@ export const communityService = {
     return response.data;
   },
 
-  async addReply(discussionId: string, input: { authorName: string; authorInitials: string; message: string }): Promise<Discussion> {
+  async addReply(discussionId: string, input: { message: string }): Promise<Discussion> {
     const response = await communityRepository.addReply(discussionId, input);
     return response.data;
+  },
+
+  async reportDiscussion(discussionId: string, reason: string): Promise<void> {
+    await communityRepository.reportDiscussion(discussionId, reason);
   },
 };

@@ -1,4 +1,4 @@
-import { adminCommunityRepository } from "@/features/admin-community/repositories/admin-community.repository";
+import { adminCommunityRepository, type AdminPostsQuery } from "@/features/admin-community/repositories/admin-community.repository";
 import type {
   CommunityStats,
   FlaggedPost,
@@ -6,6 +6,12 @@ import type {
   CommunityPostSummary,
   CommunityGroupSummary,
 } from "@/features/admin-community/types";
+import type { Pagination } from "@/types/api";
+
+export interface AdminPostsPage {
+  items: CommunityPostSummary[];
+  pagination: Pagination;
+}
 
 export const adminCommunityService = {
   async getStats(): Promise<CommunityStats> {
@@ -20,13 +26,17 @@ export const adminCommunityService = {
     const response = await adminCommunityRepository.getPinnedAnnouncements();
     return response.data;
   },
-  async getAllPosts(): Promise<CommunityPostSummary[]> {
-    const response = await adminCommunityRepository.getAllPosts();
-    return response.data;
+  async getAllPosts(query: AdminPostsQuery): Promise<AdminPostsPage> {
+    const response = await adminCommunityRepository.getAllPosts(query);
+    return { items: response.data, pagination: response.pagination };
   },
   async getGroups(): Promise<CommunityGroupSummary[]> {
     const response = await adminCommunityRepository.getGroups();
     return response.data;
+  },
+  async togglePin(id: string): Promise<boolean> {
+    const response = await adminCommunityRepository.togglePin(id);
+    return response.data.pinned;
   },
   async approvePost(id: string): Promise<boolean> {
     const response = await adminCommunityRepository.approvePost(id);
@@ -36,8 +46,8 @@ export const adminCommunityService = {
     const response = await adminCommunityRepository.removePost(id);
     return response.data.removed;
   },
-  async createPinnedAnnouncement(title: string): Promise<PinnedAnnouncementItem> {
-    const response = await adminCommunityRepository.createPinnedAnnouncement(title);
+  async createPinnedAnnouncement(title: string, body: string): Promise<PinnedAnnouncementItem> {
+    const response = await adminCommunityRepository.createPinnedAnnouncement(title, body);
     return response.data;
   },
   async unpinAnnouncement(id: string): Promise<boolean> {

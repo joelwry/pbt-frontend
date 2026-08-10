@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar } from "@/components/shared/avatar";
 import { useLeader } from "@/features/leaders/hooks/use-leaders";
 
 export function LeaderDetailView({ leaderId }: { leaderId: string }) {
@@ -41,9 +42,12 @@ export function LeaderDetailView({ leaderId }: { leaderId: string }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <Card className="lg:col-span-2">
           <div className="flex items-start gap-4 flex-wrap">
-            <div className="h-20 w-20 rounded-full bg-orange-500 text-white text-2xl font-bold flex items-center justify-center shrink-0">
-              {leader.initials}
-            </div>
+            <Avatar
+              src={leader.profileImageUrl}
+              alt={leader.name}
+              initials={leader.initials}
+              className="h-20 w-20 rounded-full text-2xl shrink-0"
+            />
             <div className="flex-1 min-w-[200px]">
               <Badge variant="sky">{leader.specialtyBadge}</Badge>
               {leader.isTopMentor && (

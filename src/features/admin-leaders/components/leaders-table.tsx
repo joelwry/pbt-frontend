@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { useDeleteLeader } from "@/features/admin-leaders/hooks/use-admin-leaders";
 import { useToast } from "@/providers/toast-provider";
+import { Avatar } from "@/components/shared/avatar";
 import type { AdminLeader } from "@/features/admin-leaders/types";
 
 export function LeadersTable({ leaders }: { leaders: AdminLeader[] }) {
@@ -58,9 +59,12 @@ function LeaderRow({ leader }: { leader: AdminLeader }) {
     <tr>
       <td className="py-3.5 pr-4">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
-            {leader.initials}
-          </div>
+          <Avatar
+            src={leader.profileImageUrl}
+            alt={leader.fullName}
+            initials={leader.initials}
+            className="h-9 w-9 rounded-full text-xs shrink-0"
+          />
           <div className="min-w-0">
             <p className="font-semibold text-text-primary truncate">{leader.fullName}</p>
             <p className="text-xs text-text-muted truncate">{leader.region}</p>

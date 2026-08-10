@@ -1,13 +1,7 @@
+import { apiClient } from "@/lib/api-client";
 import type { ApiSuccess, ApiPaginated } from "@/types/api";
-import type { YearOption, YearProgramme, Lesson, LearningModuleSummary } from "@/features/learning/types";
-import {
-  learningYearsMock,
-  yearProgrammeMocks,
-  lessonsByModuleId,
-  yearModuleIds,
-} from "@/features/learning/mocks/learning.mock";
-
-const SIMULATED_LATENCY_MS = 450;
+import type { YearOption, Roadmap, Lesson } from "@/features/learning/types";
+import type { MembershipTier } from "@/features/session/types";
 
 export class LearningNotFoundError extends Error {}
 
@@ -15,88 +9,84 @@ export interface LessonContext {
   lesson: Lesson;
   moduleId: string;
   moduleTitle: string;
-  year: string;
-  yearLabel: string;
   moduleLessons: Lesson[];
+}
+
+interface BackendRoadmapYear {
+  year: string;
+  title: string;
+  isCurrent: boolean;
 }
 
 export const learningRepository = {
   async getYears(): Promise<ApiSuccess<YearOption[]>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    return learningYearsMock;
+    const { data } = await apiClient.get<ApiSuccess<BackendRoadmapYear[]>>("/learning/years");
+    return {
+      success: true,
+      message: data.message,
+      data: data.data.map((r) => ({ year: r.year, label: r.title, isCurrent: r.isCurrent })),
+    };
   },
 
   /**
-   * Returns programme metadata + module summaries only (no lesson bodies) —
-   * lessons are fetched separately, one paginated page per module, so opening
-   * a year never pulls a full programme's worth of content in one request.
+   * `tier` restricts the whole roadmap to lessons written for exactly that
+   * tier — the Pathway page passes 'Pathway' so Plus/Masterplan-only lessons
+   * never load there at all (they live on their own dedicated pages), and
+   * those dedicated pages reuse this same call with 'Plus' / 'Mentorship'.
    */
-  async getYearProgramme(year: string): Promise<ApiSuccess<YearProgramme>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    const match = yearProgrammeMocks[year];
-    if (!match) throw new LearningNotFoundError(`No programme found for ${year}`);
-    return match;
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiSuccess<YearProgramme>>(`/learning/${year}`);
-    // return data;
+  async getRoadmap(year: string, tier: MembershipTier): Promise<ApiSuccess<Roadmap>> {
+    const { data } = await apiClient.get<ApiSuccess<Roadmap>>(`/learning/roadmap/${year}`, { params: { tier } });
+    return data;
   },
 
-  async getModuleLessonsPage(moduleId: string, page: number, limit: number): Promise<ApiPaginated<Lesson>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-    const all = lessonsByModuleId[moduleId] ?? [];
-    const start = (page - 1) * limit;
-    const items = all.slice(start, start + limit);
-    const totalPages = Math.max(1, Math.ceil(all.length / limit));
+  async getContinueLearning(): Promise<ApiSuccess<Lesson[]>> {
+    const { data } = await apiClient.get<ApiSuccess<Lesson[]>>("/learning/continue");
+    return data;
+  },
+
+  /** Real server-side pagination — a module's lessons are no longer fetched all at once and sliced client-side. */
+  async getModuleLessonsPage(moduleId: string, page: number, limit: number, tier: MembershipTier): Promise<ApiPaginated<Lesson>> {
+    const { data } = await apiClient.get<ApiPaginated<Lesson>>(`/learning/modules/${moduleId}`, { params: { page, limit, tier } });
+    return data;
+  },
+
+  async completeLesson(lessonId: string, moduleId: string, timeSpentMinutes: number): Promise<void> {
+    await apiClient.post(`/learning/lessons/${lessonId}/progress`, {
+      moduleId,
+      status: "completed",
+      progressPercent: 100,
+      timeSpentMinutes,
+    });
+  },
+
+  /** Wired to the existing /questions module -- a checkpoint week's "Submit a Question" tab. */
+  async submitQuestion(title: string, description: string, category: string): Promise<void> {
+    await apiClient.post("/questions", { title, description, category });
+  },
+
+  async getLessonContext(lessonId: string, tier: MembershipTier): Promise<ApiSuccess<LessonContext>> {
+    const { data: lessonResponse } = await apiClient.get<
+      ApiSuccess<Omit<Lesson, "moduleId"> & { moduleId: { _id: string; title: string } | string }>
+    >(`/learning/lessons/${lessonId}`);
+    const rawLesson = lessonResponse.data;
+    const moduleId = typeof rawLesson.moduleId === "string" ? rawLesson.moduleId : rawLesson.moduleId._id;
+    const moduleTitle = typeof rawLesson.moduleId === "string" ? "" : rawLesson.moduleId.title;
+
+    // Full module context (not just one page) so prev/next navigation still
+    // works across a module's entire lesson list, not just the first page.
+    const { data: moduleLessonsResponse } = await apiClient.get<ApiPaginated<Lesson>>(`/learning/modules/${moduleId}`, {
+      params: { page: 1, limit: 100, tier },
+    });
 
     return {
       success: true,
-      data: items,
-      pagination: {
-        page,
-        limit,
-        totalItems: all.length,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
+      message: "Lesson retrieved successfully",
+      data: {
+        lesson: { ...rawLesson, moduleId },
+        moduleId,
+        moduleTitle,
+        moduleLessons: moduleLessonsResponse.data,
       },
     };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiPaginated<Lesson>>(`/learning/modules/${moduleId}/lessons`, { params: { page, limit } });
-    // return data;
-  },
-
-  async getLessonContext(lessonId: string): Promise<ApiSuccess<LessonContext>> {
-    await new Promise((resolve) => setTimeout(resolve, SIMULATED_LATENCY_MS));
-
-    for (const [year, moduleIds] of Object.entries(yearModuleIds)) {
-      for (const moduleId of moduleIds) {
-        const moduleLessons = lessonsByModuleId[moduleId] ?? [];
-        const lesson = moduleLessons.find((l) => l.id === lessonId);
-        if (lesson) {
-          const moduleSummary: LearningModuleSummary | undefined = yearProgrammeMocks[year]?.data.modules.find(
-            (m) => m.id === moduleId
-          );
-          return {
-            success: true,
-            message: "Lesson retrieved successfully",
-            data: {
-              lesson,
-              moduleId,
-              moduleTitle: moduleSummary?.title ?? "",
-              year,
-              yearLabel: yearProgrammeMocks[year]?.data.label ?? "",
-              moduleLessons,
-            },
-          };
-        }
-      }
-    }
-    throw new LearningNotFoundError(`No lesson found for id ${lessonId}`);
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.get<ApiSuccess<LessonContext>>(`/learning/lessons/${lessonId}`);
-    // return data;
   },
 };
