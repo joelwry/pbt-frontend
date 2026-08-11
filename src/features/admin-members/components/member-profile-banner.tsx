@@ -4,9 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EditMemberDialog } from "@/features/admin-members/components/edit-member-dialog";
+import { TIER_LABEL, TIER_VARIANT } from "@/features/admin-members/tier-labels";
 import type { AdminMemberDetail } from "@/features/admin-members/types";
 
-const TIER_VARIANT = { Pathway: "outline" as const, Plus: "sky" as const, Mentorship: "orange" as const };
 const STATUS_VARIANT = { Active: "success" as const, "Payment Failed": "error" as const, Paused: "outline" as const };
 
 export function MemberProfileBanner({ member }: { member: AdminMemberDetail }) {
@@ -28,7 +28,7 @@ export function MemberProfileBanner({ member }: { member: AdminMemberDetail }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={TIER_VARIANT[member.tier]}>PBT {member.tier}</Badge>
+            <Badge variant={TIER_VARIANT[member.tier]}>{TIER_LABEL[member.tier]}</Badge>
             <Badge variant={STATUS_VARIANT[member.status]}>{member.status}</Badge>
             <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)}>
               <Pencil className="h-3.5 w-3.5" />

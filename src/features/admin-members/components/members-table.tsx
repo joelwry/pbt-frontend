@@ -15,13 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { useDeleteMember } from "@/features/admin-members/hooks/use-admin-members";
 import { useToast } from "@/providers/toast-provider";
+import { TIER_LABEL, TIER_VARIANT } from "@/features/admin-members/tier-labels";
 import type { AdminMemberListItem } from "@/features/admin-members/types";
-
-const TIER_VARIANT = {
-  Pathway: "outline" as const,
-  Plus: "sky" as const,
-  Mentorship: "orange" as const,
-};
 
 const STATUS_VARIANT = {
   Active: "success" as const,
@@ -84,7 +79,7 @@ function MemberRow({ member }: { member: AdminMemberListItem }) {
         </div>
       </td>
       <td className="py-3.5 pr-4">
-        <Badge variant={TIER_VARIANT[member.tier]}>{member.tier}</Badge>
+        <Badge variant={TIER_VARIANT[member.tier]}>{TIER_LABEL[member.tier]}</Badge>
       </td>
       <td className="py-3.5 pr-4 text-text-secondary whitespace-nowrap">{member.joinedLabel}</td>
       <td className="py-3.5 pr-4">

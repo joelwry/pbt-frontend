@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { TIER_LABEL } from "@/features/admin-members/tier-labels";
 import type { Invoice, InvoiceStatus, MembershipTier } from "@/features/admin-subscriptions/types";
 
 const TIER_VARIANT: Record<MembershipTier, "slate" | "sky" | "orange"> = {
@@ -41,7 +42,7 @@ export function InvoicesTable({ invoices }: { invoices: Invoice[] }) {
                 </div>
               </td>
               <td className="py-3.5 pr-4">
-                <Badge variant={TIER_VARIANT[invoice.tier]}>{invoice.tier}</Badge>
+                <Badge variant={TIER_VARIANT[invoice.tier]}>{TIER_LABEL[invoice.tier]}</Badge>
               </td>
               <td className="py-3.5 pr-4 text-text-secondary whitespace-nowrap">£{invoice.amount.toFixed(2)}</td>
               <td className="py-3.5 pr-4 text-text-secondary whitespace-nowrap">{invoice.dateLabel}</td>

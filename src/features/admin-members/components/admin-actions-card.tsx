@@ -21,6 +21,7 @@ import {
   useResendWelcomeEmail,
   useDeactivateAccount,
 } from "@/features/admin-members/hooks/use-admin-members";
+import { TIER_LABEL } from "@/features/admin-members/tier-labels";
 import type { AdminMemberDetail } from "@/features/admin-members/types";
 import type { MembershipTier } from "@/features/session/types";
 
@@ -72,7 +73,7 @@ export function AdminActionsCard({ member }: { member: AdminMemberDetail }) {
                       : "border-border bg-white text-text-secondary hover:bg-[#F5F8FA]"
                   }`}
                 >
-                  PBT {tier}
+                  {TIER_LABEL[tier]}
                 </button>
               ))}
             </div>
@@ -85,7 +86,7 @@ export function AdminActionsCard({ member }: { member: AdminMemberDetail }) {
                   {
                     onSuccess: () => {
                       setChangeTierOpen(false);
-                      toast({ variant: "success", title: "Tier updated", description: `${member.fullName} is now on PBT ${selectedTier}.` });
+                      toast({ variant: "success", title: "Tier updated", description: `${member.fullName} is now on ${TIER_LABEL[selectedTier]}.` });
                     },
                   }
                 )
