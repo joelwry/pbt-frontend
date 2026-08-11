@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DonutChart } from "@/components/shared/donut-chart";
 import { useMembersByTier } from "@/features/admin-analytics/hooks/use-admin-analytics";
+import { TIER_LABEL } from "@/features/admin-members/tier-labels";
 import type { MembershipTier } from "@/features/session/types";
 
 const SEGMENT_COLOR: Record<MembershipTier, string> = {
@@ -38,7 +39,7 @@ export function MembersByTierCard() {
               <li key={segment.tier} className="flex items-center justify-between gap-3 flex-wrap">
                 <span className="flex items-center gap-2 text-sm text-text-secondary">
                   <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: SEGMENT_COLOR[segment.tier] }} />
-                  {segment.tier}
+                  {TIER_LABEL[segment.tier]}
                 </span>
                 <span className="text-sm font-semibold text-text-primary">{segment.percent}%</span>
               </li>
