@@ -1,13 +1,8 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { TIER_LABEL, TIER_VARIANT } from "@/features/admin-members/tier-labels";
 import type { AdminRecentMember } from "@/features/admin-dashboard/types";
-
-const TIER_VARIANT = {
-  Pathway: "outline" as const,
-  Plus: "sky" as const,
-  Mentorship: "orange" as const,
-};
 
 const STATUS_VARIANT = {
   Active: "success" as const,
@@ -50,7 +45,7 @@ export function RecentlyJoinedTable({ members }: { members: AdminRecentMember[] 
                   </div>
                 </td>
                 <td className="py-3 pr-4">
-                  <Badge variant={TIER_VARIANT[member.tier]}>{member.tier}</Badge>
+                  <Badge variant={TIER_VARIANT[member.tier]}>{TIER_LABEL[member.tier]}</Badge>
                 </td>
                 <td className="py-3 pr-4 text-text-secondary whitespace-nowrap">{member.joinedLabel}</td>
                 <td className="py-3">
