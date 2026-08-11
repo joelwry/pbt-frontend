@@ -74,14 +74,25 @@ export function PersonalInformationForm({ details }: { details: ProfileDetails }
             <select
               id="investmentFocus"
               {...register("investmentFocus")}
-              className="flex h-11 w-full rounded-[var(--radius-input)] border border-border bg-white px-3.5 text-sm text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+              aria-invalid={!!errors.investmentFocus}
+              className={`flex h-11 w-full rounded-[var(--radius-input)] border bg-white px-3.5 text-sm text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${errors.investmentFocus ? "border-error" : "border-border"}`}
             >
+              {/* Accounts created before this field existed (or an admin-created
+                  member who hasn't set one yet) have investmentFocus: "" -- without
+                  a real empty option, the browser silently renders the first real
+                  option as if selected while the underlying value stays "", so the
+                  member sees no visual sign anything needs picking, and Save
+                  silently no-ops against the required-field validation below. */}
+              <option value="" disabled>
+                Select an investment focus
+              </option>
               {INVESTMENT_FOCUS_OPTIONS.map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
               ))}
             </select>
+            {errors.investmentFocus && <p className="text-xs text-error">{errors.investmentFocus.message}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="assignedLeader">Assigned Leader</Label>
