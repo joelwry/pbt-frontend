@@ -73,23 +73,30 @@ function expiresInFromJwt(token: string): number {
   return Math.max(Math.floor(decoded.exp - Date.now() / 1000), 0);
 }
 
-// No subscription record exists for an account until one is created via the
-// real payment flow (see renew-subscription.repository.ts) — a 404 here is a
-// real "never subscribed" state, not an error, so it's treated conservatively
-// as an expired Pathway subscription rather than a broken request.
-async function fetchSubscription(accessToken: string): Promise<BackendSubscription | null> {
+// `GET /subscriptions/current` always responds 200 (with `data: null` when
+// there's no active subscription) -- it never 404s. So the only way this
+// throws is a genuine network/server failure, which means we don't actually
+// know the member's subscription state. `confirmed: false` lets composeMember
+// tell "confirmed not active" apart from "couldn't check" -- the latter must
+// never be treated as expired, or a transient blip (a slow dev-server
+// restart, a dropped request) would wrongly lock a paying member out of the
+// portal and shove them at the renew-subscription paywall. The real security
+// boundary is server-side on each protected endpoint anyway; this is just
+// which page to land the member on.
+async function fetchSubscription(accessToken: string): Promise<{ subscription: BackendSubscription | null; confirmed: boolean }> {
   try {
     const { data } = await apiClient.get<ApiSuccess<BackendSubscription>>("/subscriptions/current", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-    return data.data;
+    return { subscription: data.data, confirmed: true };
   } catch {
-    return null;
+    return { subscription: null, confirmed: false };
   }
 }
 
 async function composeMember(user: BackendUser, accessToken: string): Promise<CurrentMember> {
-  const subscription = await fetchSubscription(accessToken);
+  const { subscription, confirmed } = await fetchSubscription(accessToken);
+  const isActive = subscription?.status === "active";
   return {
     id: user.id,
     clientId: user.clientId ?? user.id,
@@ -98,7 +105,7 @@ async function composeMember(user: BackendUser, accessToken: string): Promise<Cu
     email: user.email,
     avatarUrl: user.avatarUrl,
     membershipTier: subscription ? toMembershipTier(subscription.tier) : "Pathway",
-    subscriptionStatus: subscription?.status === "active" ? "active" : "expired",
+    subscriptionStatus: !confirmed || isActive ? "active" : "expired",
     subscriptionDate: subscription?.endDate ?? subscription?.startDate ?? new Date().toISOString(),
   };
 }

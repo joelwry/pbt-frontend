@@ -19,7 +19,7 @@ interface AdminAuthContextValue {
   /** True while the initial session-restore attempt (silent refresh from the httpOnly cookie) is in flight. */
   isLoading: boolean;
   login: (credentials: AdminLoginCredentials) => Promise<AdminUser>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextValue | null>(null);
@@ -149,8 +149,11 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     [scheduleRefresh, toast]
   );
 
-  const logout = useCallback(() => {
-    adminAuthService.logout().catch(() => {});
+  const logout = useCallback(async () => {
+    // Must await this *before* forceLogout clears the in-memory access
+    // token -- see the matching comment in providers/auth-provider.tsx for
+    // the full explanation. Same bug, same fix, both portals.
+    await adminAuthService.logout().catch(() => {});
     forceLogout("manual");
   }, [forceLogout]);
 

@@ -20,7 +20,7 @@ interface AuthContextValue {
   /** True while the initial session-restore attempt (silent refresh from the httpOnly cookie) is in flight. */
   isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<CurrentMember>;
-  logout: () => void;
+  logout: () => Promise<void>;
   /** Patches the in-memory member record — e.g. after a successful subscription renewal, without requiring a re-login. */
   updateMember: (patch: Partial<CurrentMember>) => void;
 }
@@ -164,8 +164,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [scheduleRefresh, toast]
   );
 
-  const logout = useCallback(() => {
-    authService.logout().catch(() => {});
+  const logout = useCallback(async () => {
+    // Must await this *before* forceLogout clears the in-memory access
+    // token -- the axios request interceptor reads that token to attach
+    // the Authorization header /auth/logout needs (it's an authenticated
+    // route). Clearing the token first meant the logout request went out
+    // with no token, the backend rejected it with 401 before ever reaching
+    // the handler that clears the refresh cookie, and the httpOnly cookie
+    // stayed valid -- so the member looked logged out in this tab but a
+    // fresh page load silently restored their session from that cookie.
+    await authService.logout().catch(() => {});
     forceLogout("manual");
   }, [forceLogout]);
 
