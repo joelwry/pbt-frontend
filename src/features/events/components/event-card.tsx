@@ -52,6 +52,7 @@ export function EventCard({
               {event.requiredTier}
             </Badge>
           )}
+          {!isPast && !event.rsvped && event.isFull && <Badge variant="error">Full</Badge>}
         </div>
       </div>
 
@@ -123,6 +124,11 @@ export function EventCard({
             <Button size="sm" variant="secondary" className="w-full" disabled>
               <Lock className="h-3.5 w-3.5" />
               Requires {event.requiredTier}
+            </Button>
+          ) : event.isFull ? (
+            <Button size="sm" variant="secondary" className="w-full" disabled>
+              <XCircle className="h-3.5 w-3.5" />
+              Event Full
             </Button>
           ) : (
             <RsvpDialog

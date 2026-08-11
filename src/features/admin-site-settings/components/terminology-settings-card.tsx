@@ -52,7 +52,12 @@ function TerminologyForm({ currentLabel }: { currentLabel: string }) {
         </Button>
       </div>
       <p className="text-xs text-text-muted">
-        Used across the Dashboard, the enrolment page, and every plan page (e.g. &quot;{workshopLabel || "Deal Clinic"} Schedule Preview&quot;).
+        {/* A space right after {expr} is silently dropped by JSX whenever the
+            surrounding text node also spans a line break (as it does here,
+            before the closing </p>) -- rendered as "Deal ClinicSchedule
+            Preview" with no space. A single template literal sidesteps the
+            multi-text-node whitespace trimming entirely. */}
+        {`Used across the Dashboard, the enrolment page, and every plan page (e.g. "${workshopLabel || "Deal Clinic"} Schedule Preview").`}
       </p>
     </div>
   );

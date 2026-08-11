@@ -11,6 +11,7 @@ interface BackendEventItem {
   category: EventItem["category"];
   requiredTier: EventItem["requiredTier"];
   rsvped: boolean;
+  isFull: boolean;
   rsvpDetails?: RsvpDetails;
   photoGalleryUrl?: string;
   recordingUrl?: string;
