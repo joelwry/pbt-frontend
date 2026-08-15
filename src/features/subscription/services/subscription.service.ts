@@ -50,4 +50,8 @@ export const subscriptionService = {
     const response = await subscriptionRepository.createCheckoutSession(tier, billingCycle);
     return response.data.checkoutUrl;
   },
+
+  async downloadReceipt(invoiceId: string): Promise<Blob> {
+    return subscriptionRepository.downloadReceipt(invoiceId);
+  },
 };

@@ -35,6 +35,14 @@ export const subscriptionRepository = {
     return data;
   },
 
+  /** Branded PDF receipt for one billing-history record, as a Blob for the browser to save. */
+  async downloadReceipt(invoiceId: string): Promise<Blob> {
+    const { data } = await apiClient.get<Blob>(`/subscriptions/invoices/${invoiceId}/receipt`, {
+      responseType: "blob",
+    });
+    return data;
+  },
+
   /** Upgrading, downgrading, or switching billing cycle all go through the same real Stripe Checkout flow as a renewal. */
   async createCheckoutSession(tier: MembershipTier, billingCycle: "monthly" | "annual"): Promise<ApiSuccess<{ checkoutUrl: string }>> {
     const { data } = await apiClient.post<ApiSuccess<{ checkoutUrl: string }>>("/billing/checkout-session", { tier, billingCycle });

@@ -1,21 +1,49 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Receipt } from "lucide-react";
+import { Download, Loader2, Receipt } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Pagination } from "@/components/shared/pagination";
-import { useInvoicesPage } from "@/features/subscription/hooks/use-subscription";
-import type { InvoiceStatus } from "@/features/subscription/types";
+import { useToast } from "@/providers/toast-provider";
+import { useInvoicesPage, useDownloadReceipt } from "@/features/subscription/hooks/use-subscription";
+import type { Invoice, InvoiceStatus } from "@/features/subscription/types";
 
 const STATUS_VARIANT: Record<InvoiceStatus, "success" | "warning" | "error"> = {
   Paid: "success",
   Pending: "warning",
   Failed: "error",
 };
+
+function ReceiptDownloadButton({ invoice }: { invoice: Invoice }) {
+  const { mutate, isPending } = useDownloadReceipt();
+  const { toast } = useToast();
+
+  function handleClick() {
+    mutate(
+      { invoiceId: invoice.id, filename: `PBT-Receipt-${invoice.invoiceNumber}` },
+      {
+        onError: () => {
+          toast({ variant: "error", title: "Couldn't download receipt", description: "Please try again." });
+        },
+      }
+    );
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={isPending}
+      aria-label={`Download receipt ${invoice.invoiceNumber}`}
+      className="inline-flex items-center justify-center h-8 w-8 rounded-lg hover:bg-[#F5F8FA] text-text-muted hover:text-text-primary disabled:opacity-50"
+    >
+      {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+    </button>
+  );
+}
 
 export function BillingHistoryTable() {
   const [page, setPage] = useState(1);
@@ -60,9 +88,7 @@ export function BillingHistoryTable() {
                       <Badge variant={STATUS_VARIANT[invoice.status]}>{invoice.status}</Badge>
                     </td>
                     <td className="py-3 text-right">
-                      <button className="inline-flex items-center justify-center h-8 w-8 rounded-lg hover:bg-[#F5F8FA] text-text-muted hover:text-text-primary">
-                        <Download className="h-4 w-4" />
-                      </button>
+                      <ReceiptDownloadButton invoice={invoice} />
                     </td>
                   </tr>
                 ))}

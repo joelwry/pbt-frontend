@@ -40,3 +40,20 @@ export function useChangeTierCheckout() {
       subscriptionService.createCheckoutSession(tier, billingCycle),
   });
 }
+
+/** Fetches the branded receipt PDF and hands it to the browser as a real file download. */
+export function useDownloadReceipt() {
+  return useMutation({
+    mutationFn: async ({ invoiceId, filename }: { invoiceId: string; filename: string }) => {
+      const blob = await subscriptionService.downloadReceipt(invoiceId);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${filename}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    },
+  });
+}
