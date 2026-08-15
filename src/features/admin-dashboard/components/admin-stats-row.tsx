@@ -10,7 +10,7 @@ export function AdminStatsRow({ stats }: { stats: AdminDashboardStats }) {
         iconVariant="navy"
         topRight={<StatChip label={stats.activeMembersDeltaLabel} />}
         value={stats.activeMembers.toLocaleString()}
-        label="Active Members"
+        label="Total Members"
         linkLabel="View all"
         linkHref="/admin/members"
       />
