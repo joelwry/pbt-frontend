@@ -1,3 +1,5 @@
+import { isAxiosError } from "axios";
+import { adminApiClient } from "@/lib/admin-api-client";
 import type { ApiSuccess } from "@/types/api";
 import type { AdminProfileData, AdminNotificationPreferences, ChangePasswordInput } from "@/features/admin-profile/types";
 import { DEFAULT_NOTIFICATION_PREFERENCES, DEFAULT_PHONE } from "@/features/admin-profile/mocks/admin-profile.mock";
@@ -51,14 +53,14 @@ export const adminProfileRepository = {
   },
 
   async changePassword(input: ChangePasswordInput): Promise<ApiSuccess<{ changed: true }>> {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    if (input.currentPassword !== "password123") {
-      throw new AdminPasswordError("Your current password is incorrect.");
+    try {
+      const { data } = await adminApiClient.post<ApiSuccess<Record<string, never>>>("/auth/me/change-password", input);
+      return { success: true, message: data.message, data: { changed: true } };
+    } catch (error) {
+      if (isAxiosError(error) && error.response?.status === 401) {
+        throw new AdminPasswordError(error.response.data?.message ?? "Your current password is incorrect.");
+      }
+      throw error;
     }
-    return { success: true, message: "Password updated successfully", data: { changed: true } };
-
-    // Live implementation, once the Express API exists:
-    // const { data } = await apiClient.post<ApiSuccess<{ changed: true }>>("/admin/me/change-password", input);
-    // return data;
   },
 };

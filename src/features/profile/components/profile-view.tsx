@@ -8,6 +8,7 @@ import { useProfile } from "@/features/profile/hooks/use-profile";
 import { useCurrentMember } from "@/features/session/hooks/use-current-member";
 import { PersonalInformationForm } from "@/features/profile/components/personal-information-form";
 import { ProfileSummaryCard, NotificationPreferencesCard } from "@/features/profile/components/profile-sidebar-cards";
+import { SecurityCard } from "@/features/profile/components/security-card";
 
 export function ProfileView() {
   const { data: profile, isLoading, isError, refetch } = useProfile();
@@ -48,8 +49,9 @@ export function ProfileView() {
       <PageHeader title="Profile" description="Manage your personal details and preferences." />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           <PersonalInformationForm details={profile.details} />
+          <SecurityCard />
         </div>
         <div className="space-y-6">
           <ProfileSummaryCard member={member} />

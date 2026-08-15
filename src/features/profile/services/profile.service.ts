@@ -1,5 +1,5 @@
 import { profileRepository } from "@/features/profile/repositories/profile.repository";
-import type { ProfileData, ProfileDetails, NotificationPreferences } from "@/features/profile/types";
+import type { ProfileData, ProfileDetails, NotificationPreferences, ChangePasswordInput } from "@/features/profile/types";
 
 export const profileService = {
   async getProfile(): Promise<ProfileData> {
@@ -15,5 +15,9 @@ export const profileService = {
   async updateNotificationPreference(key: keyof NotificationPreferences, value: boolean): Promise<NotificationPreferences> {
     const response = await profileRepository.updateNotificationPreference(key, value);
     return response.data;
+  },
+
+  async changePassword(input: ChangePasswordInput): Promise<void> {
+    await profileRepository.changePassword(input);
   },
 };

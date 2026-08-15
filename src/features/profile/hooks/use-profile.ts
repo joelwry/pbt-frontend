@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { profileService } from "@/features/profile/services/profile.service";
-import type { ProfileData, ProfileDetails, NotificationPreferences } from "@/features/profile/types";
+import { PasswordError } from "@/features/profile/repositories/profile.repository";
+import type { ProfileData, ProfileDetails, NotificationPreferences, ChangePasswordInput } from "@/features/profile/types";
 
 const PROFILE_KEY = ["profile"];
 
@@ -31,3 +32,11 @@ export function useUpdateNotificationPreference() {
     },
   });
 }
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (input: ChangePasswordInput) => profileService.changePassword(input),
+  });
+}
+
+export { PasswordError };

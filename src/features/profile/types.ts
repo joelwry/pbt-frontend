@@ -19,6 +19,11 @@ export interface ProfileData {
   notifications: NotificationPreferences;
 }
 
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export const INVESTMENT_FOCUS_OPTIONS = [
   "HMO & Portfolio Growth",
   "Buy-to-Let Fundamentals",

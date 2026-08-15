@@ -1,6 +1,10 @@
+import { isAxiosError } from "axios";
 import { apiClient } from "@/lib/api-client";
 import type { ApiSuccess } from "@/types/api";
-import type { ProfileData, ProfileDetails, NotificationPreferences } from "@/features/profile/types";
+import type { ProfileData, ProfileDetails, NotificationPreferences, ChangePasswordInput } from "@/features/profile/types";
+
+/** Thrown when the current password supplied doesn't match -- lets the form surface it as a field error instead of a generic toast. */
+export class PasswordError extends Error {}
 
 interface BackendProfile {
   fullName: string;
@@ -67,5 +71,16 @@ export const profileRepository = {
       value,
     });
     return { success: true, message: data.message, data: data.data };
+  },
+
+  async changePassword(input: ChangePasswordInput): Promise<void> {
+    try {
+      await apiClient.post("/auth/me/change-password", input);
+    } catch (error) {
+      if (isAxiosError(error) && error.response?.status === 401) {
+        throw new PasswordError(error.response.data?.message ?? "Your current password is incorrect.");
+      }
+      throw error;
+    }
   },
 };
