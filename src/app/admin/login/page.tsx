@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ShieldCheck, Lock, Activity } from "lucide-react";
 import { AdminLoginForm } from "@/features/admin-auth/components/admin-login-form";
-import { DemoAdminAccountsPanel } from "@/features/admin-auth/components/demo-admin-accounts-panel";
 import { BrandMark } from "@/components/shared/brand-mark";
 
 export const metadata: Metadata = {
@@ -81,10 +80,6 @@ export default function AdminLoginPage() {
                 you need access.
               </p>
             </div>
-          </div>
-
-          <div className="mt-4">
-            <DemoAdminAccountsPanel />
           </div>
         </div>
       </div>

@@ -191,6 +191,20 @@ export const authRepository = {
   },
 
   /**
+   * Always resolves (no error) regardless of whether the email exists -- the
+   * backend deliberately returns the same generic message either way so a
+   * caller can't use this to discover which emails have accounts.
+   */
+  async requestPasswordReset(email: string): Promise<string> {
+    try {
+      const { data } = await apiClient.post<ApiSuccess<Record<string, never>>>("/auth/forgot-password", { email });
+      return data.message;
+    } catch (error) {
+      throw toAuthApiError(error);
+    }
+  },
+
+  /**
    * Used both by "forgot password" and by the first-time account-setup link
    * (admin-created member, or eventually a first-ever Stripe subscription) —
    * the backend's reset-password endpoint is the same token-gated mechanism

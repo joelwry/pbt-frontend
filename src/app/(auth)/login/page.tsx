@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { CheckCircle2, ShieldCheck, Building2, Users2 } from "lucide-react";
 import { LoginForm } from "@/features/auth/components/login-form";
-import { DemoAccountsPanel } from "@/features/auth/components/demo-accounts-panel";
 import { BrandMark } from "@/components/shared/brand-mark";
 import { Button } from "@/components/ui/button";
 
@@ -99,10 +98,6 @@ export default function LoginPage() {
                 <Link href="/join">Join PBT</Link>
               </Button>
             </div>
-          </div>
-
-          <div className="mt-4">
-            <DemoAccountsPanel />
           </div>
         </div>
       </div>

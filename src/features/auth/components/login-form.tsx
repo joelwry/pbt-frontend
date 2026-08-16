@@ -3,6 +3,7 @@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -113,8 +114,8 @@ export function LoginForm() {
           />
           <span className="text-sm text-text-secondary">Remember me</span>
         </label>
-        <Button variant="link" type="button" className="text-sm">
-          Forgot password?
+        <Button variant="link" type="button" className="text-sm" asChild>
+          <Link href="/forgot-password">Forgot password?</Link>
         </Button>
       </div>
 
