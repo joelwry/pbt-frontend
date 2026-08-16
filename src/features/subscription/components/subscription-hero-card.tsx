@@ -32,7 +32,7 @@ export function SubscriptionHeroCard({ subscription }: { subscription: Subscript
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-white/10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 pt-6 border-t border-white/10">
         <div>
           <p className="text-[11px] font-semibold text-white/50 uppercase tracking-wide">
             {subscription.cancelled ? "Access Until" : "Next Billing"}
@@ -42,10 +42,6 @@ export function SubscriptionHeroCard({ subscription }: { subscription: Subscript
         <div>
           <p className="text-[11px] font-semibold text-white/50 uppercase tracking-wide">Amount</p>
           <p className="text-sm font-semibold text-white mt-1">{subscription.amountLabel}</p>
-        </div>
-        <div>
-          <p className="text-[11px] font-semibold text-white/50 uppercase tracking-wide">Payment Method</p>
-          <p className="text-sm font-semibold text-white mt-1">{subscription.paymentMethodLabel}</p>
         </div>
       </div>
     </Card>

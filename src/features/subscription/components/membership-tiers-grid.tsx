@@ -13,7 +13,14 @@ import { formatAmount } from "@/features/pricing/services/pricing.service";
 import { MEMBERSHIP_TIERS, TIER_ORDER } from "@/features/membership/tiers";
 import type { MembershipTier } from "@/features/session/types";
 
-export function MembershipTiersGrid({ currentTier }: { currentTier: MembershipTier }) {
+export function MembershipTiersGrid({
+  currentTier,
+  currentAmountLabel,
+}: {
+  currentTier: MembershipTier;
+  /** The member's actual locked-in rate for their current plan -- can differ from today's list price below if pricing changed since they joined (a real, honest grandfathered rate, not a bug). */
+  currentAmountLabel: string;
+}) {
   const { toast } = useToast();
   const { mutate, isPending, variables } = useChangeTierCheckout();
   const { data: pricing, isLoading: pricingLoading } = usePricing();
@@ -58,14 +65,21 @@ export function MembershipTiersGrid({ currentTier }: { currentTier: MembershipTi
               <Badge variant={isCurrent ? "sky" : "outline"} className="mb-3 self-start">
                 {def.label}
               </Badge>
-              {pricingLoading ? (
+              {isCurrent ? (
+                <>
+                  <p className="font-display text-2xl font-bold text-text-primary">{currentAmountLabel}</p>
+                  <p className="text-xs text-text-muted mt-0.5">Your current rate</p>
+                </>
+              ) : pricingLoading ? (
                 <Skeleton className="h-8 w-24" />
               ) : (
-                <p className="font-display text-2xl font-bold text-text-primary">
-                  {formatAmount(pricing?.[tier].monthly ?? 0)}
-                </p>
+                <>
+                  <p className="font-display text-2xl font-bold text-text-primary">
+                    {formatAmount(pricing?.[tier].monthly ?? 0)}
+                  </p>
+                  <p className="text-xs text-text-muted mt-0.5">+ VAT/month at today&apos;s price</p>
+                </>
               )}
-              <p className="text-xs text-text-muted mt-0.5">+ VAT/month</p>
               <p className="text-xs text-text-muted mt-3">{def.contractLabel}</p>
               <ul className="space-y-2 mt-4 flex-1">
                 {def.features.map((feature) => (

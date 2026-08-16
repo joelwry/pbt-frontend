@@ -50,7 +50,7 @@ export function BillingHistoryTable() {
   const { data, isLoading, isError, refetch, isFetching } = useInvoicesPage(page);
 
   return (
-    <Card>
+    <Card id="billing-history">
       <div className="flex items-center justify-between mb-5">
         <h3 className="font-display text-lg font-semibold text-text-primary">Billing History</h3>
       </div>

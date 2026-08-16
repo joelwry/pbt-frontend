@@ -2,7 +2,6 @@ import { apiClient } from "@/lib/api-client";
 import type { ApiSuccess, ApiPaginated } from "@/types/api";
 import type { Invoice } from "@/features/subscription/types";
 import type { MembershipTier } from "@/features/session/types";
-import { billingDetailsMock, type BillingDetails } from "@/features/subscription/mocks/subscription.mock";
 
 export interface BackendSubscription {
   tier: "pathway" | "plus" | "mentorship";
@@ -15,11 +14,6 @@ export interface BackendSubscription {
 }
 
 export const subscriptionRepository = {
-  /** Payment method on file -- there's no real payment gateway yet (Stripe integration is deferred), so this stays a static placeholder. */
-  async getBillingDetails(): Promise<ApiSuccess<BillingDetails>> {
-    return billingDetailsMock;
-  },
-
   async getCurrentSubscription(): Promise<ApiSuccess<BackendSubscription | null>> {
     const { data } = await apiClient.get<ApiSuccess<BackendSubscription | null>>("/subscriptions/current");
     return data;

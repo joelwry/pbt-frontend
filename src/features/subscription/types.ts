@@ -8,7 +8,6 @@ export interface SubscriptionSummary {
   clientId: string;
   nextBillingLabel: string;
   amountLabel: string;
-  paymentMethodLabel: string;
 }
 
 export type InvoiceStatus = "Paid" | "Pending" | "Failed";

@@ -10,12 +10,9 @@ export interface InvoicesPage {
 }
 
 export const subscriptionService = {
-  /** Composes the subscription summary from the real logged-in member (tier, client ID) + the real current subscription (cancelled flag, renewal/lapse date) + billing extras from the repository. */
+  /** Composes the subscription summary from the real logged-in member (tier, client ID) + the real current subscription (cancelled flag, renewal/lapse date). */
   async getSubscription(member: CurrentMember): Promise<SubscriptionSummary> {
-    const [billing, subscription] = await Promise.all([
-      subscriptionRepository.getBillingDetails(),
-      subscriptionRepository.getCurrentSubscription(),
-    ]);
+    const subscription = await subscriptionRepository.getCurrentSubscription();
     const tierDef = MEMBERSHIP_TIERS[member.membershipTier];
     const nextBillingDate = subscription.data?.endDate ?? member.subscriptionDate;
 
@@ -32,7 +29,6 @@ export const subscriptionService = {
       amountLabel: subscription.data
         ? `£${subscription.data.amount.toLocaleString("en-GB")} + VAT/${subscription.data.billingCycle === "monthly" ? "month" : "year"}`
         : "—",
-      paymentMethodLabel: billing.data.paymentMethodLabel,
     };
   },
 

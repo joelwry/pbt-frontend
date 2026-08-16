@@ -58,7 +58,7 @@ export function SubscriptionView() {
         />
       </div>
 
-      <MembershipTiersGrid currentTier={subscription.tier} />
+      <MembershipTiersGrid currentTier={subscription.tier} currentAmountLabel={subscription.amountLabel} />
 
       <BillingHistoryTable />
     </div>
