@@ -105,7 +105,11 @@ export function TierLearningView({ contentTier, title, description, showContinue
       )}
 
       {filteredWeeks.length === 0 ? (
-        <EmptyState icon={SearchX} title="No modules match your search" description="Try a different keyword." />
+        search.trim() ? (
+          <EmptyState icon={SearchX} title="No modules match your search" description="Try a different keyword." />
+        ) : (
+          <EmptyState icon={SearchX} title="Nothing here yet" description="This roadmap hasn't been built out yet -- check back soon." />
+        )
       ) : (
         <div className="space-y-12">
           {visibleWeeks.map((week) =>
