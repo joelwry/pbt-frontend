@@ -30,7 +30,7 @@ export function AdminSubscriptionsStatsRow({ stats }: { stats: SubscriptionStats
         value={String(stats.failedPaymentsCount)}
         label="Failed Payments"
         linkLabel="Review"
-        linkHref="/admin/subscriptions"
+        linkHref="/admin/subscriptions?status=Failed"
       />
       <StatCard
         icon={TrendingUp}

@@ -14,9 +14,9 @@ import { EventsToolbar } from "@/features/admin-events/components/events-toolbar
 import { EventsTable } from "@/features/admin-events/components/events-table";
 import type { EventFilterTab } from "@/features/admin-events/types";
 
-export function EventsManagementView() {
+export function EventsManagementView({ initialTab }: { initialTab?: EventFilterTab }) {
   const { data: stats, isLoading: statsLoading } = useAdminEventsStats();
-  const [tab, setTab] = useState<EventFilterTab>("Upcoming");
+  const [tab, setTab] = useState<EventFilterTab>(initialTab ?? "Upcoming");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 

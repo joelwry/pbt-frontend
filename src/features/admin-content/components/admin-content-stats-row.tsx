@@ -20,7 +20,7 @@ export function AdminContentStatsRow({ stats }: { stats: AdminContentStats }) {
         topRight={<StatChip label="Live now" />}
         value={String(stats.publishedCount)}
         label="Published"
-        linkLabel="View published"
+        linkLabel="View lessons"
         linkHref="/admin/content"
       />
       <StatCard
@@ -29,7 +29,7 @@ export function AdminContentStatsRow({ stats }: { stats: AdminContentStats }) {
         topRight={<StatChip label="Upcoming" />}
         value={String(stats.scheduledCount)}
         label="Scheduled"
-        linkLabel="View scheduled"
+        linkLabel="View lessons"
         linkHref="/admin/content"
       />
       <StatCard
@@ -38,7 +38,7 @@ export function AdminContentStatsRow({ stats }: { stats: AdminContentStats }) {
         topRight={<StatChip label="This year" />}
         value={String(stats.modulesActiveCount)}
         label="Modules Active"
-        linkLabel="View modules"
+        linkLabel="View lessons"
         linkHref="/admin/content"
       />
     </div>

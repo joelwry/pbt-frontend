@@ -14,9 +14,9 @@ import { ResourcesToolbar } from "@/features/admin-resources/components/resource
 import { ResourcesTable } from "@/features/admin-resources/components/resources-table";
 import type { AdminResourceCategory } from "@/features/admin-resources/types";
 
-export function ResourcesView() {
+export function ResourcesView({ initialCategory }: { initialCategory?: AdminResourceCategory }) {
   const { data: stats, isLoading: statsLoading } = useAdminResourcesStats();
-  const [category, setCategory] = useState<AdminResourceCategory | "All">("All");
+  const [category, setCategory] = useState<AdminResourceCategory | "All">(initialCategory ?? "All");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 

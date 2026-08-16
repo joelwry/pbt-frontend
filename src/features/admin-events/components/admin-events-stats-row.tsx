@@ -20,7 +20,7 @@ export function AdminEventsStatsRow({ stats }: { stats: AdminEventsStats }) {
         topRight={<StatChip label="Across all events" />}
         value={String(stats.totalRsvps)}
         label="Total RSVPs"
-        linkLabel="View RSVPs"
+        linkLabel="View events"
         linkHref="/admin/events"
       />
       <StatCard
@@ -30,7 +30,7 @@ export function AdminEventsStatsRow({ stats }: { stats: AdminEventsStats }) {
         value={String(stats.inPersonCount)}
         label="In-Person Events"
         linkLabel="View in-person"
-        linkHref="/admin/events"
+        linkHref="/admin/events?tab=In-Person"
       />
       <StatCard
         icon={CheckCircle2}
@@ -39,7 +39,7 @@ export function AdminEventsStatsRow({ stats }: { stats: AdminEventsStats }) {
         value={String(stats.completedCount)}
         label="Completed Events"
         linkLabel="View completed"
-        linkHref="/admin/events"
+        linkHref="/admin/events?tab=Past"
       />
     </div>
   );

@@ -20,7 +20,7 @@ export function AdminMembersStatsRow({ stats }: { stats: AdminMembersStats }) {
         topRight={<StatChip label="This week" />}
         value={String(stats.newMembersThisWeek)}
         label="New Members"
-        linkLabel="View new"
+        linkLabel="View members"
         linkHref="/admin/members"
       />
       <StatCard
@@ -30,7 +30,7 @@ export function AdminMembersStatsRow({ stats }: { stats: AdminMembersStats }) {
         value={String(stats.failedPayments)}
         label="Failed Payments"
         linkLabel="Review"
-        linkHref="/admin/subscriptions"
+        linkHref="/admin/subscriptions?status=Failed"
       />
       <StatCard
         icon={Lock}
@@ -38,7 +38,7 @@ export function AdminMembersStatsRow({ stats }: { stats: AdminMembersStats }) {
         topRight={<StatChip label="This month" />}
         value={String(stats.pausedAccounts)}
         label="Paused Accounts"
-        linkLabel="View paused"
+        linkLabel="View members"
         linkHref="/admin/members"
       />
     </div>

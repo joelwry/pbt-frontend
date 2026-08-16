@@ -29,7 +29,7 @@ export function AdminLeadersStatsRow({ stats }: { stats: AdminLeadersStats }) {
         topRight={<StatChip label="2026" />}
         value={String(stats.topMentorCount)}
         label="Top Mentor"
-        linkLabel="View"
+        linkLabel="View all"
         linkHref="/admin/pbt-leaders"
       />
       <StatCard
@@ -38,7 +38,7 @@ export function AdminLeadersStatsRow({ stats }: { stats: AdminLeadersStats }) {
         topRight={<StatChip label="Coverage" />}
         value={String(stats.regionsCount)}
         label="Regions"
-        linkLabel="View regions"
+        linkLabel="View all"
         linkHref="/admin/pbt-leaders"
       />
     </div>

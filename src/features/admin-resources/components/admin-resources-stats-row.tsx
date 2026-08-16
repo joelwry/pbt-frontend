@@ -20,7 +20,7 @@ export function AdminResourcesStatsRow({ stats }: { stats: AdminResourcesStats }
         topRight={<StatChip label="This month" />}
         value={stats.totalDownloadsLabel}
         label="Total Downloads"
-        linkLabel="View downloads"
+        linkLabel="View resources"
         linkHref="/admin/resources"
       />
       <StatCard
@@ -29,7 +29,7 @@ export function AdminResourcesStatsRow({ stats }: { stats: AdminResourcesStats }
         topRight={<StatChip label="In review" />}
         value={String(stats.draftsCount)}
         label="Drafts"
-        linkLabel="View drafts"
+        linkLabel="View resources"
         linkHref="/admin/resources"
       />
       <StatCard
@@ -39,7 +39,11 @@ export function AdminResourcesStatsRow({ stats }: { stats: AdminResourcesStats }
         value={stats.topCategoryLabel}
         label="Top Category"
         linkLabel="View category"
-        linkHref="/admin/resources"
+        linkHref={
+          stats.topCategoryLabel === "None yet"
+            ? "/admin/resources"
+            : `/admin/resources?category=${encodeURIComponent(stats.topCategoryLabel)}`
+        }
       />
     </div>
   );

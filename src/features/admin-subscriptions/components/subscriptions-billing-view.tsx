@@ -17,9 +17,9 @@ import { MentorshipAssignmentsCard } from "@/features/admin-subscriptions/compon
 import { PricingSettingsCard } from "@/features/admin-pricing/components/pricing-settings-card";
 import type { InvoiceStatus } from "@/features/admin-subscriptions/types";
 
-export function SubscriptionsBillingView() {
+export function SubscriptionsBillingView({ initialStatus }: { initialStatus?: InvoiceStatus }) {
   const { data: stats, isLoading: statsLoading } = useSubscriptionStats();
-  const [status, setStatus] = useState<InvoiceStatus | "All">("All");
+  const [status, setStatus] = useState<InvoiceStatus | "All">(initialStatus ?? "All");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 

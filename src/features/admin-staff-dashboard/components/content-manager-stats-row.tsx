@@ -27,7 +27,7 @@ export function ContentManagerStatsRow({ contentStats, resourcesStats, unlocksTh
         topRight={<StatChip label="This year" />}
         value={String(contentStats.scheduledCount)}
         label="Scheduled This Year"
-        linkLabel="View schedule"
+        linkLabel="View lessons"
         linkHref="/admin/content"
       />
       <StatCard
@@ -45,7 +45,7 @@ export function ContentManagerStatsRow({ contentStats, resourcesStats, unlocksTh
         topRight={<StatChip label="This week" />}
         value={String(unlocksThisWeek)}
         label="Unlocks This Week"
-        linkLabel="View content"
+        linkLabel="View lessons"
         linkHref="/admin/content"
       />
     </div>

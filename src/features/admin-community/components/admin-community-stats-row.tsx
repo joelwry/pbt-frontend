@@ -12,7 +12,7 @@ export function AdminCommunityStatsRow({ stats }: { stats: CommunityStats }) {
         value={String(stats.totalPosts)}
         label="Total Posts"
         linkLabel="View all"
-        linkHref="/admin/community"
+        linkHref="/admin/community?tab=All%20Posts"
       />
       <StatCard
         icon={Flag}
@@ -21,7 +21,7 @@ export function AdminCommunityStatsRow({ stats }: { stats: CommunityStats }) {
         value={String(stats.flaggedCount)}
         label="Flagged Posts"
         linkLabel="Review"
-        linkHref="/admin/community"
+        linkHref="/admin/community?tab=Flagged"
       />
       <StatCard
         icon={Pin}
@@ -30,7 +30,7 @@ export function AdminCommunityStatsRow({ stats }: { stats: CommunityStats }) {
         value={String(stats.pinnedCount)}
         label="Pinned Announcements"
         linkLabel="Manage"
-        linkHref="/admin/community"
+        linkHref="/admin/community?tab=Pinned"
       />
       <StatCard
         icon={Users}
@@ -39,7 +39,7 @@ export function AdminCommunityStatsRow({ stats }: { stats: CommunityStats }) {
         value={String(stats.groupsCount)}
         label="Community Groups"
         linkLabel="View groups"
-        linkHref="/admin/community"
+        linkHref="/admin/community?tab=Groups"
       />
     </div>
   );

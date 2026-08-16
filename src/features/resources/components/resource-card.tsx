@@ -35,12 +35,19 @@ export function ResourceCard({ resource }: { resource: Resource }) {
       </div>
       <p className="font-semibold text-text-primary text-sm mt-4 leading-snug flex-1">{resource.title}</p>
       <p className="text-xs text-text-muted mt-1.5">{resource.metaLabel}</p>
-      <Button variant="secondary" size="sm" className="w-full mt-4" asChild>
-        <a href={resource.downloadUrl} download onClick={() => trackDownload(resource.id)}>
+      {resource.downloadUrl ? (
+        <Button variant="secondary" size="sm" className="w-full mt-4" asChild>
+          <a href={resource.downloadUrl} download onClick={() => trackDownload(resource.id)}>
+            <Download className="h-3.5 w-3.5" />
+            Download
+          </a>
+        </Button>
+      ) : (
+        <Button variant="secondary" size="sm" className="w-full mt-4" disabled>
           <Download className="h-3.5 w-3.5" />
-          Download
-        </a>
-      </Button>
+          Unavailable
+        </Button>
+      )}
     </Card>
   );
 }

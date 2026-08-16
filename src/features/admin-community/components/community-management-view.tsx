@@ -12,10 +12,10 @@ import { PinnedAnnouncementsCard } from "@/features/admin-community/components/p
 import { AllPostsCard, GroupsCard } from "@/features/admin-community/components/all-posts-and-groups";
 import type { CommunityTab } from "@/features/admin-community/types";
 
-export function CommunityManagementView() {
+export function CommunityManagementView({ initialTab }: { initialTab?: CommunityTab }) {
   const { data: stats, isLoading: statsLoading } = useCommunityStats();
   const { data: flagged } = useFlaggedPosts();
-  const [tab, setTab] = useState<CommunityTab>("Flagged");
+  const [tab, setTab] = useState<CommunityTab>(initialTab ?? "Flagged");
 
   const tabs: { value: CommunityTab; label: string; badge?: number }[] = [
     { value: "All Posts", label: "All Posts" },

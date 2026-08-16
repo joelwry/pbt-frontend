@@ -14,9 +14,9 @@ import { RecentActivityCard, MemberDetailTabs, type MemberDetailTab } from "@/fe
 import { LearningProgressTab, BillingHistoryTab } from "@/features/admin-members/components/member-detail-secondary-tabs";
 import { ActivityLogTab } from "@/features/admin-members/components/activity-log-tab";
 
-export function MemberDetailView({ memberId }: { memberId: string }) {
+export function MemberDetailView({ memberId, initialTab }: { memberId: string; initialTab?: MemberDetailTab }) {
   const { data: member, isLoading, isError, refetch } = useAdminMember(memberId);
-  const [tab, setTab] = useState<MemberDetailTab>("overview");
+  const [tab, setTab] = useState<MemberDetailTab>(initialTab ?? "overview");
 
   if (isLoading) {
     return (

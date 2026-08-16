@@ -12,7 +12,7 @@ export function AdminUsersStatsRow({ stats }: { stats: AdminUsersStats }) {
         value={String(stats.superAdminsCount)}
         label="Super Admins"
         linkLabel="View"
-        linkHref="/admin/admin-users"
+        linkHref="/admin/admin-users?role=Super%20Admin"
       />
       <StatCard
         icon={Users}
@@ -20,7 +20,7 @@ export function AdminUsersStatsRow({ stats }: { stats: AdminUsersStats }) {
         topRight={<StatChip label="Active" />}
         value={String(stats.staffAccountsCount)}
         label="Staff Accounts"
-        linkLabel="View"
+        linkLabel="View all"
         linkHref="/admin/admin-users"
       />
       <StatCard
@@ -29,7 +29,7 @@ export function AdminUsersStatsRow({ stats }: { stats: AdminUsersStats }) {
         topRight={<StatChip label="Pending" />}
         value={String(stats.invitedNotActiveCount)}
         label="Invited, Not Active"
-        linkLabel="Review"
+        linkLabel="View all"
         linkHref="/admin/admin-users"
       />
       <StatCard
@@ -38,7 +38,7 @@ export function AdminUsersStatsRow({ stats }: { stats: AdminUsersStats }) {
         topRight={<StatChip label="Last 30 days" />}
         value={String(stats.roleChangesCount)}
         label="Role Changes"
-        linkLabel="View"
+        linkLabel="View all"
         linkHref="/admin/admin-users"
       />
     </div>

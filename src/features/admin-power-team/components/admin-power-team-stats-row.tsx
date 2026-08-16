@@ -20,7 +20,7 @@ export function AdminPowerTeamStatsRow({ stats }: { stats: AdminPowerTeamStats }
         topRight={<StatChip label="Categories" />}
         value={String(stats.serviceTypesCount)}
         label="Service Types"
-        linkLabel="View services"
+        linkLabel="View all"
         linkHref="/admin/power-team"
       />
       <StatCard
@@ -29,7 +29,7 @@ export function AdminPowerTeamStatsRow({ stats }: { stats: AdminPowerTeamStats }
         topRight={<StatChip label="Awaiting review" />}
         value={String(stats.pendingCount)}
         label="Pending Verification"
-        linkLabel="Review"
+        linkLabel="View all"
         linkHref="/admin/power-team"
       />
       <StatCard
@@ -38,7 +38,7 @@ export function AdminPowerTeamStatsRow({ stats }: { stats: AdminPowerTeamStats }
         topRight={<StatChip label="Coverage" />}
         value={String(stats.regionsCount)}
         label="Regions"
-        linkLabel="View regions"
+        linkLabel="View all"
         linkHref="/admin/power-team"
       />
     </div>

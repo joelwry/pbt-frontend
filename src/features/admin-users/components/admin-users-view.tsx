@@ -14,9 +14,9 @@ import { AdminUsersToolbar } from "@/features/admin-users/components/admin-users
 import { AdminUsersTable } from "@/features/admin-users/components/admin-users-table";
 import type { AdminRole } from "@/features/admin-auth/types";
 
-export function AdminUsersView() {
+export function AdminUsersView({ initialRole }: { initialRole?: AdminRole }) {
   const { data: stats, isLoading: statsLoading } = useAdminUsersStats();
-  const [role, setRole] = useState<AdminRole | "All">("All");
+  const [role, setRole] = useState<AdminRole | "All">(initialRole ?? "All");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
