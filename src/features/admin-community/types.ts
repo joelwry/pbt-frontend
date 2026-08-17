@@ -40,3 +40,25 @@ export interface CommunityGroupSummary {
   memberCount: number;
   status: "Active" | "Archived";
 }
+
+export interface CommunityReplyDetail {
+  id: string;
+  authorName: string;
+  authorInitials: string;
+  roleTag: string | null;
+  message: string;
+  postedAtLabel: string;
+}
+
+export interface CommunityPostDetail {
+  id: string;
+  title: string;
+  content: string;
+  authorName: string;
+  postedAtLabel: string;
+  pinned: boolean;
+  likeCount: number;
+  reportCount: number;
+  reportReason: string;
+  replies: CommunityReplyDetail[];
+}

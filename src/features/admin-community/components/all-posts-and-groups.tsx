@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { MessageCircle, ThumbsUp, Users, Search, Pin, PinOff } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -75,7 +76,12 @@ function PostRow({ post }: { post: CommunityPostSummary }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-semibold text-text-primary leading-snug">{post.title}</p>
+            <Link
+              href={`/admin/community/${post.id}`}
+              className="text-sm font-semibold text-text-primary leading-snug hover:text-sky-600 hover:underline"
+            >
+              {post.title}
+            </Link>
             {post.pinned && (
               <Badge variant="outline">
                 <Pin className="h-3 w-3" />

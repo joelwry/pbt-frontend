@@ -6,6 +6,7 @@ import type {
   PinnedAnnouncementItem,
   CommunityPostSummary,
   CommunityGroupSummary,
+  CommunityPostDetail,
 } from "@/features/admin-community/types";
 
 export interface AdminPostsQuery {
@@ -34,6 +35,11 @@ export const adminCommunityRepository = {
     const { data } = await adminApiClient.get<ApiPaginated<CommunityPostSummary>>("/admin/community/posts", {
       params: { search: query.search || undefined, page: query.page, limit: query.limit },
     });
+    return data;
+  },
+
+  async getPostDetail(id: string): Promise<ApiSuccess<CommunityPostDetail>> {
+    const { data } = await adminApiClient.get<ApiSuccess<CommunityPostDetail>>(`/admin/community/posts/${id}`);
     return data;
   },
 

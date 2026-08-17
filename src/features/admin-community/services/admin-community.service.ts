@@ -5,6 +5,7 @@ import type {
   PinnedAnnouncementItem,
   CommunityPostSummary,
   CommunityGroupSummary,
+  CommunityPostDetail,
 } from "@/features/admin-community/types";
 import type { Pagination } from "@/types/api";
 
@@ -29,6 +30,10 @@ export const adminCommunityService = {
   async getAllPosts(query: AdminPostsQuery): Promise<AdminPostsPage> {
     const response = await adminCommunityRepository.getAllPosts(query);
     return { items: response.data, pagination: response.pagination };
+  },
+  async getPostDetail(id: string): Promise<CommunityPostDetail> {
+    const response = await adminCommunityRepository.getPostDetail(id);
+    return response.data;
   },
   async getGroups(): Promise<CommunityGroupSummary[]> {
     const response = await adminCommunityRepository.getGroups();

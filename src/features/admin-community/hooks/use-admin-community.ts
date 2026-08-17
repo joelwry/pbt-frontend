@@ -21,6 +21,13 @@ export function useAllPosts(search: string, page: number) {
   });
 }
 
+export function usePostDetail(id: string) {
+  return useQuery({
+    queryKey: ["admin", "community", "post", id],
+    queryFn: () => adminCommunityService.getPostDetail(id),
+  });
+}
+
 export function useCommunityGroups() {
   return useQuery({ queryKey: ["admin", "community", "groups"], queryFn: adminCommunityService.getGroups });
 }

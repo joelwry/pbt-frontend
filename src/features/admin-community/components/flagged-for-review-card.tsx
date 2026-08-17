@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Flag, CheckCircle2, Trash2, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,7 +52,12 @@ function FlaggedPostRow({ post }: { post: FlaggedPost }) {
 
   return (
     <div>
-      <p className="text-sm font-semibold text-text-primary leading-snug">{post.postTitle}</p>
+      <Link
+        href={`/admin/community/${post.id}`}
+        className="text-sm font-semibold text-text-primary leading-snug hover:text-sky-600 hover:underline"
+      >
+        {post.postTitle}
+      </Link>
       <p className="text-sm text-text-secondary mt-1.5 italic">&ldquo;{post.quote}&rdquo;</p>
       <div className="flex items-center gap-3 mt-2 flex-wrap">
         <span className="text-xs text-text-muted">
