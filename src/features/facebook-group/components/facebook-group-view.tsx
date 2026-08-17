@@ -1,10 +1,14 @@
 "use client";
 
-import { Users, MessageCircle, ThumbsUp, Clock } from "lucide-react";
+import { Users, MessageCircle, ThumbsUp, ExternalLink } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/providers/toast-provider";
+
+// The client's real, existing group -- no admin-configurable wiring
+// requested for this, so it's a plain constant rather than a Site
+// Settings field.
+const FACEBOOK_GROUP_URL = "https://www.facebook.com/groups/propertybusinesstraining/";
 
 const HIGHLIGHTS = [
   { icon: MessageCircle, label: "Ask questions and get help from fellow members" },
@@ -13,16 +17,6 @@ const HIGHLIGHTS = [
 ];
 
 export function FacebookGroupView() {
-  const { toast } = useToast();
-
-  function handleJoinClick() {
-    toast({
-      variant: "info",
-      title: "Facebook Group integration coming soon",
-      description: "We're setting up the connection to our Facebook Group — check back shortly.",
-    });
-  }
-
   return (
     <div className="space-y-6">
       <PageHeader title="Facebook Group" description="Connect with the wider PBT community on Facebook." />
@@ -37,13 +31,16 @@ export function FacebookGroupView() {
             Join now to get help, support and ideas from your fellow members and the PBT team!
           </p>
 
-          <Button className="mt-7 bg-orange-500 hover:bg-orange-600 text-navy-950" onClick={handleJoinClick}>
-            Join The Group
+          <Button asChild className="mt-7 bg-orange-500 hover:bg-orange-600 text-navy-950">
+            <a href={FACEBOOK_GROUP_URL} target="_blank" rel="noopener noreferrer">
+              Join The Group
+              <ExternalLink className="h-4 w-4" />
+            </a>
           </Button>
 
           <p className="flex items-center justify-center gap-1.5 text-xs text-white/50 mt-4">
-            <Clock className="h-3.5 w-3.5" />
-            Facebook Group integration coming soon
+            <ExternalLink className="h-3.5 w-3.5" />
+            Opens in a new tab on Facebook
           </p>
         </div>
       </Card>
