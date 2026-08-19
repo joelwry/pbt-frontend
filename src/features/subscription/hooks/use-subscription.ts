@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useToast } from "@/providers/toast-provider";
+import { getApiErrorMessage } from "@/lib/api-error";
 import { subscriptionService } from "@/features/subscription/services/subscription.service";
 import { useCurrentMember } from "@/features/session/hooks/use-current-member";
 import type { MembershipTier } from "@/features/session/types";
@@ -25,11 +27,20 @@ export function useInvoicesPage(page: number) {
 
 export function useCancelSubscription(onCancelled: () => void) {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   return useMutation({
     mutationFn: subscriptionService.cancelSubscription,
     onSuccess: () => {
       onCancelled();
       queryClient.invalidateQueries({ queryKey: ["subscription", "summary"] });
+    },
+    onError: (error) => {
+      // Cancelling can genuinely fail now that it has to stop the real
+      // Stripe subscription before it reports success -- the backend
+      // deliberately refuses rather than showing a member a cancelled
+      // membership that is still being charged. Without this the dialog
+      // just stopped spinning and sat there, telling the member nothing.
+      toast({ variant: "error", title: "Couldn't cancel your membership", description: getApiErrorMessage(error) });
     },
   });
 }
