@@ -1,3 +1,4 @@
+import { ADMIN_ROLES } from "@/features/admin-auth/types";
 import type { AdminUser, AdminRole, AdminSection } from "@/features/admin-auth/types";
 
 export const ADMIN_SECTION_LABELS: Record<AdminSection, string> = {
@@ -26,22 +27,31 @@ export const ADMIN_SECTION_ROUTES: Record<AdminSection, string> = {
   referrals: "/admin/referrals",
 };
 
-/** Suggested default access when a role is picked in the Invite Admin User form. Editable afterward. */
+/**
+ * What the Invite Admin User form pre-ticks when a role is picked. Purely a
+ * form convenience -- the authoritative copy is ROLE_DEFAULT_SECTIONS in the
+ * backend's core/auth/adminAccess.ts, which is what an account actually
+ * inherits when nobody customises it. Keep the two in step; if they ever
+ * disagree, the backend wins and the form is simply showing a bad guess.
+ */
 export const ROLE_DEFAULT_SECTIONS: Record<AdminRole, AdminSection[]> = {
-  "Super Admin": Object.keys(ADMIN_SECTION_LABELS) as AdminSection[],
-  Admin: Object.keys(ADMIN_SECTION_LABELS) as AdminSection[],
-  "Content Manager": ["content", "resources"],
-  "Community Moderator": ["community", "events"],
-  "Support Staff": ["members"],
+  SUPER_ADMIN: Object.keys(ADMIN_SECTION_LABELS) as AdminSection[],
+  ADMIN: Object.keys(ADMIN_SECTION_LABELS) as AdminSection[],
+  CONTENT_MANAGER: ["content", "resources"],
+  COMMUNITY_MODERATOR: ["community", "events"],
+  SUPPORT_STAFF: ["members"],
 };
 
+/** Roles a Super Admin can assign, in the order they're offered. */
+export const ASSIGNABLE_ADMIN_ROLES: readonly AdminRole[] = ADMIN_ROLES;
+
 export function hasSection(admin: AdminUser, section: AdminSection): boolean {
-  return admin.role === "Super Admin" || admin.sections.includes(section);
+  return admin.role === "SUPER_ADMIN" || admin.sections.includes(section);
 }
 
 /** Nav items only need the two fields below, so this stays decoupled from the nav-config module. */
 export function canAccessAdminNavItem(admin: AdminUser, item: { section?: AdminSection; superAdminOnly?: boolean }): boolean {
-  if (item.superAdminOnly) return admin.role === "Super Admin";
+  if (item.superAdminOnly) return admin.role === "SUPER_ADMIN";
   if (item.section) return hasSection(admin, item.section);
   return true;
 }
@@ -57,7 +67,7 @@ export const SUPER_ADMIN_ONLY_ROUTES = ["/admin/admin-users", "/admin/settings"]
 
 export function isAdminRouteAllowed(admin: AdminUser, pathname: string): boolean {
   if (SUPER_ADMIN_ONLY_ROUTES.some((route) => pathname === route || pathname.startsWith(route + "/"))) {
-    return admin.role === "Super Admin";
+    return admin.role === "SUPER_ADMIN";
   }
   const entry = (Object.entries(ADMIN_SECTION_ROUTES) as [AdminSection, string][]).find(
     ([, route]) => pathname === route || pathname.startsWith(route + "/")
@@ -67,6 +77,6 @@ export function isAdminRouteAllowed(admin: AdminUser, pathname: string): boolean
 }
 
 export function accessibleSectionLabels(admin: AdminUser): string[] {
-  if (admin.role === "Super Admin") return Object.values(ADMIN_SECTION_LABELS);
+  if (admin.role === "SUPER_ADMIN") return Object.values(ADMIN_SECTION_LABELS);
   return admin.sections.map((s) => ADMIN_SECTION_LABELS[s]);
 }

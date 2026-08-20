@@ -16,5 +16,5 @@ export function AdminDashboardRouter() {
     );
   }
 
-  return admin.role === "Super Admin" ? <AdminDashboardView /> : <StaffDashboardView admin={admin} />;
+  return admin.role === "SUPER_ADMIN" ? <AdminDashboardView /> : <StaffDashboardView admin={admin} />;
 }

@@ -17,14 +17,15 @@ import { useDeleteAdminAccount } from "@/features/admin-users/hooks/use-admin-us
 import { useToast } from "@/providers/toast-provider";
 import { accessScopeLabel } from "@/features/admin-users/utils";
 import type { AdminAccount, AdminAccountStatus } from "@/features/admin-users/types";
+import { ADMIN_ROLE_LABELS } from "@/features/admin-auth/types";
 import type { AdminRole } from "@/features/admin-auth/types";
 
 const ROLE_VARIANT: Record<AdminRole, "navy" | "sky" | "outline"> = {
-  "Super Admin": "navy",
-  Admin: "navy",
-  "Content Manager": "sky",
-  "Community Moderator": "sky",
-  "Support Staff": "outline",
+  SUPER_ADMIN: "navy",
+  ADMIN: "navy",
+  CONTENT_MANAGER: "sky",
+  COMMUNITY_MODERATOR: "sky",
+  SUPPORT_STAFF: "outline",
 };
 
 const STATUS_VARIANT: Record<AdminAccountStatus, "success" | "slate"> = {
@@ -59,7 +60,7 @@ function AdminAccountRow({ account }: { account: AdminAccount }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const { mutate: deleteAccount, isPending } = useDeleteAdminAccount();
   const { toast } = useToast();
-  const isSuperAdmin = account.role === "Super Admin";
+  const isSuperAdmin = account.role === "SUPER_ADMIN";
 
   function handleDelete() {
     deleteAccount(account.id, {
@@ -84,7 +85,7 @@ function AdminAccountRow({ account }: { account: AdminAccount }) {
         </div>
       </td>
       <td className="py-3.5 pr-4">
-        <Badge variant={ROLE_VARIANT[account.role]}>{account.role}</Badge>
+        <Badge variant={ROLE_VARIANT[account.role]}>{ADMIN_ROLE_LABELS[account.role]}</Badge>
       </td>
       <td className="py-3.5 pr-4 text-text-secondary whitespace-nowrap">{accessScopeLabel(account)}</td>
       <td className="py-3.5 pr-4">

@@ -30,15 +30,23 @@ export const adminUsersRepository = {
     return data;
   },
 
-  /** New accounts carry a client-generated `au_<timestamp>` id (see admin-user-editor-view.tsx)
-   * until the invite is sent -- that's the signal to POST rather than PATCH. */
-  async saveAccount(input: AdminAccount): Promise<ApiSuccess<AdminAccount>> {
+  /**
+   * New accounts carry a client-generated `au_<timestamp>` id (see
+   * admin-user-editor-view.tsx) until the invite is sent -- that's the
+   * signal to POST rather than PATCH.
+   *
+   * `useRoleDefaults` is why `sections` is sometimes absent rather than
+   * empty: omitting it on create, or asking for a reset on update, leaves
+   * the account inheriting its role's defaults. Sending `[]` instead would
+   * tell the API the opposite -- a deliberate lockout.
+   */
+  async saveAccount(input: AdminAccount, options: { useRoleDefaults?: boolean } = {}): Promise<ApiSuccess<AdminAccount>> {
     if (input.id.startsWith("au_")) {
       const { data } = await adminApiClient.post<ApiSuccess<AdminAccount>>("/admin/admin-users", {
         fullName: input.fullName,
         email: input.email,
         role: input.role,
-        sections: input.sections,
+        ...(options.useRoleDefaults ? {} : { sections: input.sections }),
       });
       return data;
     }
@@ -46,7 +54,7 @@ export const adminUsersRepository = {
     const { data } = await adminApiClient.patch<ApiSuccess<AdminAccount>>(`/admin/admin-users/${input.id}`, {
       fullName: input.fullName,
       role: input.role,
-      sections: input.sections,
+      ...(options.useRoleDefaults ? { resetSectionsToRoleDefaults: true } : { sections: input.sections }),
     });
     return data;
   },

@@ -3,14 +3,16 @@ import { Search, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ADMIN_ROLE_LABELS } from "@/features/admin-auth/types";
+import { ASSIGNABLE_ADMIN_ROLES } from "@/features/admin-auth/permissions";
 import type { AdminRole } from "@/features/admin-auth/types";
 
+// Every assignable role gets a tab, "Admin" included -- it was missing
+// before, so accounts holding it (everything created outside the invite
+// form) could only be found under "All Roles".
 const ROLE_TABS: { value: AdminRole | "All"; label: string }[] = [
   { value: "All", label: "All Roles" },
-  { value: "Super Admin", label: "Super Admin" },
-  { value: "Content Manager", label: "Content Manager" },
-  { value: "Community Moderator", label: "Community Moderator" },
-  { value: "Support Staff", label: "Support Staff" },
+  ...ASSIGNABLE_ADMIN_ROLES.map((role) => ({ value: role, label: ADMIN_ROLE_LABELS[role] })),
 ];
 
 interface AdminUsersToolbarProps {

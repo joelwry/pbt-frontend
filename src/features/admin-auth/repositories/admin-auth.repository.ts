@@ -10,6 +10,7 @@ import type {
   AdminSection,
 } from "@/features/admin-auth/types";
 import { ADMIN_SECTION_LABELS } from "@/features/admin-auth/permissions";
+import { ADMIN_ROLES } from "@/features/admin-auth/types";
 
 export class AdminAuthApiError extends Error {
   errors: string[];
@@ -42,7 +43,9 @@ interface BackendUser {
   role: string;
   clientId?: string;
   avatarUrl?: string;
-  /** Section grants held by this admin account -- see composeAdmin below. */
+  /** The account's staff role, one of ADMIN_ROLES -- see toAdminRole below. */
+  adminRole?: string;
+  /** Effective section access for this admin account -- see composeAdmin below. */
   adminSections?: string[];
 }
 
@@ -56,8 +59,17 @@ interface BackendTokens {
 // is defense-in-depth on the frontend, not the only gate.
 const ADMIN_BACKEND_ROLES = new Set(["admin", "super_admin"]);
 
-function toAdminRole(role: string): AdminRole {
-  return role === "super_admin" ? "Super Admin" : "Admin";
+/**
+ * The account's staff role as the API reports it. `adminRole` is
+ * authoritative; the coarse `role` is only a fallback for a session issued
+ * before the API carried the field (or by an environment mid-deploy), where
+ * the same inference the backend makes applies.
+ */
+function toAdminRole(user: BackendUser): AdminRole {
+  if (user.adminRole && (ADMIN_ROLES as readonly string[]).includes(user.adminRole)) {
+    return user.adminRole as AdminRole;
+  }
+  return user.role === "super_admin" ? "SUPER_ADMIN" : "ADMIN";
 }
 
 function initialsOf(fullName: string): string {
@@ -84,7 +96,7 @@ function toSections(adminSections: string[] | undefined): AdminSection[] {
 }
 
 function composeAdmin(user: BackendUser): AdminUser {
-  const role = toAdminRole(user.role);
+  const role = toAdminRole(user);
   return {
     id: user.id,
     adminId: user.id,
@@ -92,14 +104,13 @@ function composeAdmin(user: BackendUser): AdminUser {
     initials: initialsOf(user.fullName),
     email: user.email,
     role,
-    // The account's real grants, as stored and enforced server-side by
-    // requireSection(). This used to be ROLE_DEFAULT_SECTIONS[role], which
-    // handed every plain admin all ten sections regardless of what they
-    // actually held -- so a staff account granted only Content still saw
+    // The account's effective grants, resolved and sent by the API -- role
+    // defaults where nothing was customised, explicit grants where it was.
+    // This used to be ROLE_DEFAULT_SECTIONS[role], guessed on the client,
+    // which handed every plain admin all ten sections regardless of what
+    // they actually held: a staff account granted only Content still saw
     // Members, Billing and Analytics in the nav, opened them, and hit a
     // wall of 403s from an API that was gating correctly all along.
-    // Super Admins bypass sections entirely (hasSection short-circuits on
-    // the role), so the empty array the API sends them is not a downgrade.
     sections: toSections(user.adminSections),
   };
 }

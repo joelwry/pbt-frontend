@@ -30,7 +30,11 @@ function useInvalidateAdminAccounts() {
 
 export function useSaveAdminAccount() {
   const invalidate = useInvalidateAdminAccounts();
-  return useMutation({ mutationFn: (input: AdminAccount) => adminUsersService.saveAccount(input), onSuccess: invalidate });
+  return useMutation({
+    mutationFn: ({ account, useRoleDefaults }: { account: AdminAccount; useRoleDefaults: boolean }) =>
+      adminUsersService.saveAccount(account, { useRoleDefaults }),
+    onSuccess: invalidate,
+  });
 }
 
 export function useDeleteAdminAccount() {

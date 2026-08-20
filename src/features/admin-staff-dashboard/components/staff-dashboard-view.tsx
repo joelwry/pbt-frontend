@@ -11,7 +11,7 @@ export function StaffDashboardView({ admin }: { admin: AdminUser }) {
 
       <RestrictedAccessBanner admin={admin} />
 
-      {admin.role === "Content Manager" ? <ContentManagerDashboard /> : <GenericStaffDashboard admin={admin} />}
+      {admin.role === "CONTENT_MANAGER" ? <ContentManagerDashboard /> : <GenericStaffDashboard admin={admin} />}
     </div>
   );
 }

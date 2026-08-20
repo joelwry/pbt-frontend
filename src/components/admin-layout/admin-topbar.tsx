@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAdminAuth } from "@/providers/admin-auth-provider";
+import { ADMIN_ROLE_LABELS } from "@/features/admin-auth/types";
 
 export function AdminTopbar() {
   const { admin, logout } = useAdminAuth();
@@ -21,13 +22,13 @@ export function AdminTopbar() {
         <>
           <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-border bg-white px-3.5 py-1.5">
             <BadgeCheck className="h-3.5 w-3.5 text-sky-600" />
-            <span className="text-xs text-text-muted">{admin.role === "Super Admin" ? "Admin ID" : "Staff ID"}</span>
+            <span className="text-xs text-text-muted">{admin.role === "SUPER_ADMIN" ? "Admin ID" : "Staff ID"}</span>
             <span className="text-xs font-semibold text-text-primary">{admin.adminId}</span>
           </div>
 
           <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-sky-tint px-3.5 py-1.5 text-xs font-semibold text-sky-600">
             <ShieldCheck className="h-3.5 w-3.5" />
-            {admin.role}
+            {ADMIN_ROLE_LABELS[admin.role]}
           </span>
 
           <DropdownMenu>

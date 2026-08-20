@@ -1,6 +1,7 @@
 import { ShieldCheck } from "lucide-react";
 import type { AdminUser } from "@/features/admin-auth/types";
 import { accessibleSectionLabels } from "@/features/admin-auth/permissions";
+import { ADMIN_ROLE_LABELS } from "@/features/admin-auth/types";
 
 function formatAccessList(sectionLabels: string[]): string {
   const items = [...sectionLabels, "your own Profile"];
@@ -18,7 +19,8 @@ export function RestrictedAccessBanner({ admin }: { admin: AdminUser }) {
       </div>
       <div>
         <p className="text-sm font-semibold text-text-primary">
-          You&apos;re signed in as {/^[aeiou]/i.test(admin.role) ? "an" : "a"} {admin.role}
+          You&apos;re signed in as {/^[aeiou]/i.test(ADMIN_ROLE_LABELS[admin.role]) ? "an" : "a"}{" "}
+          {ADMIN_ROLE_LABELS[admin.role]}
         </p>
         <p className="text-sm text-text-secondary mt-1">
           Your access is limited to {formatAccessList(labels)}. Locked sections in the sidebar aren&apos;t part of your

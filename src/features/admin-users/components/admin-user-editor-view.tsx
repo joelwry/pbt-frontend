@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,14 +15,15 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/providers/toast-provider";
 import { useAdminAccount, useSaveAdminAccount } from "@/features/admin-users/hooks/use-admin-users";
-import { ADMIN_SECTION_LABELS, ROLE_DEFAULT_SECTIONS } from "@/features/admin-auth/permissions";
+import { ADMIN_SECTION_LABELS, ROLE_DEFAULT_SECTIONS, ASSIGNABLE_ADMIN_ROLES } from "@/features/admin-auth/permissions";
 import type { AdminAccount } from "@/features/admin-users/types";
+import { ADMIN_ROLES, ADMIN_ROLE_LABELS } from "@/features/admin-auth/types";
 import type { AdminRole, AdminSection } from "@/features/admin-auth/types";
 
-// "Admin" (the backend's plain, section-less admin role) isn't offered when
-// inviting new staff — it only ever shows up when editing an account that
-// already has it, so the zod enum below still needs to accept it.
-const ROLES: AdminRole[] = ["Super Admin", "Content Manager", "Community Moderator", "Support Staff"];
+// All five roles are assignable. "Admin" was previously missing here, so an
+// account holding it — every account created outside this form — could be
+// seen but never chosen, and picking any other role was a one-way door.
+const ROLES = ASSIGNABLE_ADMIN_ROLES;
 const SECTIONS = Object.keys(ADMIN_SECTION_LABELS) as AdminSection[];
 
 const SECTION_DESCRIPTIONS: Record<AdminSection, string> = {
@@ -41,14 +42,10 @@ const SECTION_DESCRIPTIONS: Record<AdminSection, string> = {
 const editorSchema = z.object({
   fullName: z.string().min(2, "Enter the staff member's full name"),
   email: z.string().email("Enter a valid email address"),
-  role: z.enum(["Super Admin", "Admin", "Content Manager", "Community Moderator", "Support Staff"]),
+  role: z.enum(ADMIN_ROLES),
   sections: z.array(z.string()),
 });
 type EditorFormValues = z.infer<typeof editorSchema>;
-
-function defaultValues(): EditorFormValues {
-  return { fullName: "", email: "", role: "Content Manager", sections: ROLE_DEFAULT_SECTIONS["Content Manager"] };
-}
 
 function initialsFor(fullName: string) {
   return (
@@ -62,7 +59,7 @@ function initialsFor(fullName: string) {
 }
 
 function nextStaffId(role: AdminRole) {
-  const prefix = role === "Super Admin" ? "PBT-A-" : "PBT-S-";
+  const prefix = role === "SUPER_ADMIN" ? "PBT-A-" : "PBT-S-";
   return `${prefix}${String(Math.floor(1000 + Math.random() * 9000)).slice(0, 4)}`;
 }
 
@@ -80,48 +77,16 @@ function buildAccount(values: EditorFormValues, isNew: boolean, accountId: strin
   };
 }
 
+/**
+ * Fetches first, renders the form second. The form below seeds its own state
+ * from `account` in a lazy useState initializer, which only works if it
+ * mounts once the real data is already here — syncing it in afterwards would
+ * be a setState inside an effect, which this repo's ESLint config treats as
+ * a build error (see ARCHITECTURE_HANDBOOK.md §3.4).
+ */
 export function AdminUserEditorView({ accountId }: { accountId: string }) {
   const isNew = accountId === "new";
-  const router = useRouter();
-  const { toast } = useToast();
   const { data: account, isLoading, isError, refetch } = useAdminAccount(accountId);
-  const { mutate: saveAccount, isPending } = useSaveAdminAccount();
-
-  const {
-    register,
-    handleSubmit,
-    control,
-    reset,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<EditorFormValues>({ resolver: zodResolver(editorSchema), defaultValues: defaultValues() });
-
-  const watchedRole = watch("role");
-
-  useEffect(() => {
-    if (account) {
-      reset({ fullName: account.fullName, email: account.email, role: account.role, sections: account.sections });
-    }
-  }, [account, reset]);
-
-  function handleRoleChange(nextRole: AdminRole) {
-    setValue("role", nextRole);
-    setValue("sections", ROLE_DEFAULT_SECTIONS[nextRole]);
-  }
-
-  function handleSave(values: EditorFormValues, sendInvite: boolean) {
-    saveAccount(buildAccount(values, isNew, accountId, account), {
-      onSuccess: () => {
-        toast({
-          variant: "success",
-          title: isNew ? (sendInvite ? "Invite sent" : "Draft saved") : "Admin account updated",
-          description: isNew && sendInvite ? `${values.fullName} will receive an email to set their password.` : undefined,
-        });
-        router.push("/admin/admin-users");
-      },
-    });
-  }
 
   if (!isNew && isLoading) {
     return (
@@ -139,7 +104,84 @@ export function AdminUserEditorView({ accountId }: { accountId: string }) {
     return <ErrorState onRetry={() => refetch()} />;
   }
 
-  const isSuperAdminRole = watchedRole === "Super Admin";
+  return <AdminUserForm accountId={accountId} isNew={isNew} account={isNew ? undefined : account} />;
+}
+
+function AdminUserForm({
+  accountId,
+  isNew,
+  account,
+}: {
+  accountId: string;
+  isNew: boolean;
+  account?: AdminAccount;
+}) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const { mutate: saveAccount, isPending } = useSaveAdminAccount();
+
+  /**
+   * Whether this account inherits its role's access or holds a set chosen by
+   * hand. The two are genuinely different instructions to the API, not two
+   * ways of describing one list: inheriting means the account follows its
+   * role, including if that role's defaults ever change, while a chosen set
+   * — an empty one included — is honoured exactly as saved.
+   *
+   * New accounts start out inheriting; an existing one starts wherever the
+   * API says it already is.
+   */
+  const [useRoleDefaults, setUseRoleDefaults] = useState(!account?.sectionsCustomised);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<EditorFormValues>({
+    resolver: zodResolver(editorSchema),
+    defaultValues: {
+      fullName: account?.fullName ?? "",
+      email: account?.email ?? "",
+      role: account?.role ?? "CONTENT_MANAGER",
+      sections: account?.sections ?? ROLE_DEFAULT_SECTIONS.CONTENT_MANAGER,
+    },
+  });
+
+  const watchedRole = watch("role");
+  const watchedSections = watch("sections");
+
+  function handleRoleChange(nextRole: AdminRole) {
+    setValue("role", nextRole);
+    setValue("sections", ROLE_DEFAULT_SECTIONS[nextRole]);
+  }
+
+  function handleUseRoleDefaultsChange(next: boolean) {
+    setUseRoleDefaults(next);
+    // Show what inheriting actually means, rather than leaving the previous
+    // hand-picked list on screen while the account no longer uses it.
+    if (next) setValue("sections", ROLE_DEFAULT_SECTIONS[watchedRole]);
+  }
+
+  function handleSave(values: EditorFormValues, sendInvite: boolean) {
+    saveAccount(
+      { account: buildAccount(values, isNew, accountId, account), useRoleDefaults },
+      {
+        onSuccess: () => {
+          toast({
+            variant: "success",
+            title: isNew ? (sendInvite ? "Invite sent" : "Draft saved") : "Admin account updated",
+            description: isNew && sendInvite ? `${values.fullName} will receive an email to set their password.` : undefined,
+          });
+          router.push("/admin/admin-users");
+        },
+      }
+    );
+  }
+
+  const isSuperAdminRole = watchedRole === "SUPER_ADMIN";
+  const hasNoSections = !useRoleDefaults && watchedSections.length === 0;
 
   return (
     <div className="space-y-6">
@@ -180,13 +222,15 @@ export function AdminUserEditorView({ accountId }: { accountId: string }) {
                   >
                     {ROLES.map((r) => (
                       <option key={r} value={r}>
-                        {r}
+                        {ADMIN_ROLE_LABELS[r]}
                       </option>
                     ))}
                   </select>
                 )}
               />
-              <p className="text-xs text-text-muted">Changing the role resets Section Access to that role&apos;s defaults — you can still adjust it below.</p>
+              <p className="text-xs text-text-muted">
+                The role sets what this person can reach by default — you can still fine-tune it under Section Access.
+              </p>
             </div>
           </div>
         </Card>
@@ -198,7 +242,25 @@ export function AdminUserEditorView({ accountId }: { accountId: string }) {
               <p className="text-sm text-text-muted mt-3">Super Admins have full access to every section automatically.</p>
             ) : (
               <>
-                <p className="text-sm text-text-muted mb-4">Choose which parts of the admin portal this person can use.</p>
+                <label className="flex items-start gap-2.5 cursor-pointer select-none mt-3 mb-4">
+                  <input
+                    type="checkbox"
+                    checked={useRoleDefaults}
+                    onChange={(e) => handleUseRoleDefaultsChange(e.target.checked)}
+                    className="h-4 w-4 mt-0.5 rounded accent-sky-600"
+                  />
+                  <span>
+                    <span className="block text-sm font-medium text-text-primary">
+                      Use the {ADMIN_ROLE_LABELS[watchedRole]} defaults
+                    </span>
+                    <span className="block text-xs text-text-muted mt-0.5">
+                      {useRoleDefaults
+                        ? "This account follows its role. Untick to choose sections yourself."
+                        : "Sections below are set for this account specifically."}
+                    </span>
+                  </span>
+                </label>
+
                 <Controller
                   control={control}
                   name="sections"
@@ -207,10 +269,14 @@ export function AdminUserEditorView({ accountId }: { accountId: string }) {
                       {SECTIONS.map((section) => {
                         const checked = (field.value as string[]).includes(section);
                         return (
-                          <label key={section} className="flex items-start gap-2.5 cursor-pointer select-none">
+                          <label
+                            key={section}
+                            className={`flex items-start gap-2.5 select-none ${useRoleDefaults ? "cursor-default opacity-60" : "cursor-pointer"}`}
+                          >
                             <input
                               type="checkbox"
                               checked={checked}
+                              disabled={useRoleDefaults}
                               onChange={(e) => {
                                 const current = field.value as string[];
                                 field.onChange(e.target.checked ? [...current, section] : current.filter((s) => s !== section));
@@ -227,6 +293,12 @@ export function AdminUserEditorView({ accountId }: { accountId: string }) {
                     </div>
                   )}
                 />
+
+                {hasNoSections && (
+                  <p className="text-xs text-error mt-4">
+                    With nothing ticked, this person can sign in but won&apos;t be able to open any admin area.
+                  </p>
+                )}
               </>
             )}
           </Card>

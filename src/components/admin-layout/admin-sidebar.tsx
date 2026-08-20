@@ -4,6 +4,7 @@ import { LogOut, ShieldCheck } from "lucide-react";
 import { AdminNavList } from "@/components/admin-layout/admin-nav-list";
 import { BrandMark } from "@/components/shared/brand-mark";
 import { useAdminAuth } from "@/providers/admin-auth-provider";
+import { ADMIN_ROLE_LABELS } from "@/features/admin-auth/types";
 
 export function AdminSidebar() {
   const { admin, logout } = useAdminAuth();
@@ -35,13 +36,13 @@ export function AdminSidebar() {
                 <p className="text-sm font-semibold text-white truncate">{admin.fullName}</p>
                 <span className="inline-flex items-center gap-1 rounded-full bg-sky-tint px-2 py-0.5 text-[11px] font-semibold text-sky-600 mt-0.5">
                   <ShieldCheck className="h-3 w-3" />
-                  {admin.role}
+                  {ADMIN_ROLE_LABELS[admin.role]}
                 </span>
               </div>
             </div>
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
               <span className="text-[11px] text-white/40 uppercase tracking-wide">
-                {admin.role === "Super Admin" ? "Admin ID" : "Staff ID"}
+                {admin.role === "SUPER_ADMIN" ? "Admin ID" : "Staff ID"}
               </span>
               <span className="text-xs font-semibold text-white/80">{admin.adminId}</span>
             </div>

@@ -20,8 +20,8 @@ export const adminUsersService = {
     const response = await adminUsersRepository.getAccountById(id);
     return response.data;
   },
-  async saveAccount(input: AdminAccount): Promise<AdminAccount> {
-    const response = await adminUsersRepository.saveAccount(input);
+  async saveAccount(input: AdminAccount, options?: { useRoleDefaults?: boolean }): Promise<AdminAccount> {
+    const response = await adminUsersRepository.saveAccount(input, options);
     return response.data;
   },
   async deleteAccount(id: string): Promise<boolean> {
