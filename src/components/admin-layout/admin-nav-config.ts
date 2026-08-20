@@ -63,7 +63,10 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     label: "Account",
     items: [
       { label: "Admin Users & Roles", href: "/admin/admin-users", icon: ShieldCheck, superAdminOnly: true },
-      { label: "Site Settings", href: "/admin/settings", icon: Settings },
+      // super_admin only, matching the backend: PUT /admin/site-settings is
+      // authorize('super_admin'), so a plain admin used to see this item,
+      // open the page and only discover it was forbidden when saving failed.
+      { label: "Site Settings", href: "/admin/settings", icon: Settings, superAdminOnly: true },
       { label: "Profile", href: "/admin/profile", icon: UserCircle },
     ],
   },

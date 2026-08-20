@@ -1,8 +1,13 @@
 // "Admin" corresponds to the backend's plain 'admin' role (see User.schema.ts
-// role enum) — the backend doesn't yet support granular per-admin section
-// permissions, so an "Admin" gets every section; "Content Manager" /
-// "Community Moderator" / "Support Staff" remain reserved for once that
-// finer-grained backend RBAC exists.
+// role enum). Section grants ARE enforced server-side now -- every admin
+// module's route file carries requireSection(...) (sectionMiddleware.ts), so
+// an admin only reaches the sections actually granted on their account; this
+// comment previously said otherwise and was stale.
+//
+// The three named staff roles below are still presentation-only: the backend
+// has no role beyond member/admin/super_admin, so picking one here just
+// seeds a different default set of sections (ROLE_DEFAULT_SECTIONS in
+// permissions.ts) on an account that is a plain 'admin' server-side.
 export type AdminRole = "Super Admin" | "Admin" | "Content Manager" | "Community Moderator" | "Support Staff";
 
 export type AdminSection =

@@ -46,8 +46,17 @@ export function canAccessAdminNavItem(admin: AdminUser, item: { section?: AdminS
   return true;
 }
 
+/**
+ * Areas no combination of section grants unlocks, mirroring the backend's
+ * `authorize('super_admin')` on both: Admin Users & Roles, and Site
+ * Settings -- which changes site-wide member-facing copy and is
+ * deliberately not offered as a delegable section in the Invite Admin User
+ * form. Listed once so the nav and this route guard can't disagree.
+ */
+export const SUPER_ADMIN_ONLY_ROUTES = ["/admin/admin-users", "/admin/settings"];
+
 export function isAdminRouteAllowed(admin: AdminUser, pathname: string): boolean {
-  if (pathname === "/admin/admin-users" || pathname.startsWith("/admin/admin-users/")) {
+  if (SUPER_ADMIN_ONLY_ROUTES.some((route) => pathname === route || pathname.startsWith(route + "/"))) {
     return admin.role === "Super Admin";
   }
   const entry = (Object.entries(ADMIN_SECTION_ROUTES) as [AdminSection, string][]).find(

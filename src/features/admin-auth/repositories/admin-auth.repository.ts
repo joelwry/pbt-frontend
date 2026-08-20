@@ -7,8 +7,9 @@ import type {
   AdminRefreshedSession,
   AdminUser,
   AdminRole,
+  AdminSection,
 } from "@/features/admin-auth/types";
-import { ROLE_DEFAULT_SECTIONS } from "@/features/admin-auth/permissions";
+import { ADMIN_SECTION_LABELS } from "@/features/admin-auth/permissions";
 
 export class AdminAuthApiError extends Error {
   errors: string[];
@@ -41,6 +42,8 @@ interface BackendUser {
   role: string;
   clientId?: string;
   avatarUrl?: string;
+  /** Section grants held by this admin account -- see composeAdmin below. */
+  adminSections?: string[];
 }
 
 interface BackendTokens {
@@ -73,6 +76,13 @@ function expiresInFromJwt(token: string): number {
   return Math.max(Math.floor(decoded.exp - Date.now() / 1000), 0);
 }
 
+const KNOWN_SECTIONS = new Set(Object.keys(ADMIN_SECTION_LABELS) as AdminSection[]);
+
+/** Only sections this frontend actually knows about -- an unrecognised value from the API is dropped rather than left to break a lookup. */
+function toSections(adminSections: string[] | undefined): AdminSection[] {
+  return (adminSections ?? []).filter((section): section is AdminSection => KNOWN_SECTIONS.has(section as AdminSection));
+}
+
 function composeAdmin(user: BackendUser): AdminUser {
   const role = toAdminRole(user.role);
   return {
@@ -82,10 +92,15 @@ function composeAdmin(user: BackendUser): AdminUser {
     initials: initialsOf(user.fullName),
     email: user.email,
     role,
-    // The backend doesn't have granular per-admin section permissions yet —
-    // every admin/super_admin account gets full section access on the
-    // frontend; the real gate remains the backend's role check.
-    sections: ROLE_DEFAULT_SECTIONS[role],
+    // The account's real grants, as stored and enforced server-side by
+    // requireSection(). This used to be ROLE_DEFAULT_SECTIONS[role], which
+    // handed every plain admin all ten sections regardless of what they
+    // actually held -- so a staff account granted only Content still saw
+    // Members, Billing and Analytics in the nav, opened them, and hit a
+    // wall of 403s from an API that was gating correctly all along.
+    // Super Admins bypass sections entirely (hasSection short-circuits on
+    // the role), so the empty array the API sends them is not a downgrade.
+    sections: toSections(user.adminSections),
   };
 }
 
