@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/providers/toast-provider";
 import { useChangeTierCheckout } from "@/features/subscription/hooks/use-subscription";
 import { usePricing } from "@/features/pricing/hooks/use-pricing";
-import { formatAmount } from "@/features/pricing/services/pricing.service";
+import { formatAmountOrUnavailable } from "@/features/pricing/services/pricing.service";
 import { MEMBERSHIP_TIERS, TIER_ORDER } from "@/features/membership/tiers";
 import type { MembershipTier } from "@/features/session/types";
 
@@ -75,9 +75,11 @@ export function MembershipTiersGrid({
               ) : (
                 <>
                   <p className="font-display text-2xl font-bold text-text-primary">
-                    {formatAmount(pricing?.[tier].monthly ?? 0)}
+                    {formatAmountOrUnavailable(pricing?.[tier]?.monthly)}
                   </p>
-                  <p className="text-xs text-text-muted mt-0.5">+ VAT/month at today&apos;s price</p>
+                  {pricing?.[tier]?.monthly != null && (
+                    <p className="text-xs text-text-muted mt-0.5">+ VAT/month at today&apos;s price</p>
+                  )}
                 </>
               )}
               <p className="text-xs text-text-muted mt-3">{def.contractLabel}</p>

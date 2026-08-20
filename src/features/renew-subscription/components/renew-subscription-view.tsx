@@ -10,7 +10,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { useToast } from "@/providers/toast-provider";
 import { useRenewSubscription } from "@/features/renew-subscription/hooks/use-renew-subscription";
 import { usePricing } from "@/features/pricing/hooks/use-pricing";
-import { formatAmount } from "@/features/pricing/services/pricing.service";
+import { formatAmountOrUnavailable } from "@/features/pricing/services/pricing.service";
 import { MEMBERSHIP_TIERS } from "@/features/membership/tiers";
 
 export function RenewSubscriptionView() {
@@ -76,10 +76,12 @@ export function RenewSubscriptionView() {
               <Skeleton className="h-7 w-16 ml-auto" />
             ) : (
               <p className="font-display text-xl font-bold text-text-primary">
-                {formatAmount(pricing?.[member.membershipTier].monthly ?? 0)}
+                {formatAmountOrUnavailable(pricing?.[member.membershipTier]?.monthly)}
               </p>
             )}
-            <p className="text-xs text-text-muted">+ VAT/month</p>
+            {pricing?.[member.membershipTier]?.monthly != null && (
+              <p className="text-xs text-text-muted">+ VAT/month</p>
+            )}
           </div>
         </div>
 

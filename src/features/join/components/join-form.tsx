@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { joinSchema, type JoinFormValues } from "@/features/join/join-schema";
 import { joinRepository, getJoinErrorMessage } from "@/features/join/repositories/join.repository";
 import { usePricing } from "@/features/pricing/hooks/use-pricing";
-import { formatAmount } from "@/features/pricing/services/pricing.service";
+import { formatAmountOrUnavailable } from "@/features/pricing/services/pricing.service";
 import { MEMBERSHIP_TIERS, TIER_ORDER } from "@/features/membership/tiers";
 
 export function JoinForm() {
@@ -87,7 +87,7 @@ export function JoinForm() {
                   {isSelected && <Check className="h-4 w-4 text-orange-600" />}
                 </div>
                 <p className="text-xs text-text-muted mt-1">
-                  {pricingLoading ? "…" : `${formatAmount(pricing?.[tier].monthly ?? 0)} + VAT/month`}
+                  {pricingLoading ? "…" : formatAmountOrUnavailable(pricing?.[tier]?.monthly, " + VAT/month")}
                 </p>
               </button>
             );
@@ -103,8 +103,8 @@ export function JoinForm() {
           ) : (
             <p className="text-xs text-text-muted mt-0.5">
               {billingCycle === "annual"
-                ? `${formatAmount(pricing?.[selectedTier].annual ?? 0)} + VAT/year (2 months free)`
-                : `${formatAmount(pricing?.[selectedTier].monthly ?? 0)} + VAT/month`}
+                ? formatAmountOrUnavailable(pricing?.[selectedTier]?.annual, " + VAT/year (2 months free)")
+                : formatAmountOrUnavailable(pricing?.[selectedTier]?.monthly, " + VAT/month")}
             </p>
           )}
         </div>
