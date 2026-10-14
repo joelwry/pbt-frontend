@@ -10,8 +10,8 @@ interface StatCardProps {
   topRight?: React.ReactNode;
   value: string;
   label: string;
-  linkLabel: string;
-  linkHref: string;
+  linkLabel?: string;
+  linkHref?: string;
 }
 
 const ICON_BG: Record<StatCardProps["iconVariant"], string> = {
@@ -32,13 +32,16 @@ export function StatCard({ icon: Icon, iconVariant, topRight, value, label, link
       </div>
       <p className="font-display text-[28px] leading-none font-bold text-text-primary">{value}</p>
       <p className="text-sm text-text-muted mt-1.5">{label}</p>
-      <Link
-        href={linkHref}
-        className="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 mt-3 hover:underline"
-      >
-        {linkLabel}
-        <ArrowUpRight className="h-3 w-3" />
-      </Link>
+      { linkLabel &&  linkHref &&
+        (<Link
+          href={linkHref}
+          className="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 mt-3 hover:underline"
+        >
+          {linkLabel}
+          <ArrowUpRight className="h-3 w-3" />
+        </Link>
+        ) 
+      }
     </Card>
   );
 }

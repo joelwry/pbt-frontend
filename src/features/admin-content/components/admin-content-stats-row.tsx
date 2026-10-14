@@ -11,8 +11,8 @@ export function AdminContentStatsRow({ stats }: { stats: AdminContentStats }) {
         topRight={<StatChip label="2026" />}
         value={String(stats.totalLessons)}
         label="Total Lessons"
-        linkLabel="View all"
-        linkHref="/admin/content"
+        // linkLabel="View all"
+        // linkHref="/admin/content"
       />
       <StatCard
         icon={CheckCircle2}
@@ -20,8 +20,8 @@ export function AdminContentStatsRow({ stats }: { stats: AdminContentStats }) {
         topRight={<StatChip label="Live now" />}
         value={String(stats.publishedCount)}
         label="Published"
-        linkLabel="View lessons"
-        linkHref="/admin/content"
+        // linkLabel="View lessons"
+        // linkHref="/admin/content"
       />
       <StatCard
         icon={CalendarClock}
@@ -29,8 +29,8 @@ export function AdminContentStatsRow({ stats }: { stats: AdminContentStats }) {
         topRight={<StatChip label="Upcoming" />}
         value={String(stats.scheduledCount)}
         label="Scheduled"
-        linkLabel="View lessons"
-        linkHref="/admin/content"
+        // linkLabel="View lessons"
+        // linkHref="/admin/content"
       />
       <StatCard
         icon={FolderOpen}
@@ -38,8 +38,8 @@ export function AdminContentStatsRow({ stats }: { stats: AdminContentStats }) {
         topRight={<StatChip label="This year" />}
         value={String(stats.modulesActiveCount)}
         label="Modules Active"
-        linkLabel="View lessons"
-        linkHref="/admin/content"
+        // linkLabel="View lessons"
+        // linkHref="/admin/content"
       />
     </div>
   );
