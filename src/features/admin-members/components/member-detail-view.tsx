@@ -9,6 +9,7 @@ import { useAdminMember } from "@/features/admin-members/hooks/use-admin-members
 import { MemberProfileBanner } from "@/features/admin-members/components/member-profile-banner";
 import { MemberDetailStatsRow } from "@/features/admin-members/components/member-detail-stats-row";
 import { AccountInformationCard } from "@/features/admin-members/components/account-information-card";
+import { AccountSetupCard } from "@/features/admin-members/components/account-setup-card";
 import { AdminActionsCard } from "@/features/admin-members/components/admin-actions-card";
 import { RecentActivityCard, MemberDetailTabs, type MemberDetailTab } from "@/features/admin-members/components/member-detail-shared";
 import { LearningProgressTab, BillingHistoryTab } from "@/features/admin-members/components/member-detail-secondary-tabs";
@@ -52,7 +53,10 @@ export function MemberDetailView({ memberId, initialTab }: { memberId: string; i
             <div className="lg:col-span-2">
               <AccountInformationCard member={member} />
             </div>
-            <AdminActionsCard member={member} />
+            <div className="space-y-6">
+              <AccountSetupCard member={member} />
+              <AdminActionsCard member={member} />
+            </div>
           </div>
           <RecentActivityCard items={member.recentActivity} />
         </div>

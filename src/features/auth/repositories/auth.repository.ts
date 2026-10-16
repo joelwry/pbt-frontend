@@ -210,6 +210,24 @@ export const authRepository = {
    * the backend's reset-password endpoint is the same token-gated mechanism
    * either way, only the surrounding page copy differs.
    */
+  /**
+   * Asks the backend whether an emailed set-password / reset link is still
+   * usable, without consuming it -- so the page can show "expired or already
+   * used" immediately. The backend always answers 200 (`valid: false` for a
+   * bad link), so a rejection here means a genuine network/server failure.
+   */
+  async validateResetToken(token: string): Promise<{ valid: boolean; email?: string }> {
+    try {
+      const { data } = await apiClient.post<ApiSuccess<{ valid: boolean; email?: string }>>(
+        "/auth/reset-password/validate",
+        { token }
+      );
+      return data.data;
+    } catch (error) {
+      throw toAuthApiError(error);
+    }
+  },
+
   async setNewPassword(token: string, newPassword: string): Promise<void> {
     try {
       // Backend requires confirmPassword in the body too (defense against a

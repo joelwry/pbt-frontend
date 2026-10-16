@@ -12,6 +12,8 @@ export interface AdminMemberListItem {
   joinedLabel: string;
   status: AdminMemberStatus;
   contractLabel: string;
+  /** True until the member completes the emailed account set-up link (first password). */
+  setupPending?: boolean;
 }
 
 export interface ActivityLogItem {
@@ -23,6 +25,8 @@ export interface ActivityLogItem {
 
 export interface AdminMemberDetail extends AdminMemberListItem {
   phone: string;
+  /** Date of last sign-in, or null if they've never signed in. */
+  lastLoginLabel?: string | null;
   location: string;
   assignedLeader: string;
   assignedLeaderId: string | null;

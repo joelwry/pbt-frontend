@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ShieldCheck, GraduationCap, Users2 } from "lucide-react";
 import { JoinForm } from "@/features/join/components/join-form";
 import { BrandMark } from "@/components/shared/brand-mark";
+import { AuthFormPanel } from "@/components/shared/auth-form-panel";
 
 export const metadata: Metadata = {
   title: "Join PBT | Property Business Training",
@@ -57,8 +58,8 @@ export default function JoinPage() {
         <div />
       </div>
 
-      <div className="flex items-center justify-center px-6 py-14 sm:px-10">
-        <div className="w-full max-w-md">
+      <AuthFormPanel maxWidth="max-w-xl">
+        <div>
           <h2 className="font-display text-3xl font-bold text-text-primary">Join PBT</h2>
           <p className="text-text-muted mt-2 mb-8">Choose your membership to get started.</p>
 
@@ -73,7 +74,7 @@ export default function JoinPage() {
             </Link>
           </p>
         </div>
-      </div>
+      </AuthFormPanel>
     </div>
   );
 }

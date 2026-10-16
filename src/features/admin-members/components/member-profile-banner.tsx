@@ -30,6 +30,7 @@ export function MemberProfileBanner({ member }: { member: AdminMemberDetail }) {
           <div className="flex items-center gap-2">
             <Badge variant={TIER_VARIANT[member.tier]}>{TIER_LABEL[member.tier]}</Badge>
             <Badge variant={STATUS_VARIANT[member.status]}>{member.status}</Badge>
+            {member.setupPending && <Badge variant="warning">Setup pending</Badge>}
             <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)}>
               <Pencil className="h-3.5 w-3.5" />
               Edit

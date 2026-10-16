@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { ShieldCheck, Lock, Activity } from "lucide-react";
 import { AdminLoginForm } from "@/features/admin-auth/components/admin-login-form";
 import { BrandMark } from "@/components/shared/brand-mark";
+import { AuthFormPanel } from "@/components/shared/auth-form-panel";
 
 export const metadata: Metadata = {
   title: "Admin Sign In | Property Business Training",
@@ -62,8 +63,8 @@ export default function AdminLoginPage() {
       </div>
 
       {/* Form */}
-      <div className="flex items-center justify-center px-6 py-14 sm:px-10">
-        <div className="w-full max-w-sm">
+      <AuthFormPanel maxWidth="max-w-md">
+        <div>
           <h2 className="font-display text-3xl font-bold text-text-primary">Admin Sign In</h2>
           <p className="text-text-muted mt-2 mb-8">Sign in with your administrator credentials.</p>
 
@@ -82,7 +83,7 @@ export default function AdminLoginPage() {
             </div>
           </div>
         </div>
-      </div>
+      </AuthFormPanel>
     </div>
   );
 }

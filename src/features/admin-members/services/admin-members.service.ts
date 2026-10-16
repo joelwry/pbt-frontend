@@ -1,4 +1,9 @@
-import { adminMembersRepository, type AdminMembersQuery } from "@/features/admin-members/repositories/admin-members.repository";
+import {
+  adminMembersRepository,
+  type AdminMembersQuery,
+  type SetupInviteResult,
+  type SetupLinkResult,
+} from "@/features/admin-members/repositories/admin-members.repository";
 import type { MembershipTier } from "@/features/session/types";
 import type { AdminMemberDetail, AdminMembersStats, MemberBillingRow, MemberLearningProgress } from "@/features/admin-members/types";
 import type { Pagination } from "@/types/api";
@@ -34,9 +39,14 @@ export const adminMembersService = {
     return response.data;
   },
 
-  async resendWelcomeEmail(id: string): Promise<boolean> {
+  async resendWelcomeEmail(id: string): Promise<SetupInviteResult> {
     const response = await adminMembersRepository.resendWelcomeEmail(id);
-    return response.data.sent;
+    return response.data;
+  },
+
+  async createSetupLink(id: string): Promise<SetupLinkResult> {
+    const response = await adminMembersRepository.createSetupLink(id);
+    return response.data;
   },
 
   async deactivateAccount(id: string): Promise<boolean> {

@@ -83,7 +83,10 @@ function MemberRow({ member }: { member: AdminMemberListItem }) {
       </td>
       <td className="py-3.5 pr-4 text-text-secondary whitespace-nowrap">{member.joinedLabel}</td>
       <td className="py-3.5 pr-4">
-        <Badge variant={STATUS_VARIANT[member.status]}>{member.status}</Badge>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Badge variant={STATUS_VARIANT[member.status]}>{member.status}</Badge>
+          {member.setupPending && <Badge variant="warning">Setup pending</Badge>}
+        </div>
       </td>
       <td className="py-3.5 pr-4 text-text-secondary whitespace-nowrap">{member.contractLabel}</td>
       <td className="py-3.5">

@@ -54,6 +54,12 @@ export function useResendWelcomeEmail() {
   });
 }
 
+export function useCreateSetupLink() {
+  return useMutation({
+    mutationFn: (id: string) => adminMembersService.createSetupLink(id),
+  });
+}
+
 export function useDeactivateAccount() {
   const invalidate = useInvalidateMembers();
   return useMutation({

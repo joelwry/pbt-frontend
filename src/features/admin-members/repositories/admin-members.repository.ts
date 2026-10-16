@@ -3,6 +3,19 @@ import type { ApiSuccess, ApiPaginated } from "@/types/api";
 import type { MembershipTier } from "@/features/session/types";
 import type { AdminMemberDetail, AdminMembersStats, MemberBillingRow, MemberLearningProgress } from "@/features/admin-members/types";
 
+export interface SetupInviteResult {
+  /** False when the mail server didn't accept the message -- use the copy-link option instead. */
+  sent: boolean;
+  email: string;
+  expiresAt: string;
+}
+
+export interface SetupLinkResult {
+  setupUrl: string;
+  email: string;
+  expiresAt: string;
+}
+
 export class AdminMemberNotFoundError extends Error {}
 
 export interface AdminMembersQuery {
@@ -57,8 +70,13 @@ export const adminMembersRepository = {
     return data;
   },
 
-  async resendWelcomeEmail(id: string): Promise<ApiSuccess<{ sent: boolean }>> {
-    const { data } = await adminApiClient.post<ApiSuccess<{ sent: boolean }>>(`/admin/members/${id}/resend-welcome`, {});
+  async resendWelcomeEmail(id: string): Promise<ApiSuccess<SetupInviteResult>> {
+    const { data } = await adminApiClient.post<ApiSuccess<SetupInviteResult>>(`/admin/members/${id}/resend-welcome`, {});
+    return data;
+  },
+
+  async createSetupLink(id: string): Promise<ApiSuccess<SetupLinkResult>> {
+    const { data } = await adminApiClient.post<ApiSuccess<SetupLinkResult>>(`/admin/members/${id}/setup-link`, {});
     return data;
   },
 

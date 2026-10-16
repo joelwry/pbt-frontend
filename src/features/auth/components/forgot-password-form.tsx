@@ -29,8 +29,10 @@ export function ForgotPasswordForm() {
 
   if (sent) {
     return (
-      <div className="text-center py-6">
-        <MailCheck className="h-12 w-12 text-success mx-auto mb-4" />
+      <div className="text-center py-2">
+        <div className="h-16 w-16 rounded-2xl bg-[#DCFCE7] text-[#15803D] flex items-center justify-center mx-auto mb-5">
+          <MailCheck className="h-8 w-8" />
+        </div>
         <h3 className="font-display text-xl font-bold text-text-primary">Check your email</h3>
         <p className="text-text-muted mt-2 mb-6">
           If an account exists for that email, we&apos;ve sent a link to reset your password. It can take a

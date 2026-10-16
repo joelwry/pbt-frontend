@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CheckCircle2, ShieldCheck, Building2, Users2 } from "lucide-react";
 import { LoginForm } from "@/features/auth/components/login-form";
 import { BrandMark } from "@/components/shared/brand-mark";
+import { AuthFormPanel } from "@/components/shared/auth-form-panel";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
@@ -66,8 +67,8 @@ export default function LoginPage() {
       </div>
 
       {/* Form */}
-      <div className="flex items-center justify-center px-6 py-14 sm:px-10">
-        <div className="w-full max-w-sm">
+      <AuthFormPanel maxWidth="max-w-md">
+        <div>
           <h2 className="font-display text-3xl font-bold text-text-primary">Welcome back</h2>
           <p className="text-text-muted mt-2 mb-8">Sign in to continue your property journey.</p>
 
@@ -100,7 +101,7 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
-      </div>
+      </AuthFormPanel>
     </div>
   );
 }

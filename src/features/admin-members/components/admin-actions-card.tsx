@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { CreditCard, Lock, LockOpen, Send, Trash2, Loader2 } from "lucide-react";
+import { CreditCard, Lock, LockOpen, Trash2, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +18,6 @@ import { useToast } from "@/providers/toast-provider";
 import {
   useChangeTier,
   useSetPaused,
-  useResendWelcomeEmail,
   useDeactivateAccount,
 } from "@/features/admin-members/hooks/use-admin-members";
 import { TIER_LABEL } from "@/features/admin-members/tier-labels";
@@ -36,8 +35,6 @@ export function AdminActionsCard({ member }: { member: AdminMemberDetail }) {
   const { mutate: changeTier, isPending: isChangingTier } = useChangeTier();
 
   const { mutate: setPaused, isPending: isTogglingPause } = useSetPaused();
-
-  const { mutate: resendEmail, isPending: isResending } = useResendWelcomeEmail();
 
   const [deactivateOpen, setDeactivateOpen] = useState(false);
   const { mutate: deactivate, isPending: isDeactivating } = useDeactivateAccount();
@@ -119,20 +116,6 @@ export function AdminActionsCard({ member }: { member: AdminMemberDetail }) {
         >
           {isTogglingPause ? <Loader2 className="h-4 w-4 animate-spin" /> : isPaused ? <LockOpen className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
           {isPaused ? "Resume Membership" : "Pause Membership"}
-        </Button>
-
-        <Button
-          variant="secondary"
-          className="w-full justify-start"
-          disabled={isResending}
-          onClick={() =>
-            resendEmail(member.id, {
-              onSuccess: () => toast({ variant: "success", title: "Welcome email sent", description: `Sent to ${member.email}.` }),
-            })
-          }
-        >
-          {isResending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          Resend Welcome Email
         </Button>
 
         <Dialog open={deactivateOpen} onOpenChange={setDeactivateOpen}>
