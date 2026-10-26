@@ -1,66 +1,37 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
+import { DonutChart } from "@/components/shared/donut-chart";
 import type { RoadmapProgress } from "@/features/dashboard/types";
 
-function ProgressRing({ percent }: { percent: number }) {
-  const size = 108;
-  const stroke = 10;
-  const center = size / 2;
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (percent / 100) * circumference;
-
-  return (
-    <svg width={size} height={size} className="shrink-0">
-      {/* Only the arc needs rotating (so it starts at 12 o'clock) — rotating
-          the whole SVG previously forced a counter-rotation on the text
-          labels too, and that counter-rotation pivoted around each text
-          element's own bounding box instead of the ring's center, which is
-          what made the percent and "Overall" labels collide. */}
-      <g transform={`rotate(-90 ${center} ${center})`}>
-        <circle cx={center} cy={center} r={radius} fill="none" stroke="#EDF1F4" strokeWidth={stroke} />
-        <circle
-          cx={center}
-          cy={center}
-          r={radius}
-          fill="none"
-          stroke="#26AAE1"
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 600ms ease" }}
-        />
-      </g>
-      <text
-        x={center}
-        y={center - 8}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        style={{ fontSize: 22, fontWeight: 700, fill: "#1F2937" }}
-      >
-        {percent}%
-      </text>
-      <text
-        x={center}
-        y={center + 14}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        style={{ fontSize: 10, fill: "#6B7B84" }}
-      >
-        Overall
-      </text>
-    </svg>
-  );
-}
+/* Matches the admin dashboard's tier breakdown palette -- the client asked
+   for this card to use the same doughnuts the admin side already uses,
+   rather than the bespoke single-arc ring that used to live here and never
+   read as a pie at all. */
+const SEGMENT_COLOR = {
+  completed: "#22c55e",
+  inProgress: "#26aae1",
+  upcoming: "#cbd8e0",
+} as const;
 
 export function RoadmapProgressCard({ progress }: { progress: RoadmapProgress }) {
+  /* Proportions of the year's content, so the ring shows the real shape of
+     the journey rather than one arc. Guarded against a zero total: with no
+     content yet, every segment is 0 and DonutChart renders its neutral
+     track, which still looks like a doughnut instead of an empty box. */
+  const total = progress.totalThisYear || 0;
+  const share = (value: number) => (total > 0 ? (value / total) * 100 : 0);
+  const donutSegments = [
+    { key: "completed", percent: share(progress.completed), color: SEGMENT_COLOR.completed },
+    { key: "inProgress", percent: share(progress.unlockedInProgress), color: SEGMENT_COLOR.inProgress },
+    { key: "upcoming", percent: share(progress.upcoming), color: SEGMENT_COLOR.upcoming },
+  ];
+
   const metrics = [
-    { label: "Completed", value: progress.completed },
-    { label: "Unlocked, In Progress", value: progress.unlockedInProgress },
-    { label: "Upcoming", value: progress.upcoming },
-    { label: "Total This Year", value: progress.totalThisYear },
+    { label: "Completed", value: progress.completed, color: SEGMENT_COLOR.completed },
+    { label: "Unlocked, In Progress", value: progress.unlockedInProgress, color: SEGMENT_COLOR.inProgress },
+    { label: "Upcoming", value: progress.upcoming, color: SEGMENT_COLOR.upcoming },
+    { label: "Total This Year", value: progress.totalThisYear, color: null },
   ];
 
   return (
@@ -78,7 +49,14 @@ export function RoadmapProgressCard({ progress }: { progress: RoadmapProgress })
       </div>
 
       <div className="flex items-center gap-6 flex-wrap sm:flex-nowrap">
-        <ProgressRing percent={progress.overallPercent} />
+        <DonutChart
+          segments={donutSegments}
+          centerValue={`${progress.overallPercent}%`}
+          centerLabel="Overall"
+          size={132}
+          strokeWidth={18}
+          ariaLabel={`Roadmap progress: ${progress.overallPercent}% overall. ${progress.completed} completed, ${progress.unlockedInProgress} in progress, ${progress.upcoming} upcoming.`}
+        />
         <div className="flex-1 min-w-[200px]">
           <p className="text-sm font-medium text-text-primary">{progress.encouragement}</p>
           <div className="h-2 rounded-full bg-[#EDF1F4] mt-3 overflow-hidden">
@@ -94,7 +72,12 @@ export function RoadmapProgressCard({ progress }: { progress: RoadmapProgress })
         {metrics.map((metric) => (
           <div key={metric.label}>
             <p className="font-display text-2xl font-bold text-text-primary">{metric.value}</p>
-            <p className="text-xs text-text-muted mt-1">{metric.label}</p>
+            <p className="text-xs text-text-muted mt-1 flex items-center gap-1.5">
+              {metric.color && (
+                <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: metric.color }} />
+              )}
+              {metric.label}
+            </p>
           </div>
         ))}
       </div>
