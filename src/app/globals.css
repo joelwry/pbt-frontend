@@ -36,6 +36,55 @@
 
   --background: var(--pbt-bg);
   --foreground: var(--pbt-text-primary);
+
+  /* ---- Revamp v5: surfaces -------------------------------------------
+     Three stacked planes rather than one flat fill. `sunken` is the page
+     behind everything, `base` is a card, `raised` is a card that sits on
+     top of another card -- without the third step, nested panels in the
+     admin tables had nothing to distinguish them but a border. */
+  --pbt-surface-sunken: #eef3f7;
+  --pbt-surface: #ffffff;
+  --pbt-surface-raised: #ffffff;
+  --pbt-surface-muted: #f7fafc;
+
+  /* Hairlines. The flat #e2e8ed border reads heavy against white at 1px;
+     these are mixed toward the brand ink so edges recede instead of
+     outlining every box. */
+  --pbt-hairline: color-mix(in oklab, var(--pbt-navy-900) 9%, transparent);
+  --pbt-hairline-strong: color-mix(in oklab, var(--pbt-navy-900) 16%, transparent);
+
+  /* ---- Revamp v5: elevation ------------------------------------------
+     Shadows are tinted with the brand navy rather than pure black, and
+     layered: a tight contact shadow for the edge plus a broad diffuse one
+     for the lift. Pure-black single-layer shadows are the main reason the
+     old UI read as flat and dated. Every level also carries a hairline
+     ring so a card keeps its edge on a white background. */
+  --pbt-ring: 0 0 0 1px color-mix(in oklab, var(--pbt-navy-900) 7%, transparent);
+  --pbt-elev-xs: var(--pbt-ring), 0 1px 2px rgba(19, 15, 64, 0.04);
+  --pbt-elev-sm: var(--pbt-ring), 0 1px 2px rgba(19, 15, 64, 0.04), 0 2px 8px rgba(19, 15, 64, 0.05);
+  --pbt-elev-md: var(--pbt-ring), 0 2px 4px rgba(19, 15, 64, 0.04), 0 8px 24px rgba(19, 15, 64, 0.07);
+  --pbt-elev-lg: var(--pbt-ring), 0 4px 8px rgba(19, 15, 64, 0.05), 0 16px 48px rgba(19, 15, 64, 0.1);
+  --pbt-elev-xl: var(--pbt-ring), 0 8px 16px rgba(19, 15, 64, 0.06), 0 32px 80px rgba(19, 15, 64, 0.14);
+
+  /* Coloured glows for primary actions -- a shadow in the button's own hue
+     reads as the button emitting light rather than casting a grey smudge. */
+  --pbt-glow-sky: 0 2px 6px rgba(38, 170, 225, 0.22), 0 8px 24px rgba(38, 170, 225, 0.2);
+  --pbt-glow-orange: 0 2px 6px rgba(241, 141, 0, 0.24), 0 8px 24px rgba(241, 141, 0, 0.2);
+
+  /* Focus ring, used by :focus-visible everywhere. Two rings (white gap,
+     then brand) so it stays visible on both light and dark surfaces. */
+  --pbt-focus-ring: 0 0 0 2px var(--pbt-card), 0 0 0 4px var(--pbt-sky-500);
+
+  /* ---- Revamp v5: type scale ---------------------------------------- */
+  --pbt-text-2xs: 0.6875rem;
+  --pbt-text-xs: 0.75rem;
+  --pbt-text-sm: 0.8125rem;
+  --pbt-text-base: 0.875rem;
+  --pbt-text-lg: 1rem;
+  --pbt-text-xl: 1.25rem;
+  --pbt-text-2xl: 1.5rem;
+  --pbt-text-3xl: 1.875rem;
+  --pbt-text-4xl: 2.25rem;
 }
 
 @theme inline {
@@ -71,15 +120,43 @@
   --radius-modal: 24px;
   --radius-chip: 999px;
 
-  --shadow-sm-pbt: 0 2px 10px rgba(0, 0, 0, 0.05);
-  --shadow-md-pbt: 0 8px 30px rgba(0, 0, 0, 0.08);
-  --shadow-lg-pbt: 0 18px 60px rgba(0, 0, 0, 0.12);
+  /* Kept as the old names so the ~435 existing files keep compiling, but
+     repointed at the new layered values -- every card in the app picks up
+     the refreshed elevation without a single component edit. */
+  --shadow-sm-pbt: var(--pbt-elev-sm);
+  --shadow-md-pbt: var(--pbt-elev-md);
+  --shadow-lg-pbt: var(--pbt-elev-lg);
+
+  --shadow-xs-pbt: var(--pbt-elev-xs);
+  --shadow-xl-pbt: var(--pbt-elev-xl);
+  --shadow-glow-sky: var(--pbt-glow-sky);
+  --shadow-glow-orange: var(--pbt-glow-orange);
+
+  --color-surface: var(--pbt-surface);
+  --color-surface-raised: var(--pbt-surface-raised);
+  --color-surface-sunken: var(--pbt-surface-sunken);
+  --color-surface-muted: var(--pbt-surface-muted);
+  --color-hairline: var(--pbt-hairline);
+  --color-hairline-strong: var(--pbt-hairline-strong);
 }
 
 body {
-  background: var(--background);
+  /* A flat fill was the other half of why this read as dated. Two very low
+     alpha brand-tinted radials sit over the base colour -- sky toward the
+     top-left where the sidebar meets the content, a warmer orange toward
+     the bottom-right -- so large empty areas have some depth instead of
+     being a single grey sheet. `fixed` keeps them anchored to the viewport
+     so they don't slide around as a long page scrolls. */
+  background-color: var(--pbt-surface-sunken);
+  background-image:
+    radial-gradient(1200px 600px at 0% -10%, rgba(38, 170, 225, 0.1), transparent 60%),
+    radial-gradient(1000px 700px at 110% 110%, rgba(241, 141, 0, 0.07), transparent 60%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 .font-display {
@@ -93,15 +170,75 @@ body {
      `className` on top of the base "pbt-card" class, since this rule is
      unlayered custom CSS and wins the cascade over @layer utilities. */
   background-color: var(--pbt-card);
-  border: 1px solid var(--pbt-border);
+  /* The hairline now lives in the box-shadow ring (see --pbt-ring) rather
+     than a real border, so it doesn't add a layout pixel and doesn't
+     double up with the shadow's own edge. */
+  border: 0;
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-sm-pbt);
-  transition: box-shadow 200ms ease, transform 200ms ease;
+  box-shadow: var(--pbt-elev-sm);
+  transition: box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1), transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* A card sitting on another card: slightly tinted so the nesting reads
+   without drawing a second border around it. */
+.pbt-card-muted {
+  background-color: var(--pbt-surface-muted);
+  border: 0;
+  border-radius: var(--radius-card);
+  box-shadow: var(--pbt-elev-xs);
+}
+
+/* For cards that are actually links/buttons -- pairs with pbt-hover-lift. */
+.pbt-card-interactive {
+  cursor: pointer;
+}
+
+.pbt-hover-lift {
+  will-change: transform;
 }
 
 .pbt-hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md-pbt);
+  transform: translateY(-3px);
+  box-shadow: var(--pbt-elev-lg);
+}
+
+.pbt-hover-lift:active {
+  transform: translateY(-1px);
+  box-shadow: var(--pbt-elev-md);
+}
+
+/* Frosted panel, for the topbar and any sticky header that content scrolls
+   under. Falls back to a solid fill where backdrop-filter isn't supported. */
+.pbt-glass {
+  background-color: color-mix(in oklab, var(--pbt-card) 88%, transparent);
+  box-shadow: var(--pbt-elev-xs);
+}
+
+@supports (backdrop-filter: blur(12px)) {
+  .pbt-glass {
+    background-color: color-mix(in oklab, var(--pbt-card) 72%, transparent);
+    backdrop-filter: saturate(1.6) blur(12px);
+  }
+}
+
+/* One consistent focus ring across every interactive element. Previously
+   each primitive defined its own ring colour and offset, and several had
+   none at all, which is a real accessibility gap for keyboard users. */
+:where(a, button, input, select, textarea, [role="button"], [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: var(--pbt-focus-ring);
+  border-radius: var(--radius-btn);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pbt-card,
+  .pbt-hover-lift {
+    transition: none;
+  }
+  .pbt-hover-lift:hover,
+  .pbt-hover-lift:active {
+    transform: none;
+  }
 }
 
 /* Custom scrollbar — thin, brand navy, subtle track */
