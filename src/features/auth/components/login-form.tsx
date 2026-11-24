@@ -44,7 +44,19 @@ export function LoginForm() {
       const member = await login(values);
       toast({ variant: "success", title: `Welcome back, ${member.fullName.split(" ")[0]}!` });
       const returnTo = searchParams.get("returnTo");
-      router.push(returnTo && returnTo.startsWith("/") ? returnTo : "/dashboard");
+      const returnToPath = returnTo?.split(/[?#]/, 1)[0].replace(/\/+$/, "") || "";
+      const safeReturnTo =
+        returnTo &&
+        returnTo.startsWith("/") &&
+        !returnTo.startsWith("//") &&
+        returnToPath !== "/renew-subscription"
+          ? returnTo
+          : null;
+      router.push(
+        member.subscriptionStatus === "expired"
+          ? "/renew-subscription"
+          : safeReturnTo ?? "/dashboard"
+      );
     } catch (error) {
       // AuthProvider already fires an error toast; keep an inline message too
       // since a toast can be missed and this is a security-relevant form.

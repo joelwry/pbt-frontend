@@ -62,7 +62,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const forceLogout = useCallback(
     (reason: "expired" | "manual") => {
       clearRefreshTimer();
-      const returnTo = pathname && pathname !== "/login" ? pathname : undefined;
+      const returnTo =
+        reason === "expired" && pathname && pathname !== "/login" && pathname !== "/renew-subscription"
+          ? pathname
+          : undefined;
       refreshTokenRef.current = null;
       modeRef.current = null;
       setStoredAccessToken(null);

@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { AlertTriangle, CreditCard, Loader2, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,11 +17,23 @@ import { MEMBERSHIP_TIERS } from "@/features/membership/tiers";
 
 export function RenewSubscriptionView() {
   const { member, logout } = useAuth();
+  const router = useRouter();
   const { toast } = useToast();
   const { mutate, isPending } = useRenewSubscription();
   const { data: pricing, isLoading: pricingLoading } = usePricing();
+  const isActive = member?.subscriptionStatus === "active";
 
-  if (!member) return null;
+  useEffect(() => {
+    if (isActive) router.replace("/dashboard");
+  }, [isActive, router]);
+
+  if (!member || isActive) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-sky-600" />
+      </div>
+    );
+  }
 
   const tierDef = MEMBERSHIP_TIERS[member.membershipTier];
 

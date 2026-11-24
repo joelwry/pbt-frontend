@@ -15,7 +15,8 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     // httpOnly cookie) before deciding there's no session — otherwise every
     // page reload would bounce a persistent session straight to /login.
     if (!isLoading && !isAuthenticated) {
-      router.replace(`/login?returnTo=${encodeURIComponent(pathname)}`);
+      const returnTo = pathname !== "/renew-subscription" ? pathname : null;
+      router.replace(returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : "/login");
     }
     // Only re-run when auth/loading status or the path actually changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
