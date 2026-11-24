@@ -39,12 +39,12 @@ export function AdminSidebar() {
                 </span>
               </div>
             </div>
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
+            {/* <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
               <span className="text-[11px] text-white/40 uppercase tracking-wide">
                 {admin.role === "Super Admin" ? "Admin ID" : "Staff ID"}
               </span>
               <span className="text-xs font-semibold text-white/80">{admin.adminId}</span>
-            </div>
+            </div> */}
           </div>
         )}
         <button
