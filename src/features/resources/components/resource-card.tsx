@@ -39,7 +39,7 @@ export function ResourceCard({ resource }: { resource: Resource }) {
         <Button variant="secondary" size="sm" className="w-full mt-4" asChild>
           <a href={resource.downloadUrl} download onClick={() => trackDownload(resource.id)}>
             <Download className="h-3.5 w-3.5" />
-            Download
+            view 
           </a>
         </Button>
       ) : (
